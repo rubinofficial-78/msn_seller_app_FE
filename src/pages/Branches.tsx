@@ -295,7 +295,7 @@ const BranchList: React.FC<BranchTableProps> = ({ data }) => (
   </div>
 );
 
-// Add this interface
+// First, define the interface
 interface BranchFormData {
   companyName: string;
   branchName: string;
@@ -306,72 +306,6 @@ interface BranchFormData {
   city: string;
   pincode: string;
 }
-
-const branchFormFields = [
-  {
-    type: 'select',
-    key: 'companyName',
-    label: 'Company Name',
-    required: true,
-    options: companyData.map((company, index) => ({
-      id: index,
-      label: company.companyName,
-      value: company.companyName
-    })),
-    value: formData.companyName
-  },
-  {
-    type: 'text',
-    key: 'branchName',
-    label: 'Branch Name',
-    required: true,
-    placeholder: 'Enter branch name',
-    value: formData.branchName
-  },
-  {
-    type: 'text',
-    key: 'mobileNumber',
-    label: 'Mobile Number',
-    required: true,
-    placeholder: 'Enter mobile number',
-    value: formData.mobileNumber
-  },
-  {
-    type: 'email',
-    key: 'email',
-    label: 'Email',
-    required: true,
-    placeholder: 'Enter email address'
-  },
-  {
-    type: 'textarea',
-    key: 'address',
-    label: 'Address',
-    required: true,
-    placeholder: 'Enter complete address'
-  },
-  {
-    type: 'text',
-    key: 'state',
-    label: 'State',
-    required: true,
-    placeholder: 'Enter state'
-  },
-  {
-    type: 'text',
-    key: 'city',
-    label: 'City',
-    required: true,
-    placeholder: 'Enter city'
-  },
-  {
-    type: 'text',
-    key: 'pincode',
-    label: 'Pincode',
-    required: true,
-    placeholder: 'Enter pincode'
-  }
-];
 
 const Branches = () => {
   const [activeTab, setActiveTab] = useState("All Branches");
@@ -387,6 +321,73 @@ const Branches = () => {
     city: "",
     pincode: "",
   });
+
+  // Then define branchFormFields using formData
+  const branchFormFields = [
+    {
+      type: 'select',
+      key: 'companyName',
+      label: 'Company Name',
+      required: true,
+      options: companyData.map((company, index) => ({
+        id: index,
+        label: company.companyName,
+        value: company.companyName
+      })),
+      value: formData.companyName
+    },
+    {
+      type: 'text',
+      key: 'branchName',
+      label: 'Branch Name',
+      required: true,
+      placeholder: 'Enter branch name',
+      value: formData.branchName
+    },
+    {
+      type: 'text',
+      key: 'mobileNumber',
+      label: 'Mobile Number',
+      required: true,
+      placeholder: 'Enter mobile number',
+      value: formData.mobileNumber
+    },
+    {
+      type: 'email',
+      key: 'email',
+      label: 'Email',
+      required: true,
+      placeholder: 'Enter email address'
+    },
+    {
+      type: 'textarea',
+      key: 'address',
+      label: 'Address',
+      required: true,
+      placeholder: 'Enter complete address'
+    },
+    {
+      type: 'text',
+      key: 'state',
+      label: 'State',
+      required: true,
+      placeholder: 'Enter state'
+    },
+    {
+      type: 'text',
+      key: 'city',
+      label: 'City',
+      required: true,
+      placeholder: 'Enter city'
+    },
+    {
+      type: 'text',
+      key: 'pincode',
+      label: 'Pincode',
+      required: true,
+      placeholder: 'Enter pincode'
+    }
+  ];
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

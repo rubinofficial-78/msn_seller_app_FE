@@ -1,35 +1,38 @@
 import React, { useState } from 'react';
-import { Search, Calendar, Download, LayoutList, Table, Eye, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
+import CustomTable from '../components/CustomTable';
+import moment from 'moment';
 
 // Sample data for the products table
 const productData = [
   {
-    productImage: '/path/to/image.jpg',
-    productName: 'Hudi',
-    productDescription: 'This is short description for hudi',
-    skuHsnCode: 'HUDI1230307',
-    noOfVariants: 0,
+    id: 1,
+    product_image: '/path/to/image.jpg',
+    product_name: 'Hudi',
+    product_description: 'This is short description for hudi',
+    sku_hsn_code: 'HUDI1230307',
+    variants_count: 0,
     mrp: 250.00,
-    sellingPrice: 250.00,
+    selling_price: 250.00,
     category: 'Fashion',
-    subCategory: 'Jeans',
+    sub_category: 'Jeans',
     status: 'Active',
-    createdDate: '18-11-2024, 09:50 pm'
+    created_date: '2024-11-18T21:50:00'
   },
   {
-    productImage: '/path/to/image.jpg',
-    productName: 'ddf',
-    productDescription: 'dfdf',
-    skuHsnCode: 'fdfdfd0209',
-    noOfVariants: 0,
+    id: 2,
+    product_image: '/path/to/image.jpg',
+    product_name: 'ddf',
+    product_description: 'dfdf',
+    sku_hsn_code: 'fdfdfd0209',
+    variants_count: 0,
     mrp: 11.00,
-    sellingPrice: 11.00,
+    selling_price: 11.00,
     category: 'Electronics',
-    subCategory: 'Keyboard',
+    sub_category: 'Keyboard',
     status: 'Active',
-    createdDate: '11-10-2024, 01:33 pm'
+    created_date: '2024-10-11T13:33:00'
   },
-  // Add more sample data as needed
 ];
 
 // Tab type definition
@@ -46,82 +49,67 @@ const tabs: Tab[] = [
   { label: 'Draft', count: 45, color: 'text-gray-600' },
 ];
 
-const ProductTable = ({ data }) => (
-  <div className="bg-white rounded-lg shadow overflow-x-auto">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-blue-50">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Product Name
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Product Description
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            SKU Id & HSN Code
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            No of Variants
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            MRP
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Selling Price
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Category Sub-category
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Status
-          </th>
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {data.map((product, index) => (
-          <tr key={index} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-center">
-                <div className="h-10 w-10 flex-shrink-0">
-                  <img className="h-10 w-10 rounded-full" src={product.productImage} alt="" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-sm font-medium text-gray-900">{product.productName}</div>
-                  <div className="text-sm text-gray-500">{product.createdDate}</div>
-                </div>
-              </div>
-            </td>
-            <td className="px-6 py-4 text-sm text-gray-900">{product.productDescription}</td>
-            <td className="px-6 py-4">
-              <div className="flex items-center">
-                <span className="text-sm text-gray-900">{product.skuHsnCode}</span>
-                <Eye className="ml-2 text-gray-400 cursor-pointer" size={16} />
-              </div>
-            </td>
-            <td className="px-6 py-4 text-sm text-gray-900">{product.noOfVariants}</td>
-            <td className="px-6 py-4 text-sm text-gray-900">₹{product.mrp.toFixed(2)}</td>
-            <td className="px-6 py-4 text-sm text-gray-900">₹{product.sellingPrice.toFixed(2)}</td>
-            <td className="px-6 py-4">
-              <div className="text-sm text-gray-900">{product.category}</div>
-              <div className="text-sm text-gray-500">{product.subCategory}</div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                ${product.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                  product.status === 'Inactive' ? 'bg-red-100 text-red-800' : 
-                  'bg-gray-100 text-gray-800'}`}>
-                {product.status}
-              </span>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+// Define table headers
+const headCells = [
+  {
+    id: 'product',
+    key: ['product_name', 'created_date'],
+    label: 'Product Name',
+    type: 'image_text',
+    image_path: 'product_image',
+    join: true,
+    join_type: 'sameline'
+  },
+  {
+    id: 'description',
+    key: 'product_description',
+    label: 'Product Description'
+  },
+  {
+    id: 'sku',
+    key: 'sku_hsn_code',
+    label: 'SKU Id & HSN Code',
+    type: 'component'
+  },
+  {
+    id: 'variants',
+    key: 'variants_count',
+    label: 'No of Variants',
+    type: 'number'
+  },
+  {
+    id: 'mrp',
+    key: 'mrp',
+    label: 'MRP',
+    type: 'amount'
+  },
+  {
+    id: 'selling_price',
+    key: 'selling_price',
+    label: 'Selling Price',
+    type: 'amount'
+  },
+  {
+    id: 'category',
+    key: ['category', 'sub_category'],
+    label: 'Category Sub-category',
+    join: true,
+    join_type: 'sameline_with_text'
+  },
+  {
+    id: 'status',
+    key: 'status',
+    label: 'Status',
+    type: 'status'
+  }
+];
 
-const MasterCatalog = () => {
+const MasterCatalog: React.FC = () => {
   const [activeTab, setActiveTab] = useState('All Products');
+  const [params, setParams] = useState({
+    page_no: 1,
+    per_page: 10
+  });
 
   return (
     <div className="space-y-4">
@@ -188,7 +176,15 @@ const MasterCatalog = () => {
       </div>
 
       {/* Products Table */}
-      <ProductTable data={productData} />
+      <CustomTable
+        headCells={headCells}
+        data={productData}
+        setParams={setParams}
+        meta_data={{
+          total_rows: productData.length,
+          page_no: params.page_no
+        }}
+      />
     </div>
   );
 };

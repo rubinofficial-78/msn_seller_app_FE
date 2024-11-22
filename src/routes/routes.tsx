@@ -21,6 +21,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import MyListings from "../pages/seller/MyListing";
 import MyOrders from "../pages/seller/MyOrders";
 import SellerDashboard from "../pages/seller/SellerDashboard";
+import Onboarding from "../pages/auth/Onboarding";
 
 export const routes: RouteObject[] = [
   {
@@ -114,6 +115,14 @@ export const routes: RouteObject[] = [
       {
         path: "seller-dashboard",
         element: <SellerDashboard/>,
+      },
+      {
+        path: "onboarding",
+        element: (
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

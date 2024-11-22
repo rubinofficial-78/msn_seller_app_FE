@@ -79,6 +79,7 @@ const data: Ticket[] = [
     closedDateTime: '--',
     status: 'OPEN'
   },
+  
   // Add more sample tickets...
 ];
 

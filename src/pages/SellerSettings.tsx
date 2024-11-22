@@ -11,26 +11,26 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const Settings = () => {
+const SellerSettings = () => {
   const navigate = useNavigate();
 
   const handleCardClick = (title: string) => {
     switch (title) {
       case "Account Details":
-        navigate("/dashboard/settings/account-details");
+        navigate("/dashboard/seller-settings/account-details");
         break;
       case "Banking & Business Details":
-        navigate("/dashboard/settings/banking-details");
+        navigate("/dashboard/seller-settings/banking-details");
         break;
       case "Locations & Serviceability":
-        navigate("/dashboard/settings/location-services");
+        navigate("/dashboard/seller-settings/location-services");
         break;
-      // Add other cases for different settings cards as needed
       default:
         break;
     }
   };
 
+  // Use the same settings array as the original Settings component
   const settings = [
     {
       icon: <CreditCard size={24} />,
@@ -86,7 +86,7 @@ const Settings = () => {
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-2xl font-bold">Application Settings</h1>
+        <h1 className="text-2xl font-bold">Seller Settings</h1>
       </div>
 
       {/* Settings Grid */}
@@ -115,4 +115,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default SellerSettings; 

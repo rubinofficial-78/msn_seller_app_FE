@@ -1,44 +1,35 @@
-import React from 'react';
+import React from "react";
 
 interface TailTextareaProps {
-  index?: number;
+  disabled?: boolean;
   fieldKey: string;
   label?: string;
+  value: string;
   description?: string;
-  handleInputonChange?: (key: string, value: string, index?: number) => void;
-  value?: string | null;
-  disabled?: boolean;
+  handleInputonChange?: (key: string, value: any, index?: number) => void;
+  index?: number;
 }
 
 const TailTextarea: React.FC<TailTextareaProps> = ({
-  index,
+  disabled,
   fieldKey,
-  label = "",
-  description = "",
+  value,
   handleInputonChange,
-  value = null,
-  disabled = false
+  index,
+  ...props
 }) => {
   return (
-    <>
-      <textarea
-        id={fieldKey}
-        name={fieldKey}
-        rows={3}
-        placeholder={label}
-        className={`${
-          disabled ? "cursor-not-allowed" : "cursor-text"
-        } block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-        value={value || ''}
-        disabled={disabled}
-        onChange={(e) => handleInputonChange?.(fieldKey, e.target.value, index)}
-      />
-
-      {description && (
-        <p className="mt-2 text-sm leading-6 text-gray-500">{description}</p>
-      )}
-    </>
+    <textarea
+      disabled={disabled}
+      value={value}
+      onChange={(e) => handleInputonChange?.(fieldKey, e.target.value, index)}
+      rows={4}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none
+        ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+      `}
+      {...props}
+    />
   );
 };
 
-export default TailTextarea; 
+export default TailTextarea;

@@ -21,6 +21,13 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import MyListings from "../pages/seller/MyListing";
 import MyOrders from "../pages/seller/MyOrders";
 import SellerDashboard from "../pages/seller/SellerDashboard";
+import AccountDetails from "../pages/settings/AccountDetails";
+import LocationServices from "../pages/settings/LocationServices";
+import BankingDetails from "../pages/settings/BankingDetails";
+import SellerAccountDetails from "../pages/sellerSettings/AccountDetails";
+import SellerLocationServices from "../pages/sellerSettings/LocationServices";
+import SellerBankingDetails from "../pages/sellerSettings/BankingDetails";
+import SellerSettings from "../pages/SellerSettings";
 import Onboarding from "../pages/auth/Onboarding";
 
 export const routes: RouteObject[] = [
@@ -114,7 +121,35 @@ export const routes: RouteObject[] = [
       },
       {
         path: "seller-dashboard",
-        element: <SellerDashboard/>,
+        element: <SellerDashboard />,
+      },
+      {
+        path: "settings/account-details",
+        element: <AccountDetails />,
+      },
+      {
+        path: "settings/location-services",
+        element: <LocationServices />,
+      },
+      {
+        path: "settings/banking-details",
+        element: <BankingDetails />,
+      },
+      {
+        path: "seller-settings/account-details",
+        element: <SellerAccountDetails />,
+      },
+      {
+        path: "seller-settings/location-services",
+        element: <SellerLocationServices />,
+      },
+      {
+        path: "seller-settings/banking-details",
+        element: <SellerBankingDetails />,
+      },
+      {
+        path: "seller-settings",
+        element: <SellerSettings />,
       },
       {
         path: "onboarding",

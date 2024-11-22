@@ -1,6 +1,8 @@
 import { RouteObject } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import Login from '../pages/auth/Login';
 import VerifyOTP from '../pages/auth/VerifyOTP';
+import Dashboard from '../pages/Dashboard';
 import Orders from '../pages/Orders';
 import Partners from '../pages/Partners';
 import Payouts from '../pages/Payouts';
@@ -13,6 +15,10 @@ import DashboardLayout from '../components/layouts/DashboardLayout';
 export const routes: RouteObject[] = [
   {
     path: '/',
+    element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: '/login',
     element: <Login />,
   },
   {
@@ -25,6 +31,10 @@ export const routes: RouteObject[] = [
     children: [
       {
         index: true,
+        element: <Dashboard />,
+      },
+      {
+        path: 'orders',
         element: <Orders />,
       },
       {

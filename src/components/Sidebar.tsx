@@ -119,29 +119,7 @@ const Sidebar = () => {
             </ul>
           </nav>
 
-          {/* Logout Button */}
-          <div className="p-4 border-t">
-            <button
-              onClick={handleLogout}
-              className={`
-                flex items-center gap-3 px-4 py-2 w-full text-gray-600 hover:bg-gray-50 rounded-lg transition-colors
-                ${!isOpen && 'justify-center'}
-              `}
-              title={!isOpen ? 'Logout' : ''}
-            >
-              <div className={`${!isOpen && 'transform scale-110'}`}>
-                <LogOut size={20} />
-              </div>
-              <span 
-                className={`
-                  transition-all duration-300
-                  ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}
-                `}
-              >
-                Logout
-              </span>
-            </button>
-          </div>
+         
         </div>
       </div>
 

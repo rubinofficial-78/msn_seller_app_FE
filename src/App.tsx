@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useRoutes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
-import { routes } from './routes';
+import { routes } from './routes/routes';
 
 const AppRoutes = () => {
   return useRoutes(routes);

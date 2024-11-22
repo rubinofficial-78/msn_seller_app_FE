@@ -48,6 +48,7 @@ const Sidebar = () => {
       <div 
         className={`
           fixed top-0 left-0 h-full bg-white shadow-lg transition-all duration-300 ease-in-out
+          border-r border-primary-100
           ${isOpen ? 'w-64' : 'w-20'}
         `}
       >
@@ -95,8 +96,8 @@ const Sidebar = () => {
                       `flex items-center gap-3 px-4 py-2 rounded-lg transition-colors
                       ${!isOpen && 'justify-center'}
                       ${isActive
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-secondary-500 hover:bg-primary-50 hover:text-primary-600'
                       }`
                     }
                     title={!isOpen ? item.label : ''}

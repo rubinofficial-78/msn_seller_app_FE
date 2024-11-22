@@ -16,6 +16,7 @@ import MasterCatalog from '../pages/MasterCatalog';
 import Companies from '../pages/Companies';
 import Branches from '../pages/Branches';
 import Logistics from '../pages/Logistics';
+import Notifications from '../pages/Notifications';
 
 export const routes: RouteObject[] = [
   {
@@ -85,6 +86,10 @@ export const routes: RouteObject[] = [
       {
         path: 'settings',
         element: <Settings />,
+      },
+      {
+        path: 'notifications',
+        element: <Notifications />,
       }
     ]
   }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import adyaLogo from '../../assests/adya.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,43 +21,42 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <h2 className="text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="max-w-md w-full space-y-8 p-8">
+        <div className="flex flex-col items-center">
+          <img src={adyaLogo} alt="Adya Logo" className="w-20 h-20" />
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome</h2>
+          <p className="mt-2 text-sm text-gray-600 text-center">
+            Please provide your email or mobile number to sign up or log in.
+          </p>
+        </div>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
             {error}
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="sr-only">
-              Email address
-            </label>
+        <form onSubmit={handleSubmit}>
+          <div className="mt-4">
             <input
               id="email"
               name="email"
               type="email"
               required
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
+              className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter Email ID or Phone Number"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Sign in
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="mt-6 w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Continue
+          </button>
         </form>
       </div>
     </div>

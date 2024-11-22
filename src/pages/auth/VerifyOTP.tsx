@@ -1,117 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
-function VerifyOTP() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(30);
+const VerifyOTP = () => {
+  const [otp, setOtp] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleChange = (index: number, value: string) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-
-      // Auto-focus next input
-      if (value && index < 5) {
-        const nextInput = document.getElementById(`otp-${index + 1}`);
-        nextInput?.focus();
-      }
+    const pendingEmail = sessionStorage.getItem('pendingLoginEmail');
+    if (!pendingEmail) {
+      navigate('/login');
     }
-  };
+  }, [navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would validate OTP here
-    navigate('/dashboard');
-  };
-
-  const handleResend = () => {
-    setTimer(30);
-    // In a real app, you would make an API call to resend OTP
-  };
-
-  const handleVerifyOTP = async () => {
-    try {
-      // Your OTP verification logic here
-      
-      // After successful verification
-      navigate('/dashboard');
-    } catch (error) {
-      // Handle error
+    
+    if (otp === '123456') { // Demo OTP
+      const email = sessionStorage.getItem('pendingLoginEmail');
+      if (email) {
+        login(email);
+        sessionStorage.removeItem('pendingLoginEmail');
+        navigate('/dashboard');
+      }
+    } else {
+      setError('Invalid OTP');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Lock className="h-12 w-12 text-blue-600" />
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
+        <h2 className="text-center text-3xl font-extrabold text-gray-900">
           Verify OTP
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Enter the OTP sent to your email/mobile
-        </p>
-      </div>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <div className="flex justify-between space-x-2">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`otp-${index}`}
-                    type="text"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleChange(index, e.target.value)}
-                    className="w-12 h-12 text-center border-2 border-gray-300 rounded-md text-lg focus:border-blue-500 focus:ring-blue-500"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Verify OTP
-              </button>
-            </div>
-
-            <div className="text-center">
-              {timer > 0 ? (
-                <p className="text-sm text-gray-600">
-                  Resend OTP in {timer} seconds
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  className="text-sm text-blue-600 hover:text-blue-500"
-                >
-                  Resend OTP
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <input
+            type="text"
+            maxLength={6}
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+          />
+          <button
+            type="submit"
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Verify
+          </button>
+        </form>
       </div>
     </div>
   );
-}
+};
 
 export default VerifyOTP;

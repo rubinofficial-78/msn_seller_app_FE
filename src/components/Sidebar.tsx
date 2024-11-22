@@ -18,7 +18,9 @@ import {
   Truck
 } from 'lucide-react';
 import adya from '../assests/adya.png'
-const navItems = [
+import { useAuth } from '../contexts/AuthContext';
+
+const sellerAdminNavItems = [
   { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard' },
   { icon: <BookOpen size={20} />, label: 'Master Catalog', path: '/dashboard/master-catalog' },
   { icon: <Building2 size={20} />, label: 'Companies', path: '/dashboard/companies' },
@@ -33,9 +35,20 @@ const navItems = [
   { icon: <Truck size={20} />, label: 'Logistics', path: '/dashboard/logistics' },
 ];
 
+const sellerNavItems = [
+  { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard' },
+  { icon: <Package size={20} />, label: 'My Listings', path: '/dashboard/my-listings' },
+  { icon: <ShoppingCart size={20} />, label: 'My Orders', path: '/dashboard/my-orders' },
+  { icon: <HeadphonesIcon size={20} />, label: 'Support', path: '/dashboard/support' },
+  { icon: <Truck size={20} />, label: 'Logistics', path: '/dashboard/logistics' },
+];
+
 const Sidebar = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(true);
+
+  const navItems = user?.role === 'SELLER_ADMIN' ? sellerAdminNavItems : sellerNavItems;
 
   const handleLogout = () => {
     // Add your logout logic here

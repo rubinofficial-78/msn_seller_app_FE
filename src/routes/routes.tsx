@@ -17,6 +17,7 @@ import Companies from '../pages/Companies';
 import Branches from '../pages/Branches';
 import Logistics from '../pages/Logistics';
 import Notifications from '../pages/Notifications';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 export const routes: RouteObject[] = [
   {
@@ -33,7 +34,11 @@ export const routes: RouteObject[] = [
   },
   {
     path: '/dashboard',
-    element: <DashboardLayout />,
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -41,7 +46,11 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'master-catalog',
-        element: <MasterCatalog />,
+        element: (
+          <ProtectedRoute allowedRoles={['SELLER_ADMIN']}>
+            <MasterCatalog />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'companies',

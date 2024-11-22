@@ -1,21 +1,12 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useRoutes } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import { routes } from './routes/routes';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-const AppRoutes = () => {
-  return useRoutes(routes);
-};
-
-function App() {
+export default function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </Provider>
+    <AuthProvider>
+      <RouterProvider router={createBrowserRouter(routes)} />
+    </AuthProvider>
   );
 }
-
-export default App;

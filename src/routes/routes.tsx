@@ -11,6 +11,11 @@ import Reports from '../pages/Reports';
 import Sellers from '../pages/Sellers';
 import Support from '../pages/Support';
 import DashboardLayout from '../components/layouts/DashboardLayout';
+import Settings from '../pages/Settings';
+import MasterCatalog from '../pages/MasterCatalog';
+import Companies from '../pages/Companies';
+import Branches from '../pages/Branches';
+import Logistics from '../pages/Logistics';
 
 export const routes: RouteObject[] = [
   {
@@ -32,6 +37,18 @@ export const routes: RouteObject[] = [
       {
         index: true,
         element: <Dashboard />,
+      },
+      {
+        path: 'master-catalog',
+        element: <MasterCatalog />,
+      },
+      {
+        path: 'companies',
+        element: <Companies />,
+      },
+      {
+        path: 'branches',
+        element: <Branches />,
       },
       {
         path: 'orders',
@@ -60,6 +77,14 @@ export const routes: RouteObject[] = [
       {
         path: 'support',
         element: <Support />,
+      },
+      {
+        path: 'logistics',
+        element: <Logistics />,
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
       }
     ]
   }

@@ -39,6 +39,17 @@ function VerifyOTP() {
     // In a real app, you would make an API call to resend OTP
   };
 
+  const handleVerifyOTP = async () => {
+    try {
+      // Your OTP verification logic here
+      
+      // After successful verification
+      navigate('/dashboard');
+    } catch (error) {
+      // Handle error
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">

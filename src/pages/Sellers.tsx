@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DataTable from '../components/DataTable';
 import { ListIcon, GridIcon } from '../components/Icons';
+import { useNavigate } from 'react-router-dom';
+import { List, LayoutGrid, Eye, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import '../styles/table.css';
+import CustomTable from '../components/CustomTable';
 
 interface Seller {
   sellerName: string;
@@ -72,154 +76,163 @@ const sampleData: Seller[] = [
 ];
 
 function Sellers() {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState('');
-  const [selectedPartner, setSelectedPartner] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [viewType, setViewType] = useState<'list' | 'grid'>('list');
+  const [activeTab, setActiveTab] = useState('all');
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(true);
+  const tableRef = useRef<HTMLDivElement>(null);
 
-  // Use the sample data for now
-  const data = sampleData;
+  // Add scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      if (tableRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = tableRef.current;
+        setShowLeftScroll(scrollLeft > 0);
+        setShowRightScroll(scrollLeft < scrollWidth - clientWidth);
+      }
+    };
 
-  if (error) {
-    return <div className="p-4 text-red-600">Error: {error}</div>;
-  }
+    const currentRef = tableRef.current;
+    currentRef?.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
 
-  if (!data) {
-    return <div className="p-4">Loading...</div>;
-  }
+    return () => currentRef?.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  // Calculate counts
-  const totalSellers = data.length;
-  const pendingSellers = data.filter(seller => seller.status === 'PENDING').length;
-  const approvedSellers = data.filter(seller => seller.status === 'APPROVED').length;
-  const rejectedSellers = data.filter(seller => seller.status === 'REJECTED').length;
+  const tabs = [
+    { id: 'all', label: 'All Sellers' },
+    { id: 'active', label: 'Active Sellers' },
+    { id: 'inactive', label: 'Inactive Sellers' }
+  ];
+
+  // Mock data - replace with API call
+  const sellersData = [
+    {
+      id: 1,
+      sellerName: 'Test Seller',
+      storeName: 'Test Store',
+      contactInformation: {
+        email: 'seller@test.com',
+        phone: '9876543210'
+      },
+      address: '45, MG Road, Koramangala, Bengaluru - Karnataka 560001',
+      gstNo: '29GGGGG1314R9Z7',
+      productCounts: 150,
+      ondcLiveDate: '23-09-2024, 04:30 pm',
+      sellerOnboardingDate: '23-09-2024, 04:30 pm',
+      sellerActivationDate: '24-09-2024, 01:33 pm',
+      sellerApprovalDate: '24-09-2024, 01:33 pm',
+      catalogStatus: 'APPROVED',
+      companyStatus: 'ACTIVE',
+      storeStatus: 'APPROVED',
+      partnerName: 'Test Partner',
+      branchName: 'Test Branch',
+      companyName: 'Test Company'
+    }
+  ];
+
+  const columns = [
+    { id: 'sellerName', key: 'sellerName', label: 'Seller Name', minWidth: 150 },
+    { id: 'storeName', key: 'storeName', label: 'Store Name', minWidth: 150 },
+    { 
+      id: 'contactInfo', 
+      key: ['contactInformation.email', 'contactInformation.phone'], 
+      label: 'Contact Information',
+      join: true,
+      minWidth: 200 
+    },
+    { id: 'address', key: 'address', label: 'Address', minWidth: 250 },
+    { id: 'gstNo', key: 'gstNo', label: 'GST No', minWidth: 150 },
+    { id: 'productCount', key: 'productCounts', label: 'Product Counts', minWidth: 130 },
+    { id: 'ondcLiveDate', key: 'ondcLiveDate', label: 'ONDC Live Date', minWidth: 180 },
+    { id: 'onboardingDate', key: 'sellerOnboardingDate', label: 'Seller Onboarding Date', minWidth: 180 },
+    { id: 'activationDate', key: 'sellerActivationDate', label: 'Seller Activation Date', minWidth: 180 },
+    { id: 'approvalDate', key: 'sellerApprovalDate', label: 'Seller Approval Date', minWidth: 180 },
+    { id: 'catalogStatus', key: 'catalogStatus', label: 'Catalog Status', type: 'status', minWidth: 130 },
+    { id: 'companyStatus', key: 'companyStatus', label: 'Company Status', type: 'status', minWidth: 130 },
+    { id: 'storeStatus', key: 'storeStatus', label: 'Store Status (ONDC)', type: 'status', minWidth: 150 },
+    { id: 'partnerName', key: 'partnerName', label: 'Partner Name', minWidth: 150 },
+    { id: 'branchName', key: 'branchName', label: 'Branch Name', minWidth: 150 },
+    { id: 'companyName', key: 'companyName', label: 'Company Name', minWidth: 150 }
+  ];
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Stats Section - Fixed */}
-      <div className="p-4 bg-white border-b">
-        <div className="flex justify-end space-x-4 text-sm">
-          <span>Total Sellers {totalSellers}</span>
-          <span className="text-yellow-600">Pending {pendingSellers}</span>
-          <span className="text-green-600">Approved {approvedSellers}</span>
-          <span className="text-red-600">Rejected {rejectedSellers}</span>
-        </div>
-      </div>
-
-      {/* Filter Tabs - Fixed */}
-      <div className="bg-white border-b">
-        <nav className="flex space-x-8 px-4">
-          <a className="border-b-2 border-blue-500 px-1 pb-4 text-sm font-medium text-blue-600">
-            All Sellers
-          </a>
-          {['Approved', 'Pending', 'Rejected'].map((tab) => (
-            <a key={tab} className="px-1 pb-4 text-sm font-medium text-gray-500 hover:text-gray-700 cursor-pointer">
-              {tab} Sellers
-            </a>
+    <div className="flex flex-col h-full">
+      {/* Header with Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`border-b-2 py-4 px-1 text-sm font-medium ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab.label}
+            </button>
           ))}
         </nav>
       </div>
 
-      {/* Controls Section - Fixed */}
-      <div className="p-4 bg-white border-b">
-        <div className="flex flex-wrap gap-4 items-center">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            Add Seller
-          </button>
-
+      {/* Search and Actions Bar */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="relative">
           <input
             type="text"
-            placeholder="Search by seller name"
-            className="px-4 py-2 border rounded-md"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by Seller Name"
+            className="pl-10 pr-4 py-2 border rounded-lg w-64"
           />
-
-          <select 
-            className="px-4 py-2 border rounded-md"
-            value={selectedCompany}
-            onChange={(e) => setSelectedCompany(e.target.value)}
-          >
-            <option value="">Select Company</option>
-            {/* Add company options */}
-          </select>
-
-          <select 
-            className="px-4 py-2 border rounded-md"
-            value={selectedPartner}
-            onChange={(e) => setSelectedPartner(e.target.value)}
-          >
-            <option value="">Select Partner</option>
-            {/* Add partner options */}
-          </select>
-
-          <select 
-            className="px-4 py-2 border rounded-md"
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
-          >
-            <option value="">Select Branch</option>
-            {/* Add branch options */}
-          </select>
-
-          <div className="flex gap-2 ml-auto">
-            <button 
-              onClick={() => setViewMode('list')}
-              className={`p-2 ${viewMode === 'list' ? 'text-blue-600' : 'text-gray-600'}`}
-            >
-              <ListIcon />
-            </button>
-            <button 
-              onClick={() => setViewMode('grid')}
-              className={`p-2 ${viewMode === 'grid' ? 'text-blue-600' : 'text-gray-600'}`}
-            >
-              <GridIcon />
-            </button>
-          </div>
         </div>
 
-      </div>
-
-      {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-auto p-4">
-        {viewMode === 'list' ? (
-          <DataTable columns={columns} data={data} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Grid view cards */}
-          </div>
-        )}
-
-        {/* Pagination */}
-        <div className="mt-4 bg-white p-4 border-t">
-          <div className="flex justify-between items-center">
-            <div>
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalSellers)} of {totalSellers} entries
-            </div>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="px-3 py-1 border rounded-md"
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <button 
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className="px-3 py-1 border rounded-md"
-                disabled={currentPage * itemsPerPage >= totalSellers}
-              >
-                Next
-              </button>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewType('list')}
+            className={`p-2 rounded ${viewType === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}
+          >
+            <List size={20} />
+          </button>
+          <button
+            onClick={() => setViewType('grid')}
+            className={`p-2 rounded ${viewType === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}
+          >
+            <LayoutGrid size={20} />
+          </button>
+          <button
+            onClick={() => navigate('/dashboard/sellers/add')}
+            className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            + ADD
+          </button>
         </div>
       </div>
+
+      {/* Table Container */}
+      {viewType === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 overflow-y-auto">
+          {sellersData.map((seller, index) => (
+            <div key={index} className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-medium">{seller.sellerName}</h3>
+              <p className="text-sm text-gray-600">{seller.storeName}</p>
+              <div className="mt-2 text-sm">
+                <p>{seller.contactInformation.email}</p>
+                <p>{seller.contactInformation.phone}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex-1 mt-4 table-wrapper">
+          <CustomTable 
+            headCells={columns}
+            data={sellersData}
+            pagination={true}
+          />
+        </div>
+      )}
     </div>
   );
 }

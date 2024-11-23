@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import moment from "moment";
 import { Image } from "@chakra-ui/image"; 
 import Pagination from "./Pagination";
- 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Helper function to get image source
 const getImageSrc = (path: string) => {
@@ -54,42 +54,32 @@ const CustomTable: React.FC<CustomTableProps> = ({
   data = [],
   meta_data,
   setParams,
-  changePriceRow,
   pagination = true,
-  handleInputonChange,
-  dataFlex,
-  increment,
-  decrement,
 }) => {
   return (
-    <div>
-      <div
-        className={`overflow-auto shadow min-w-full align-middle ${
-          dataFlex ? "flex" : ""
-        } overflowX-flow`}
-      >
-        <table className="min-w-full divide-y divide-gray-200">
-          {/* Table Header */}
-          <thead className="bg-gray-50">
+    <div className="table-wrapper">
+      <div className="table-container">
+        <table className="custom-table">
+          <thead>
             <tr>
               {headCells.map((cell) => (
                 <th
                   key={cell.id}
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ minWidth: cell.minWidth || 150 }}
                 >
                   {cell.label}
                 </th>
               ))}
             </tr>
           </thead>
-
-          {/* Table Body */}
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {data.map((row, index) => (
               <tr key={index}>
                 {headCells.map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    key={cell.id}
+                    style={{ minWidth: cell.minWidth || 150 }}
+                  >
                     {cell.type === "image_text" ? (
                       <div className="flex items-center">
                         {cell.image_path && (
@@ -128,13 +118,15 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       </span>
                     ) : cell.join ? (
                       <div className="text-sm text-gray-900">
-                        {Array.isArray(cell.key)
-                          ? `${row[cell.key[0]]} / ${row[cell.key[1]]}`
-                          : row[cell.key]}
+                        {Array.isArray(cell.key) 
+                          ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
+                          : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
                       </div>
                     ) : (
                       <div className="text-sm text-gray-900">
-                        {row[cell.key as string]}
+                        {Array.isArray(cell.key) 
+                          ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
+                          : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
                       </div>
                     )}
                   </td>
@@ -146,7 +138,9 @@ const CustomTable: React.FC<CustomTableProps> = ({
       </div>
 
       {pagination && (
-        <Pagination data={data} setParams={setParams} meta_data={meta_data} />
+        <div className="pagination-wrapper">
+          <Pagination data={data} setParams={setParams} meta_data={meta_data} />
+        </div>
       )}
     </div>
   );

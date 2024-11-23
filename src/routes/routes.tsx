@@ -29,6 +29,17 @@ import SellerLocationServices from "../pages/sellerSettings/LocationServices";
 import SellerBankingDetails from "../pages/sellerSettings/BankingDetails";
 import SellerSettings from "../pages/SellerSettings";
 import Onboarding from "../pages/auth/Onboarding";
+import CreateCompany from '../components/CreateCompany';
+import CreateBranch from '../components/CreateBranch';
+import ViewBranch from '../pages/ViewBranch';
+import EditBranch from '../pages/EditBranch';
+import ViewCompany from '../pages/ViewCompany';
+import EditCompany from '../pages/EditCompany';
+import CreatePartner from '../components/CreatePartner';
+import AddSeller from '../components/AddSeller';
+import SellerOnboarding from '../components/SellerOnboarding';
+// import ViewPartner from '../components/ViewPartner';
+// import EditPartner from '../components/EditPartner';
 
 export const routes: RouteObject[] = [
   {
@@ -42,6 +53,10 @@ export const routes: RouteObject[] = [
   {
     path: "/verify-otp",
     element: <VerifyOTP />,
+  },
+  {
+    path: "/sellers/onboarding",
+    element: <SellerOnboarding />
   },
   {
     path: "/dashboard",
@@ -65,11 +80,45 @@ export const routes: RouteObject[] = [
       },
       {
         path: "companies",
-        element: <Companies />,
+        children: [
+          {
+            index: true,
+            element: <Companies />
+          },
+          {
+            path: "create",
+            element: <CreateCompany />
+          },
+          {
+            path: "view/:id",
+            element: <ViewCompany />
+          },
+          {
+            path: "edit/:id",
+            element: <EditCompany />
+          }
+        ]
       },
       {
         path: "branches",
-        element: <Branches />,
+        children: [
+          {
+            index: true,
+            element: <Branches />
+          },
+          {
+            path: "create",
+            element: <CreateBranch />
+          },
+          {
+            path: "view/:id",
+            element: <ViewBranch />
+          },
+          {
+            path: "edit/:id",
+            element: <EditBranch />
+          }
+        ]
       },
       {
         path: "orders",
@@ -77,7 +126,24 @@ export const routes: RouteObject[] = [
       },
       {
         path: "partners",
-        element: <Partners />,
+        children: [
+          {
+            index: true,
+            element: <Partners />
+          },
+          {
+            path: "create",
+            element: <CreatePartner />
+          },
+          // {
+          //   path: "view/:id",
+          //   element: <ViewPartner />
+          // },
+          // {
+          //   path: "edit/:id",
+          //   element: <EditPartner />
+          // }
+        ]
       },
       {
         path: "payouts",
@@ -93,7 +159,20 @@ export const routes: RouteObject[] = [
       },
       {
         path: "sellers",
-        element: <Sellers />,
+        children: [
+          {
+            index: true,
+            element: <Sellers />
+          },
+          {
+            path: "add",
+            element: <AddSeller />
+          },
+          {
+            path: "onboarding",
+            element: <SellerOnboarding />
+          }
+        ]
       },
       {
         path: "support",

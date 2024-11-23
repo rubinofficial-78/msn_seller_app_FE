@@ -1,569 +1,229 @@
-import React, { useState } from "react";
-import {
-  Search,
-  Plus,
-  ExternalLink,
-  LayoutList,
-  LayoutGrid,
-  Table,
-  Eye,
-  Mail,
-  Phone,
-} from "lucide-react";
-import { companyData } from "./Companies"; // Import company data for dropdown
-import { Dialog } from "@headlessui/react"; // Add this import
-import AddForm from '../components/AddForm';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Eye, Edit, LayoutGrid, List } from 'lucide-react';
 
-// Sample data for branches
-const branchData = [
-  {
-    branchName: "New Test Branch",
-    companyName: "New Test Company",
-    createdDate: "18-10-2024",
-    contactInformation: {
-      email: "new_branch@tmail.in",
-      phone: "9459592835",
-    },
-    address: "3-44/3, gandhi nagar Chintal",
-    partnerCount: 1,
-    status: "Active",
-  },
-  {
-    branchName: "Test role branch",
-    companyName: "Role company",
-    createdDate: "16-10-2024",
-    contactInformation: {
-      email: "role_branch@tmail.in",
-      phone: "9871476540",
-    },
-    address: "hyderabad",
-    partnerCount: 1,
-    status: "Active",
-  },
-  // Add more sample data as needed
-];
-
-// Tab type definition
-interface Tab {
-  label: string;
-}
-
-const tabs: Tab[] = [
-  { label: "All Branches" },
-  { label: "Active Branches" },
-  { label: "Inactive Branches" },
-];
-
-interface BranchTableProps {
-  data: typeof branchData;
-}
-
-const BranchTable: React.FC<BranchTableProps> = ({ data }) => (
-  <div className="h-[calc(100vh-280px)] flex flex-col bg-white rounded-lg shadow">
-    {/* Table Header - Fixed */}
-    <div className="bg-blue-50">
-      <table className="min-w-full">
-        <thead>
-          <tr>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Branch name
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Company Name
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Created Date
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Contact Information
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Address
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Partner Count
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Action
-            </th>
-          </tr>
-        </thead>
-      </table>
-    </div>
-
-    {/* Table Body - Scrollable */}
-    <div className="flex-1 overflow-auto">
-      <table className="min-w-full">
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((branch, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {branch.branchName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {branch.companyName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {branch.createdDate}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <div>
-                  <div className="text-gray-900">
-                    Email: {branch.contactInformation.email}
-                  </div>
-                  <div className="text-gray-900">
-                    Phone: {branch.contactInformation.phone}
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {branch.address}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                <a href="#" className="flex items-center gap-1">
-                  {branch.partnerCount}
-                  <ExternalLink size={14} />
-                </a>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                  ${
-                    branch.status === "Active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {branch.status}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <button
-                    title="View"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    title="Edit"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <ExternalLink size={16} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
-
-const BranchGrid: React.FC<BranchTableProps> = ({ data }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {data.map((branch, index) => (
-      <div
-        key={index}
-        className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow"
-      >
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              {branch.branchName}
-            </p>
-            <p className="text-xs text-gray-500">{branch.createdDate}</p>
-          </div>
-          <span
-            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-            ${
-              branch.status === "Active"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {branch.status}
-          </span>
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs text-gray-500">Company</p>
-            <p className="text-sm text-gray-900">{branch.companyName}</p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">Contact Information</p>
-            <div className="flex items-center gap-2 text-sm text-gray-900">
-              <Mail size={14} className="text-gray-500" />
-              <p>{branch.contactInformation.email}</p>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-900">
-              <Phone size={14} className="text-gray-500" />
-              <p>{branch.contactInformation.phone}</p>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">Address</p>
-            <p className="text-sm text-gray-900">{branch.address}</p>
-          </div>
-
-          <div className="pt-3 border-t border-gray-100">
-            <div>
-              <p className="text-xs text-gray-500">Partners</p>
-              <a
-                href="#"
-                className="text-sm text-blue-600 flex items-center gap-1"
-              >
-                {branch.partnerCount}
-                <ExternalLink size={14} />
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const BranchList: React.FC<BranchTableProps> = ({ data }) => (
-  <div className="space-y-3">
-    {data.map((branch, index) => (
-      <div
-        key={index}
-        className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow"
-      >
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <p className="text-sm font-medium text-gray-900">
-                {branch.branchName}
-              </p>
-              <span
-                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                ${
-                  branch.status === "Active"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {branch.status}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500">{branch.createdDate}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button title="View" className="text-blue-600 hover:text-blue-800">
-              <Eye size={16} />
-            </button>
-            <button title="Edit" className="text-blue-600 hover:text-blue-800">
-              <ExternalLink size={16} />
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <p className="text-xs text-gray-500">Company</p>
-            <p className="text-sm text-gray-900">{branch.companyName}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Contact Information</p>
-            <div className="text-sm text-gray-900">
-              <div className="flex items-center gap-2">
-                <Mail size={14} className="text-gray-500" />
-                <p>{branch.contactInformation.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone size={14} className="text-gray-500" />
-                <p>{branch.contactInformation.phone}</p>
-              </div>
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Address</p>
-            <p className="text-sm text-gray-900">{branch.address}</p>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-// First, define the interface
-interface BranchFormData {
-  companyName: string;
+interface Branch {
   branchName: string;
-  mobileNumber: string;
-  email: string;
+  companyName: string;
+  createdDate: string;
+  contactInformation: {
+    email: string;
+    phone: string;
+  };
   address: string;
-  state: string;
-  city: string;
-  pincode: string;
+  partnerCount: number;
+  status: 'Active' | 'Inactive';
+  id: string; // Added id property to the Branch interface
 }
 
-const Branches = () => {
-  const [activeTab, setActiveTab] = useState("All Branches");
-  const [viewMode, setViewMode] = useState<"table" | "list" | "grid">("table");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<BranchFormData>({
-    companyName: "",
-    branchName: "",
-    mobileNumber: "",
-    email: "",
-    address: "",
-    state: "",
-    city: "",
-    pincode: "",
-  });
+const Branches: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('All Branches');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-  // Then define branchFormFields using formData
-  const branchFormFields = [
+  // Mock data - replace with actual API call
+  const branches: Branch[] = [
     {
-      type: 'select',
-      key: 'companyName',
-      label: 'Company Name',
-      required: true,
-      options: companyData.map((company, index) => ({
-        id: index,
-        label: company.companyName,
-        value: company.companyName
-      })),
-      value: formData.companyName
-    },
-    {
-      type: 'text',
-      key: 'branchName',
-      label: 'Branch Name',
-      required: true,
-      placeholder: 'Enter branch name',
-      value: formData.branchName
-    },
-    {
-      type: 'text',
-      key: 'mobileNumber',
-      label: 'Mobile Number',
-      required: true,
-      placeholder: 'Enter mobile number',
-      value: formData.mobileNumber
-    },
-    {
-      type: 'email',
-      key: 'email',
-      label: 'Email',
-      required: true,
-      placeholder: 'Enter email address'
-    },
-    {
-      type: 'textarea',
-      key: 'address',
-      label: 'Address',
-      required: true,
-      placeholder: 'Enter complete address'
-    },
-    {
-      type: 'text',
-      key: 'state',
-      label: 'State',
-      required: true,
-      placeholder: 'Enter state'
-    },
-    {
-      type: 'text',
-      key: 'city',
-      label: 'City',
-      required: true,
-      placeholder: 'Enter city'
-    },
-    {
-      type: 'text',
-      key: 'pincode',
-      label: 'Pincode',
-      required: true,
-      placeholder: 'Enter pincode'
+      branchName: 'New Test Branch',
+      companyName: 'New Test Company',
+      createdDate: '18-10-2024',
+      contactInformation: {
+        email: 'new_company@test.com',
+        phone: '9896863423'
+      },
+      address: '3-44/3, gandhi nagar Chintal',
+      partnerCount: 1,
+      status: 'Active',
+      id: '1', // Added id to the branch object
     }
   ];
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Submitting form data:', formData);
-    setIsModalOpen(false);
-  };
-
-  const renderBranches = () => {
-    switch (viewMode) {
-      case "grid":
-        return <BranchGrid data={branchData} />;
-      case "list":
-        return <BranchList data={branchData} />;
-      default:
-        return <BranchTable data={branchData} />;
-    }
-  };
-
-  const handleInputonChange = (key: string, value: string, index?: number) => {
-    setFormData(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const handleSelectonChange = (key: string, value: any, index?: number) => {
-    setFormData(prev => ({
-      ...prev,
-      [key]: value.value
-    }));
+  const handleStatusToggle = (index: number) => {
+    // Here you would typically make an API call to update the status
+    const updatedBranches = [...branches];
+    updatedBranches[index].status = updatedBranches[index].status === 'Active' ? 'Inactive' : 'Active';
+    // setBranches(updatedBranches); // Uncomment when you have state management
   };
 
   return (
-    <div className="space-y-4">
+    <div className="p-6">
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex flex-wrap gap-4">
-          {tabs.map((tab) => (
+      <div className="border-b">
+        <div className="flex space-x-8">
+          {['All Branches', 'Active Branches', 'Inactive Branches'].map((tab) => (
             <button
-              key={tab.label}
-              onClick={() => setActiveTab(tab.label)}
-              className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                ${
-                  activeTab === tab.label
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }
-              `}
+              key={tab}
+              className={`pb-4 ${
+                activeTab === tab
+                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  : 'text-gray-500'
+              }`}
+              onClick={() => setActiveTab(tab)}
             >
-              {tab.label}
+              {tab}
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Search and Actions */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex flex-wrap gap-4 flex-1">
-          {/* Search */}
-          <div className="relative flex-1 max-w-xs">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Search Partner Name"
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Company Select */}
-          <select className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
-            <option value="">Select Company</option>
-            {companyData.map((company, index) => (
-              <option key={index} value={company.companyName}>
-                {company.companyName}
-              </option>
-            ))}
-          </select>
+      <div className="flex items-center justify-between my-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search by Branch Name"
+            className="pl-10 pr-4 py-2 border rounded-lg w-[300px]"
+          />
+          <span className="absolute left-3 top-2.5 text-gray-400">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </span>
         </div>
-
-        {/* View Controls and Add Button */}
         <div className="flex items-center gap-2">
+          <div className="flex border rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-500'}`}
+            >
+              <List size={20} />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-500'}`}
+            >
+              <LayoutGrid size={20} />
+            </button>
+          </div>
           <button
-            onClick={() => setViewMode("list")}
-            className={`p-2 rounded ${
-              viewMode === "list"
-                ? "bg-blue-100 text-blue-600"
-                : "text-gray-600"
-            }`}
-            title="List view"
-          >
-            <LayoutList size={20} />
-          </button>
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`p-2 rounded ${
-              viewMode === "grid"
-                ? "bg-blue-100 text-blue-600"
-                : "text-gray-600"
-            }`}
-            title="Grid view"
-          >
-            <LayoutGrid size={20} />
-          </button>
-          <button
-            onClick={() => setViewMode("table")}
-            className={`p-2 rounded ${
-              viewMode === "table"
-                ? "bg-blue-100 text-blue-600"
-                : "text-gray-600"
-            }`}
-            title="Table view"
-          >
-            <Table size={20} />
-          </button>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            onClick={() => navigate('create')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
           >
             <Plus size={20} />
-            <span>ADD</span>
+            ADD
           </button>
         </div>
       </div>
 
-      {/* Render Branches based on view mode */}
-      {renderBranches()}
-
-      {/* Add this modal component before the final closing div */}
-      <Dialog
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-lg font-semibold mb-4">Add New Branch</h2>
-
-            <AddForm
-              data={branchFormFields}
-              handleInputonChange={handleInputonChange}
-              handleSelectonChange={handleSelectonChange}
-            />
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </Dialog.Panel>
+      {viewMode === 'list' ? (
+        <div className="bg-white rounded-lg mt-4">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-[#F8FAFC] border-b">
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">BRANCH NAME</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">COMPANY NAME</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">CREATED DATE</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">CONTACT INFORMATION</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">ADDRESS</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">PARTNER COUNT</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">STATUS</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">ACTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              {branches.map((branch, index) => (
+                <tr key={branch.id} className="border-b"> {/* Changed key from index to branch.id */}
+                  <td className="px-6 py-4">{branch.branchName}</td>
+                  <td className="px-6 py-4">{branch.companyName}</td>
+                  <td className="px-6 py-4">{branch.createdDate}</td>
+                  <td className="px-6 py-4">
+                    <div>Email: {branch.contactInformation.email}</div>
+                    <div>Phone: {branch.contactInformation.phone}</div>
+                  </td>
+                  <td className="px-6 py-4">{branch.address}</td>
+                  <td className="px-6 py-4">
+                    <span className="text-blue-600 cursor-pointer">{branch.partnerCount}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={branch.status === 'Active'}
+                          onChange={() => handleStatusToggle(index)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        branch.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {branch.status}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      <Eye 
+                        className="w-5 h-5 text-blue-600 cursor-pointer" 
+                        onClick={() => navigate(`view/${branch.id}`)}
+                      />
+                      <Edit 
+                        className="w-5 h-5 text-blue-600 cursor-pointer" 
+                        onClick={() => navigate(`edit/${branch.id}`)}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </Dialog>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+          {branches.map((branch, index) => (
+            <div key={branch.id} className="bg-white rounded-lg shadow p-6"> {/* Changed key from index to branch.id */}
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-medium">{branch.branchName}</h3>
+                  <p className="text-sm text-gray-500">{branch.companyName}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={branch.status === 'Active'}
+                      onChange={() => handleStatusToggle(index)}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    branch.status === 'Active' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {branch.status}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-600">Created: {branch.createdDate}</p>
+                <div>
+                  <p className="text-gray-600">Contact Information:</p>
+                  <p>Email: {branch.contactInformation.email}</p>
+                  <p>Phone: {branch.contactInformation.phone}</p>
+                </div>
+                <p className="text-gray-600">Address: {branch.address}</p>
+                <p className="text-gray-600">
+                  Partner Count: <span className="text-blue-600 cursor-pointer">{branch.partnerCount}</span>
+                </p>
+              </div>
+              <div className="flex justify-end mt-4 gap-2">
+                <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-full">
+                  <Eye className="w-5 h-5" />
+                </button>
+                <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-full">
+                  <Edit className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

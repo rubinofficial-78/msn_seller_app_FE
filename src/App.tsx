@@ -3,6 +3,7 @@ import { store } from './store/store';
 import { AuthProvider } from './contexts/AuthContext';
 import { routes } from './routes/routes';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './styles/table.css';
 
 export default function App() {
   return (

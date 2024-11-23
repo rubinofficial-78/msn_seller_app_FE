@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Plus, ExternalLink, LayoutList, LayoutGrid, Table } from 'lucide-react';
+import { Search, Plus, ExternalLink, LayoutList, LayoutGrid, Table, Eye, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Sample data for the companies table
 const companyData = [
   {
+    id: 1,
     companyName: 'New Test Company',
     whiteLabeledUrl: 'new.company.com',
     companyWebsite: 'new.company.com',
@@ -18,6 +20,7 @@ const companyData = [
     status: 'Active'
   },
   {
+    id: 2, // Added missing id
     companyName: 'Role Company',
     whiteLabeledUrl: 'company.com',
     companyWebsite: 'company.com',
@@ -53,103 +56,137 @@ interface CompanyTableProps {
   data: typeof companyData;
 }
 
-const CompanyTable: React.FC<CompanyTableProps> = ({ data }) => (
-  <div className="h-[calc(100vh-280px)] flex flex-col bg-white rounded-lg shadow">
-    {/* Table Header - Fixed */}
-    <div className="bg-blue-50">
-      <table className="min-w-full">
-        <thead>
-          <tr>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Company name
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              White Labeled Url
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Company Website
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Created Date
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Contact Information
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Address
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Branch Count
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              System Users Count
-            </th>
-            <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
-            </th>
-          </tr>
-        </thead>
-      </table>
-    </div>
+const CompanyTable: React.FC<CompanyTableProps> = ({ data }) => {
+  const navigate = useNavigate();
 
-    {/* Table Body - Scrollable */}
-    <div className="flex-1 overflow-auto">
-      <table className="min-w-full">
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((company, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {company.companyName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                <a href={`https://${company.whiteLabeledUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
-                  {company.whiteLabeledUrl}
-                  <ExternalLink size={14} />
-                </a>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                <a href={`https://${company.companyWebsite}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
-                  {company.companyWebsite}
-                  <ExternalLink size={14} />
-                </a>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {company.createdDate}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <div>
-                  <div className="text-gray-900">Email: {company.contactInformation.email}</div>
-                  <div className="text-gray-900">Phone: {company.contactInformation.phone}</div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {company.address}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                <a href="#" className="flex items-center gap-1">
-                  {company.branchCount}
-                  <ExternalLink size={14} />
-                </a>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                <a href="#" className="flex items-center gap-1">
-                  {company.systemUsersCount}
-                  <ExternalLink size={14} />
-                </a>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                  ${company.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {company.status}
-                </span>
-              </td>
+  const handleStatusToggle = (index: number) => {
+    // Your toggle logic here
+  };
+
+  return (
+    <div className="h-[calc(100vh-280px)] flex flex-col bg-white rounded-lg shadow">
+      {/* Table Header - Fixed */}
+      <div className="bg-blue-50">
+        <table className="min-w-full">
+          <thead>
+            <tr>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Company name
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                White Labeled Url
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Company Website
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Created Date
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contact Information
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Address
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Branch Count
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                System Users Count
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+        </table>
+      </div>
+
+      {/* Table Body - Scrollable */}
+      <div className="flex-1 overflow-auto">
+        <table className="min-w-full">
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data.map((company, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {company.companyName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+                  <a href={`https://${company.whiteLabeledUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                    {company.whiteLabeledUrl}
+                    <ExternalLink size={14} />
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+                  <a href={`https://${company.companyWebsite}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                    {company.companyWebsite}
+                    <ExternalLink size={14} />
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {company.createdDate}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <div>
+                    <div className="text-gray-900">Email: {company.contactInformation.email}</div>
+                    <div className="text-gray-900">Phone: {company.contactInformation.phone}</div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {company.address}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+                  <a href="#" className="flex items-center gap-1">
+                    {company.branchCount}
+                    <ExternalLink size={14} />
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+                  <a href="#" className="flex items-center gap-1">
+                    {company.systemUsersCount}
+                    <ExternalLink size={14} />
+                  </a>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={company.status === 'Active'}
+                        onChange={() => handleStatusToggle(index)}
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      company.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {company.status}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex gap-2">
+                    <Eye 
+                      className="w-5 h-5 text-blue-600 cursor-pointer" 
+                      onClick={() => navigate(`view/${company.id}`)}
+                    />
+                    <Edit 
+                      className="w-5 h-5 text-blue-600 cursor-pointer" 
+                      onClick={() => navigate(`edit/${company.id}`)}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const CompanyGrid: React.FC<CompanyTableProps> = ({ data }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -268,6 +305,7 @@ const CompanyList: React.FC<CompanyTableProps> = ({ data }) => (
 );
 
 const Companies = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All Companies');
   const [viewMode, setViewMode] = useState<'table' | 'list' | 'grid'>('table');
 
@@ -280,6 +318,10 @@ const Companies = () => {
       default:
         return <CompanyTable data={companyData} />;
     }
+  };
+
+  const handleAddClick = () => {
+    navigate('create');
   };
 
   return (
@@ -342,7 +384,10 @@ const Companies = () => {
           >
             <Table size={20} />
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button 
+            onClick={handleAddClick}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
             <Plus size={20} />
             <span>ADD</span>
           </button>

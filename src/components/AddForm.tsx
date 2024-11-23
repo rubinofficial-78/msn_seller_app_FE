@@ -3,7 +3,6 @@ import {
   TextField,
   Autocomplete,
   FormControl,
-  RadioGroup,
   FormControlLabel,
   Radio,
   IconButton,
@@ -32,6 +31,13 @@ interface Field {
   note?: string;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
+  component?: React.ReactNode;
+  accept?: string;
+  onChange?: (value: any) => void;
+  uploadBoxStyle?: string;
+  uploadText?: string;
+  uploadDescription?: string;
+  radioStyle?: string;
 }
 
 interface AddFormProps {
@@ -193,9 +199,70 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
         />
       );
 
+    case 'custom':
+      return field.component;
+
+    case 'file':
+      return <FileUpload field={field} />;
+
+    case 'radio':
+      return <CustomRadioGroup field={field} />;
+
     default:
       return null;
   }
+};
+
+const FileUpload: React.FC<{field: Field}> = ({ field }) => {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        {field.label} {field.required && <span className="text-red-500">*</span>}
+      </label>
+      <div className={field.uploadBoxStyle}>
+        <div className="text-center">
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-blue-600 hover:text-blue-500">{field.uploadText}</span>
+            <p className="text-xs text-gray-500 mt-1">{field.uploadDescription}</p>
+          </div>
+          <input
+            type="file"
+            className="sr-only"
+            accept={field.accept}
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0] && field.onChange) {
+                field.onChange(e.target.files[0]);
+              }
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CustomRadioGroup: React.FC<{field: Field}> = ({ field }) => {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-3">
+        {field.label} {field.required && <span className="text-red-500">*</span>}
+      </label>
+      <div className={field.radioStyle}>
+        {field.options?.map((option) => (
+          <label key={option.value} className="flex items-center">
+            <input
+              type="radio"
+              value={option.value}
+              checked={field.value === option.value}
+              onChange={(e) => field.onChange?.(e.target.value)}
+              className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm text-gray-700">{option.label}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default AddForm;

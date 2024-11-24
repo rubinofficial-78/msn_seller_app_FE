@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
-import SellerInfo from './onboarding/SellerInfo';
-import GstInfo from './onboarding/GstInfo';
-import BankingInfo from './onboarding/BankingInfo';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
+import SellerInfo from "./onboarding/SellerInfo";
+import GstInfo from "./onboarding/GstInfo";
+import BankingInfo from "./onboarding/BankingInfo";
 
 const steps = [
-  { id: '01', name: 'SELLER STORE INFORMATION', status: 'current' },
-  { id: '02', name: 'GST PAN DETAILS', status: 'upcoming' },
-  { id: '03', name: 'BANKING DETAILS', status: 'upcoming' },
+  { id: "01", name: "SELLER STORE INFORMATION", status: "current" },
+  { id: "02", name: "GST PAN DETAILS", status: "upcoming" },
+  { id: "03", name: "BANKING DETAILS", status: "upcoming" },
 ];
 
 const Onboarding = () => {
@@ -16,22 +16,26 @@ const Onboarding = () => {
   const [formData, setFormData] = useState({
     sellerInfo: {},
     gstInfo: {},
-    bankingInfo: {}
+    bankingInfo: {},
   });
   const navigate = useNavigate();
 
   const handleNext = (data: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [currentStep === 0 ? 'sellerInfo' : currentStep === 1 ? 'gstInfo' : 'bankingInfo']: data
+      [currentStep === 0
+        ? "sellerInfo"
+        : currentStep === 1
+        ? "gstInfo"
+        : "bankingInfo"]: data,
     }));
-    
+
     if (currentStep === 2) {
       // Submit all data
-      navigate('/dashboard/seller-dashboard');
+      navigate("/dashboard/seller-dashboard");
       return;
     }
-    setCurrentStep(prev => prev + 1);
+    setCurrentStep((prev) => prev + 1);
   };
 
   return (
@@ -42,10 +46,21 @@ const Onboarding = () => {
           <ol className="flex items-center justify-between">
             {steps.map((step, index) => (
               <li key={step.id} className="relative flex items-center">
-                <div className={`flex items-center ${index <= currentStep ? 'text-blue-600' : 'text-gray-400'}`}>
-                  <span className={`w-8 h-8 flex items-center justify-center rounded-full border-2 
-                    ${index < currentStep ? 'bg-blue-600 border-blue-600' : 
-                      index === currentStep ? 'border-blue-600' : 'border-gray-300'}`}>
+                <div
+                  className={`flex items-center ${
+                    index <= currentStep ? "text-blue-600" : "text-gray-400"
+                  }`}
+                >
+                  <span
+                    className={`w-8 h-8 flex items-center justify-center rounded-full border-2 
+                    ${
+                      index < currentStep
+                        ? "bg-blue-600 border-blue-600"
+                        : index === currentStep
+                        ? "border-blue-600"
+                        : "border-gray-300"
+                    }`}
+                  >
                     {index < currentStep ? (
                       <Check className="w-4 h-4 text-white" />
                     ) : (
@@ -73,4 +88,4 @@ const Onboarding = () => {
   );
 };
 
-export default Onboarding; 
+export default Onboarding;

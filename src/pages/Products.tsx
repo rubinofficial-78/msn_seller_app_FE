@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, Eye, LayoutGrid, Table } from 'lucide-react';
 import ScrollableTabs from '../components/ScrollableTabs';
+import CustomTable from '../components/CustomTable';
 
 // Update the product data structure
 interface Product {
@@ -69,123 +70,104 @@ const tabs = [
   { label: 'Offers & Discounts' }
 ];
 
-// Update the ProductTable component
-const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => (
-  <div className="h-[calc(100vh-280px)] flex flex-col bg-white rounded-lg shadow">
-    {/* Table Header - Fixed */}
-    <div className="bg-blue-50">
-      <div className="overflow-x-auto">
-        <table className="min-w-max" style={{ width: '2000px' }}>
-          <thead>
-            <tr>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Product Name
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                Product Description
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                SKU Id & HSN Code
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                Category / Sub-category
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                Total no.of.Variants
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                MRP
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                Selling Price
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                Quantity in hand
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                Status
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Seller Name
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Partner Name
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Branch Name
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                Company Name
-              </th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                Action
-              </th>
-            </tr>
-          </thead>
-        </table>
-      </div>
-    </div>
+// Define the table columns for CustomTable
+const tableColumns = [
+  {
+    id: 'productName',
+    key: 'productName',
+    label: 'Product Name',
+    minWidth: 160
+  },
+  {
+    id: 'productDescription',
+    key: 'productDescription',
+    label: 'Product Description',
+    minWidth: 200
+  },
+  {
+    id: 'skuHsnCode',
+    key: 'skuHsnCode',
+    label: 'SKU Id & HSN Code',
+    minWidth: 160
+  },
+  {
+    id: 'category',
+    key: ['category', 'subCategory'],
+    label: 'Category / Sub-category',
+    join: true,
+    minWidth: 200
+  },
+  {
+    id: 'totalVariants',
+    key: 'totalVariants',
+    label: 'Total no.of.Variants',
+    minWidth: 140
+  },
+  {
+    id: 'mrp',
+    key: 'mrp',
+    label: 'MRP',
+    type: 'amount',
+    minWidth: 120
+  },
+  {
+    id: 'sellingPrice',
+    key: 'sellingPrice',
+    label: 'Selling Price',
+    type: 'amount',
+    minWidth: 120
+  },
+  {
+    id: 'quantityInHand',
+    key: 'quantityInHand',
+    label: 'Quantity in hand',
+    minWidth: 140
+  },
+  {
+    id: 'status',
+    key: 'status',
+    label: 'Status',
+    type: 'status',
+    minWidth: 120
+  },
+  {
+    id: 'sellerName',
+    key: 'sellerName',
+    label: 'Seller Name',
+    minWidth: 160
+  },
+  {
+    id: 'partnerName',
+    key: 'partnerName',
+    label: 'Partner Name',
+    minWidth: 160
+  },
+  {
+    id: 'branchName',
+    key: 'branchName',
+    label: 'Branch Name',
+    minWidth: 160
+  },
+  {
+    id: 'companyName',
+    key: 'companyName',
+    label: 'Company Name',
+    minWidth: 160
+  }
+];
 
-    {/* Table Body - Scrollable */}
-    <div className="flex-1 overflow-auto">
-      <div className="overflow-x-auto">
-        <table className="min-w-max" style={{ width: '2000px' }}>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {data.map((product, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-40">
-                  {product.productName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">
-                  {product.productDescription}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-40">
-                  {product.skuHsnCode}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">
-                  {product.category} / {product.subCategory}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">
-                  {product.totalVariants}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">
-                  ₹{product.mrp.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">
-                  ₹{product.sellingPrice.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">
-                  {product.quantityInHand}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap w-32">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                    ${product.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {product.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-40">
-                  {product.sellerName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-40">
-                  {product.partnerName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-40">
-                  {product.branchName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-40">
-                  {product.companyName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-24">
-                  <button className="text-blue-600 hover:text-blue-800">
-                    <Eye size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+// Replace the ProductTable component with this simpler version
+const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => (
+  <div className="bg-white rounded-lg shadow">
+    <CustomTable
+      headCells={tableColumns}
+      data={data}
+      pagination={true}
+      setParams={(params) => {
+        // Handle pagination params here
+        console.log('Pagination params:', params);
+      }}
+    />
   </div>
 );
 

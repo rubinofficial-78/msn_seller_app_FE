@@ -56,18 +56,18 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="relative flex h-full">
+    <div className="h-screen flex-shrink-0">
       {/* Sidebar */}
       <div 
         className={`
-          fixed top-0 left-0 h-full bg-white shadow-lg transition-all duration-300 ease-in-out
+          fixed top-0 left-0 h-full bg-white shadow-lg transition-all duration-300 ease-in-out z-20
           border-r border-primary-100
           ${isOpen ? 'w-64' : 'w-20'}
         `}
       >
         <div className="flex flex-col h-full">
           {/* Logo and Toggle */}
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center p-4 border-b relative">
             <div className="flex items-center">
               <img 
                 src={adya} 
@@ -87,16 +87,19 @@ const Sidebar = () => {
                 Seller Admin
               </h1>
             </div>
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className={`
-                p-1 rounded-lg hover:bg-gray-100
-                ${!isOpen && 'absolute right-0 top-4 transform translate-x-1/2 bg-white shadow-md'}
-              `}
-            >
-              {isOpen ? <ChevronLeft size={24} /> : <Menu size={24} />}
-            </button>
           </div>
+
+          {/* Toggle Button - Moved outside the header */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={`
+              p-2 rounded-full hover:bg-gray-100 absolute top-4 z-30
+              transition-all duration-300 bg-white shadow-md
+              ${isOpen ? 'right-0 translate-x-1/2' : '-right-3 translate-x-full'}
+            `}
+          >
+            {isOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+          </button>
 
           {/* Navigation */}
           <nav className="flex-1 p-4">
@@ -136,8 +139,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Spacer div to maintain layout */}
-      <div className={`transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`} />
+      {/* Spacer div */}
+      <div className={`flex-shrink-0 transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`} />
     </div>
   );
 };

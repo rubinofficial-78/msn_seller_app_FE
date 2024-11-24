@@ -57,88 +57,100 @@ const CustomTable: React.FC<CustomTableProps> = ({
   pagination = true,
 }) => {
   return (
-    <div className="table-wrapper">
-      <div className="table-container">
-        <table className="custom-table">
-          <thead>
-            <tr>
-              {headCells.map((cell) => (
-                <th
-                  key={cell.id}
-                  style={{ minWidth: cell.minWidth || 150 }}
-                >
-                  {cell.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, index) => (
-              <tr key={index}>
-                {headCells.map((cell) => (
-                  <td
-                    key={cell.id}
-                    style={{ minWidth: cell.minWidth || 150 }}
+    <div className="flex flex-col h-full">
+      <div className="overflow-x-auto">
+        <div className="inline-block min-w-full align-middle">
+          <div className="overflow-hidden border border-gray-200 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  {headCells.map((cell) => (
+                    <th
+                      key={cell.id}
+                      style={{ minWidth: cell.minWidth || 150 }}
+                      className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider sticky top-0 bg-gray-50 border-b"
+                    >
+                      {cell.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {data.map((row, index) => (
+                  <tr 
+                    key={index}
+                    className="hover:bg-gray-50 transition-colors duration-200"
                   >
-                    {cell.type === "image_text" ? (
-                      <div className="flex items-center">
-                        {cell.image_path && (
-                          <Image
-                            src={getImageSrc(row[cell.image_path])}
-                            alt=""
-                            className="h-10 w-10 rounded-full mr-3"
-                          />
-                        )}
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {Array.isArray(cell.key)
-                              ? row[cell.key[0]]
-                              : row[cell.key]}
-                          </div>
-                          {cell.join && (
-                            <div className="text-sm text-gray-500">
-                              {moment(row[cell.key[1]]).format("DD MMM YYYY")}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : cell.type === "amount" ? (
-                      <div className="text-sm text-gray-900">
-                        ₹{row[cell.key as string]}
-                      </div>
-                    ) : cell.type === "status" ? (
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          row[cell.key as string] === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                    {headCells.map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-6 py-4 whitespace-nowrap text-sm"
+                        style={{ minWidth: cell.minWidth || 150 }}
                       >
-                        {row[cell.key as string]}
-                      </span>
-                    ) : cell.join ? (
-                      <div className="text-sm text-gray-900">
-                        {Array.isArray(cell.key) 
-                          ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
-                          : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-900">
-                        {Array.isArray(cell.key) 
-                          ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
-                          : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
-                      </div>
-                    )}
-                  </td>
+                        {cell.type === "image_text" ? (
+                          <div className="flex items-center">
+                            {cell.image_path && (
+                              <Image
+                                src={getImageSrc(row[cell.image_path])}
+                                alt=""
+                                className="h-10 w-10 rounded-full mr-3"
+                              />
+                            )}
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {Array.isArray(cell.key)
+                                  ? row[cell.key[0]]
+                                  : row[cell.key]}
+                              </div>
+                              {cell.join && (
+                                <div className="text-gray-500">
+                                  {moment(row[cell.key[1]]).format("DD MMM YYYY")}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : cell.type === "amount" ? (
+                          <div className="font-medium text-gray-900">
+                            ₹{Number(row[cell.key as string]).toLocaleString('en-IN', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })}
+                          </div>
+                        ) : cell.type === "status" ? (
+                          <span
+                            className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full
+                              ${row[cell.key as string] === "Active" || row[cell.key as string] === "ACTIVE"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                              }`}
+                          >
+                            {row[cell.key as string]}
+                          </span>
+                        ) : cell.join ? (
+                          <div className="text-gray-900">
+                            {Array.isArray(cell.key) 
+                              ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
+                              : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
+                          </div>
+                        ) : (
+                          <div className="text-gray-900">
+                            {Array.isArray(cell.key) 
+                              ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
+                              : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      {pagination && (
-        <div className="pagination-wrapper">
+      {pagination && meta_data && (
+        <div className="mt-4 flex justify-end">
           <Pagination data={data} setParams={setParams} meta_data={meta_data} />
         </div>
       )}

@@ -1,115 +1,248 @@
 import React, { useState } from 'react';
 import { Search, Download } from 'lucide-react';
+import CustomTable from '../components/CustomTable';
+import * as XLSX from 'xlsx';
 
-// Sample data for payouts
-const payoutData = [
-  {
-    networkOrderID: 'SMBOI04XRO27BIAUYW',
+interface Payout {
+  networkOrderID: string;
+  collectorID: string;
+  receiverID: string;
+  orderState: string;
+  orderCreatedDateTime: string;
+  shippingCharges: number;
+  packagingCharges: number;
+  convenienceCharges: number;
+  totalOrderValue: number;
+  orderItemIDPrice: string;
+  buyerFinderFee: number;
+  withholdingAmount: number;
+  tcs: number;
+  tds: number;
+  deductionByCollector: number;
+  settlementAmount: number;
+  returnWindow: string;
+  beneficiaryIFSC: string;
+  settlementReferenceNumber: string;
+  differenceAmount: number;
+  message: string;
+  createdDateTime: string;
+}
+
+// Generate dummy data
+const generatePayoutData = (count: number): Payout[] => {
+  return Array(count).fill(null).map((_, index) => ({
+    networkOrderID: `SMBOI04XRO27BIAUYW-${index + 1}`,
     collectorID: 'preprod.ondc.adya.ai',
     receiverID: 'preprod.ondc.adya.ai',
-    orderState: 'Completed',
+    orderState: ['Completed', 'Pending', 'Processing'][Math.floor(Math.random() * 3)],
     orderCreatedDateTime: '2024-11-07 13:10:54',
-    shippingCharges: 0.00,
+    shippingCharges: Math.random() * 100,
     packagingCharges: 32.00,
     convenienceCharges: 10.00,
-    totalOrderValue: 282.00,
-    orderItemIDPrice: 'ITEM123 - ₹250.00',
+    totalOrderValue: 282.00 + (index * 10),
+    orderItemIDPrice: `ITEM${123 + index} - ₹${(250.00 + index * 5).toFixed(2)}`,
     buyerFinderFee: 5.00,
     withholdingAmount: 2.00,
     tcs: 1.00,
     tds: 1.50,
     deductionByCollector: 3.00,
-    settlementAmount: 269.50,
+    settlementAmount: 269.50 + (index * 2),
     returnWindow: '7 days',
     beneficiaryIFSC: 'HDFC0001234',
-    settlementReferenceNumber: 'SET123456789',
+    settlementReferenceNumber: `SET123456789-${index + 1}`,
     differenceAmount: 0.00,
     message: 'Settlement successful',
     createdDateTime: '2024-11-07 13:15:54'
+  }));
+};
+
+// Table columns configuration
+const tableColumns = [
+  {
+    id: 'networkOrderID',
+    key: 'networkOrderID',
+    label: 'Network Order ID',
+    minWidth: 180
   },
-  // Add more sample data as needed
+  {
+    id: 'collectorID',
+    key: 'collectorID',
+    label: 'Collector ID',
+    minWidth: 200
+  },
+  {
+    id: 'receiverID',
+    key: 'receiverID',
+    label: 'Receiver ID',
+    minWidth: 200
+  },
+  {
+    id: 'orderState',
+    key: 'orderState',
+    label: 'Order State',
+    type: 'status',
+    minWidth: 120
+  },
+  {
+    id: 'orderCreatedDateTime',
+    key: 'orderCreatedDateTime',
+    label: 'Order Created Date & Time',
+    minWidth: 180
+  },
+  {
+    id: 'shippingCharges',
+    key: 'shippingCharges',
+    label: 'Shipping Charges',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'packagingCharges',
+    key: 'packagingCharges',
+    label: 'Packaging Charges',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'convenienceCharges',
+    key: 'convenienceCharges',
+    label: 'Convenience Charges',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'totalOrderValue',
+    key: 'totalOrderValue',
+    label: 'Total Order Value',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'orderItemIDPrice',
+    key: 'orderItemIDPrice',
+    label: 'Order Item ID & Price',
+    minWidth: 180
+  },
+  {
+    id: 'buyerFinderFee',
+    key: 'buyerFinderFee',
+    label: 'Buyer Finder Fee',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'withholdingAmount',
+    key: 'withholdingAmount',
+    label: 'Withholding Amount',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'tcs',
+    key: 'tcs',
+    label: 'TCS',
+    type: 'amount',
+    minWidth: 120
+  },
+  {
+    id: 'tds',
+    key: 'tds',
+    label: 'TDS',
+    type: 'amount',
+    minWidth: 120
+  },
+  {
+    id: 'deductionByCollector',
+    key: 'deductionByCollector',
+    label: 'Deduction by Collector',
+    type: 'amount',
+    minWidth: 160
+  },
+  {
+    id: 'settlementAmount',
+    key: 'settlementAmount',
+    label: 'Settlement Amount',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'returnWindow',
+    key: 'returnWindow',
+    label: 'Return Window',
+    minWidth: 120
+  },
+  {
+    id: 'beneficiaryIFSC',
+    key: 'beneficiaryIFSC',
+    label: 'Beneficiary IFSC',
+    minWidth: 140
+  },
+  {
+    id: 'settlementReferenceNumber',
+    key: 'settlementReferenceNumber',
+    label: 'Settlement Reference Number',
+    minWidth: 200
+  },
+  {
+    id: 'differenceAmount',
+    key: 'differenceAmount',
+    label: 'Difference Amount',
+    type: 'amount',
+    minWidth: 140
+  },
+  {
+    id: 'message',
+    key: 'message',
+    label: 'Message',
+    minWidth: 180
+  },
+  {
+    id: 'createdDateTime',
+    key: 'createdDateTime',
+    label: 'Created Date & Time',
+    minWidth: 180
+  }
 ];
 
-const PayoutsTable = () => (
-  <div className="h-[calc(100vh-180px)] flex flex-col bg-white rounded-lg shadow">
-    {/* Table Header - Fixed */}
-    <div className="bg-blue-50 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-max" style={{ width: '2500px' }}> {/* Fixed width for table */}
-          <thead>
-            <tr>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Network Order ID</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Collector ID</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Receiver ID</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Order State</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Order Created Date & Time</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Shipping Charges</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Packaging Charges</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Convenience Charges</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Total Order Value</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Order Item ID & Price</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Buyer Finder Fee</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Withholding Amount</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">TCS</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">TDS</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Deduction by Collector</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Settlement Amount</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Return Window</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Beneficiary IFSC</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Settlement Reference Number</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Difference Amount</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Message</th>
-              <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Created Date & Time</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
-    </div>
-
-    {/* Table Body - Scrollable */}
-    <div className="flex-1 overflow-auto">
-      <div className="overflow-x-auto">
-        <table className="min-w-max" style={{ width: '2500px' }}> {/* Fixed width for table */}
-          <tbody className="bg-white divide-y divide-gray-200">
-            {payoutData.map((payout, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.networkOrderID}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.collectorID}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.receiverID}</td>
-                <td className="px-6 py-4 whitespace-nowrap w-32">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                    ${payout.orderState === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                    {payout.orderState}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.orderCreatedDateTime}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.shippingCharges.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.packagingCharges.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.convenienceCharges.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.totalOrderValue.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.orderItemIDPrice}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.buyerFinderFee.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.withholdingAmount.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.tcs.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.tds.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.deductionByCollector.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 w-32">₹{payout.settlementAmount.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">{payout.returnWindow}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">{payout.beneficiaryIFSC}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.settlementReferenceNumber}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-32">₹{payout.differenceAmount.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.message}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-48">{payout.createdDateTime}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-);
+// Generate 100 dummy payouts
+const dummyData = generatePayoutData(100);
 
 const Payouts = () => {
+  const [paginationState, setPaginationState] = useState({
+    page_no: 1,
+    per_page: 10,
+    total_rows: dummyData.length
+  });
+
+  // Get paginated data
+  const getPaginatedData = () => {
+    const startIndex = (paginationState.page_no - 1) * paginationState.per_page;
+    const endIndex = startIndex + paginationState.per_page;
+    return dummyData.slice(startIndex, endIndex);
+  };
+
+  // Handle pagination changes
+  const handlePaginationChange = (params: { page_no?: number; per_page?: number }) => {
+    setPaginationState(prev => ({
+      ...prev,
+      page_no: params.page_no || prev.page_no,
+      per_page: params.per_page || prev.per_page
+    }));
+  };
+
+  // Add this new function to handle Excel download
+  const handleDownload = () => {
+    // Create a worksheet from the data
+    const worksheet = XLSX.utils.json_to_sheet(dummyData);
+    
+    // Create a workbook and add the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Payouts');
+    
+    // Generate and download the file
+    XLSX.writeFile(workbook, 'payouts.xlsx');
+  };
+
   return (
     <div className="space-y-4">
       {/* Search and Actions */}
@@ -128,13 +261,27 @@ const Payouts = () => {
         <button 
           className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
           title="Download"
+          onClick={handleDownload}
         >
           <Download size={20} />
         </button>
       </div>
 
       {/* Payouts Table */}
-      <PayoutsTable />
+      <div className="bg-white rounded-lg shadow">
+        <CustomTable
+          headCells={tableColumns}
+          data={getPaginatedData()}
+          pagination={true}
+          meta_data={{
+            total_rows: dummyData.length,
+            page_no: paginationState.page_no,
+            per_page: paginationState.per_page,
+            totalPages: Math.ceil(dummyData.length / paginationState.per_page)
+          }}
+          setParams={handlePaginationChange}
+        />
+      </div>
     </div>
   );
 };

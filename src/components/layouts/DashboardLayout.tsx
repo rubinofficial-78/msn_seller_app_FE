@@ -32,13 +32,13 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-primary-50">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
       
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-primary-100">
+        <header className="bg-white shadow-sm z-10 border-b border-primary-100">
           <div className="px-4 py-4 flex justify-between items-center">
             <div>
               {/* Left side of header if needed */}
@@ -112,8 +112,10 @@ const DashboardLayout = () => {
         />
 
         {/* Main Content Area */}
-        <main className="p-6">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="h-full">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

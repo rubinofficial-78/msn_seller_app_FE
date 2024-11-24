@@ -1,38 +1,53 @@
 import React, { useState } from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, X, Download, Upload } from 'lucide-react';
 import CustomTable from '../components/CustomTable';
 import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 // Sample data for the products table
 const productData = [
   {
     id: 1,
-    product_image: '/path/to/image.jpg',
-    product_name: 'Hudi',
-    product_description: 'This is short description for hudi',
+    product_image: 'https://images.unsplash.com/photo-1682686580391-615b1e32590a',
+    product_name: 'Winter Jacket',
+    product_description: 'Warm winter jacket for extreme conditions',
     sku_hsn_code: 'HUDI1230307',
-    variants_count: 0,
-    mrp: 250.00,
-    selling_price: 250.00,
+    variants_count: 3,
+    mrp: 2500.00,
+    selling_price: 1999.00,
     category: 'Fashion',
-    sub_category: 'Jeans',
+    sub_category: 'Winter Wear',
     status: 'Active',
     created_date: '2024-11-18T21:50:00'
   },
   {
     id: 2,
-    product_image: '/path/to/image.jpg',
-    product_name: 'ddf',
-    product_description: 'dfdf',
-    sku_hsn_code: 'fdfdfd0209',
-    variants_count: 0,
-    mrp: 11.00,
-    selling_price: 11.00,
+    product_image: 'https://images.unsplash.com/photo-1682686580186-b55d2a91053c',
+    product_name: 'Mechanical Keyboard',
+    product_description: 'Professional gaming mechanical keyboard',
+    sku_hsn_code: 'KB0209',
+    variants_count: 2,
+    mrp: 8999.00,
+    selling_price: 7499.00,
     category: 'Electronics',
-    sub_category: 'Keyboard',
+    sub_category: 'Gaming Accessories',
     status: 'Active',
     created_date: '2024-10-11T13:33:00'
   },
+  {
+    id: 3,
+    product_image: 'https://images.unsplash.com/photo-1682687220742-aba13b6e50ba',
+    product_name: 'Ceramic Vase',
+    product_description: 'Handcrafted ceramic flower vase',
+    sku_hsn_code: 'VASE0307',
+    variants_count: 1,
+    mrp: 1299.00,
+    selling_price: 999.00,
+    category: 'Home Decor',
+    sub_category: 'Vases',
+    status: 'Active',
+    created_date: '2024-10-15T09:30:00'
+  }
 ];
 
 // Tab type definition
@@ -105,11 +120,41 @@ const headCells = [
 ];
 
 const MasterCatalog: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All Products');
   const [params, setParams] = useState({
     page_no: 1,
     per_page: 10
   });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('');
+
+  const handleCloseModal = () => setShowAddModal(false);
+
+  const handleManualUpload = () => {
+    setShowAddModal(false);
+    navigate('/dashboard/master-catalog/add-product');
+  };
+
+  const handleBulkUpload = () => {
+    setShowAddModal(false);
+    navigate('/dashboard/master-catalog/bulk-upload');
+  };
+
+  const handleDownloadTemplate = () => {
+    // Add your download template logic here
+    console.log('Downloading template...');
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Add your file upload logic here
+      console.log('Uploading file:', file);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -168,12 +213,58 @@ const MasterCatalog: React.FC = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button 
+            onClick={() => setShowAddModal(true)} 
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
             <Plus size={20} />
             <span>ADD</span>
           </button>
         </div>
       </div>
+
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Add Product</h2>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-500 hover:text-gray-700">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-gray-600 mb-6">Choose a method to add your product listing</p>
+            
+            <div className="space-y-4">
+              <button 
+                onClick={handleManualUpload}
+                className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
+              >
+                <div className="p-2 bg-gray-100 rounded">
+                  <Plus size={24} className="text-gray-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Manual upload</h3>
+                  <p className="text-sm text-gray-600">Add product via form. Fill all the required one by one create variants.</p>
+                </div>
+              </button>
+
+              <button 
+                onClick={handleBulkUpload}
+                className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
+              >
+                <div className="p-2 bg-gray-100 rounded">
+                  <Upload size={24} className="text-gray-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Bulk upload</h3>
+                  <p className="text-sm text-gray-600">Add product via .csv file. Fill all the required information in a predefined template and upload.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Products Table */}
       <CustomTable

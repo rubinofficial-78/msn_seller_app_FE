@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import moment from "moment";
-import { Image } from "@chakra-ui/image"; 
+import { Image } from "@chakra-ui/image";
 import Pagination from "./Pagination";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -47,6 +47,7 @@ interface CustomTableProps {
   dataFlex?: boolean;
   increment?: (index: number, value: number) => void;
   decrement?: (index: number, value: number) => void;
+  onRowClick?: (row: any) => void;
 }
 
 const CustomTable: React.FC<CustomTableProps> = ({
@@ -55,6 +56,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
   meta_data,
   setParams,
   pagination = true,
+  onRowClick,
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -77,9 +79,12 @@ const CustomTable: React.FC<CustomTableProps> = ({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {data.map((row, index) => (
-                  <tr 
+                  <tr
                     key={index}
-                    className="hover:bg-gray-50 transition-colors duration-200"
+                    onClick={() => onRowClick && onRowClick(row)}
+                    className={`hover:bg-gray-50 transition-colors duration-200 ${
+                      onRowClick ? 'cursor-pointer' : ''
+                    }`}
                   >
                     {headCells.map((cell) => (
                       <td
@@ -104,39 +109,63 @@ const CustomTable: React.FC<CustomTableProps> = ({
                               </div>
                               {cell.join && (
                                 <div className="text-gray-500">
-                                  {moment(row[cell.key[1]]).format("DD MMM YYYY")}
+                                  {moment(row[cell.key[1]]).format(
+                                    "DD MMM YYYY"
+                                  )}
                                 </div>
                               )}
                             </div>
                           </div>
                         ) : cell.type === "amount" ? (
                           <div className="font-medium text-gray-900">
-                            ₹{Number(row[cell.key as string]).toLocaleString('en-IN', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2
-                            })}
+                            ₹
+                            {Number(row[cell.key as string]).toLocaleString(
+                              "en-IN",
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )}
                           </div>
                         ) : cell.type === "status" ? (
                           <span
                             className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full
-                              ${row[cell.key as string] === "Active" || row[cell.key as string] === "ACTIVE"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
+                              ${
+                                row[cell.key as string] === "Active" ||
+                                row[cell.key as string] === "ACTIVE"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
                               }`}
                           >
                             {row[cell.key as string]}
                           </span>
                         ) : cell.join ? (
                           <div className="text-gray-900">
-                            {Array.isArray(cell.key) 
-                              ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
-                              : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
+                            {Array.isArray(cell.key)
+                              ? cell.key
+                                  .map((k) =>
+                                    k
+                                      .split(".")
+                                      .reduce((obj, key) => obj?.[key], row)
+                                  )
+                                  .join(" / ")
+                              : cell.key
+                                  .split(".")
+                                  .reduce((obj, key) => obj?.[key], row)}
                           </div>
                         ) : (
                           <div className="text-gray-900">
-                            {Array.isArray(cell.key) 
-                              ? cell.key.map(k => k.split('.').reduce((obj, key) => obj?.[key], row)).join(' / ')
-                              : cell.key.split('.').reduce((obj, key) => obj?.[key], row)}
+                            {Array.isArray(cell.key)
+                              ? cell.key
+                                  .map((k) =>
+                                    k
+                                      .split(".")
+                                      .reduce((obj, key) => obj?.[key], row)
+                                  )
+                                  .join(" / ")
+                              : cell.key
+                                  .split(".")
+                                  .reduce((obj, key) => obj?.[key], row)}
                           </div>
                         )}
                       </td>

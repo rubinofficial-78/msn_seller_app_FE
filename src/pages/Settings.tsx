@@ -25,6 +25,9 @@ const Settings = () => {
       case "Locations & Serviceability":
         navigate("/dashboard/settings/location-services");
         break;
+      case "UI configuration":
+        navigate("/dashboard/settings/ui-config");
+        break;
       // Add other cases for different settings cards as needed
       default:
         break;

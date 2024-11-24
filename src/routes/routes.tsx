@@ -29,15 +29,19 @@ import SellerLocationServices from "../pages/sellerSettings/LocationServices";
 import SellerBankingDetails from "../pages/sellerSettings/BankingDetails";
 import SellerSettings from "../pages/SellerSettings";
 import Onboarding from "../pages/auth/Onboarding";
-import CreateCompany from '../components/CreateCompany';
-import CreateBranch from '../components/CreateBranch';
-import ViewBranch from '../pages/ViewBranch';
-import EditBranch from '../pages/EditBranch';
-import ViewCompany from '../pages/ViewCompany';
-import EditCompany from '../pages/EditCompany';
-import CreatePartner from '../components/CreatePartner';
-import AddSeller from '../components/AddSeller';
-import SellerOnboarding from '../components/SellerOnboarding';
+import CreateCompany from "../components/CreateCompany";
+import CreateBranch from "../components/CreateBranch";
+import ViewBranch from "../pages/ViewBranch";
+import EditBranch from "../pages/EditBranch";
+import ViewCompany from "../pages/ViewCompany";
+import EditCompany from "../pages/EditCompany";
+import CreatePartner from "../components/CreatePartner";
+import AddSeller from "../components/AddSeller";
+import SellerOnboarding from "../components/SellerOnboarding";
+import AddProduct from "../pages/AddProduct";
+import BulkUpload from "../pages/BulkUpload";
+import UiConfig from '../pages/settings/UiConfig';
+import LogisticsDetails from "../pages/LogisticsDetails";
 // import ViewPartner from '../components/ViewPartner';
 // import EditPartner from '../components/EditPartner';
 
@@ -56,7 +60,7 @@ export const routes: RouteObject[] = [
   },
   {
     path: "/sellers/onboarding",
-    element: <SellerOnboarding />
+    element: <SellerOnboarding />,
   },
   {
     path: "/dashboard",
@@ -72,53 +76,74 @@ export const routes: RouteObject[] = [
       },
       {
         path: "master-catalog",
-        element: (
-          <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
-            <MasterCatalog />
-          </ProtectedRoute>
-        ),
+        children: [
+          {
+            index: true,
+            element: (
+              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
+                <MasterCatalog />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "add-product",
+            element: (
+              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
+                <AddProduct />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "bulk-upload",
+            element: (
+              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
+                <BulkUpload />
+              </ProtectedRoute>
+            ),
+          },
+        ],
       },
       {
         path: "companies",
         children: [
           {
             index: true,
-            element: <Companies />
+            element: <Companies />,
           },
           {
             path: "create",
-            element: <CreateCompany />
+            element: <CreateCompany />,
           },
           {
             path: "view/:id",
-            element: <ViewCompany />
+            element: <ViewCompany />,
           },
           {
             path: "edit/:id",
-            element: <EditCompany />
-          }
-        ]
+            element: <EditCompany />,
+          },
+        ],
       },
       {
         path: "branches",
         children: [
           {
             index: true,
-            element: <Branches />
+            element: <Branches />,
           },
           {
             path: "create",
-            element: <CreateBranch />
+            element: <CreateBranch />,
           },
           {
             path: "view/:id",
-            element: <ViewBranch />
+            element: <ViewBranch />,
           },
           {
             path: "edit/:id",
-            element: <EditBranch />
-          }
-        ]
+            element: <EditBranch />,
+          },
+        ],
       },
       {
         path: "orders",
@@ -129,11 +154,11 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <Partners />
+            element: <Partners />,
           },
           {
             path: "create",
-            element: <CreatePartner />
+            element: <CreatePartner />,
           },
           // {
           //   path: "view/:id",
@@ -143,7 +168,7 @@ export const routes: RouteObject[] = [
           //   path: "edit/:id",
           //   element: <EditPartner />
           // }
-        ]
+        ],
       },
       {
         path: "payouts",
@@ -151,7 +176,28 @@ export const routes: RouteObject[] = [
       },
       {
         path: "products",
-        element: <Products />,
+        children: [
+          {
+            index: true,
+            element: <Products />,
+          },
+          {
+            path: "add-product",
+            element: (
+              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
+                <AddProduct />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "bulk-upload",
+            element: (
+              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
+                <BulkUpload />
+              </ProtectedRoute>
+            ),
+          },
+        ],
       },
       {
         path: "reports",
@@ -162,17 +208,17 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <Sellers />
+            element: <Sellers />,
           },
           {
             path: "add",
-            element: <AddSeller />
+            element: <AddSeller />,
           },
           {
             path: "onboarding",
-            element: <SellerOnboarding />
-          }
-        ]
+            element: <SellerOnboarding />,
+          },
+        ],
       },
       {
         path: "support",
@@ -237,6 +283,14 @@ export const routes: RouteObject[] = [
             <Onboarding />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "/dashboard/settings/ui-config",
+        element: <UiConfig />,
+      },
+      {
+        path: "/dashboard/logistics/:orderId",
+        element: <LogisticsDetails />,
       },
     ],
   },

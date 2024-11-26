@@ -59,7 +59,7 @@ const productData: Product[] = [
     partnerName: "Local Farms Co",
     branchName: "Central Branch",
     companyName: "Fresh Foods Inc",
-    image: "https://example.com/tomatoes.jpg"
+    image: "https://example.com/tomatoes.jpg",
   },
   {
     id: 2,
@@ -81,7 +81,7 @@ const productData: Product[] = [
     partnerName: "Eco Produce",
     branchName: "North Branch",
     companyName: "Organic Foods Inc",
-    image: "https://example.com/potatoes.jpg"
+    image: "https://example.com/potatoes.jpg",
   },
   {
     id: 3,
@@ -103,8 +103,8 @@ const productData: Product[] = [
     partnerName: "Grain Partners",
     branchName: "South Branch",
     companyName: "Grain Foods Inc",
-    image: "https://example.com/rice.jpg"
-  }
+    image: "https://example.com/rice.jpg",
+  },
   // Add more products as needed
 ];
 
@@ -240,7 +240,7 @@ const groupData: Group[] = [
     groupDescription: "High quality organic vegetables",
     quantity: 150,
     levelName: "Level 1",
-    status: "ACTIVE"
+    status: "ACTIVE",
   },
   {
     id: 2,
@@ -249,8 +249,8 @@ const groupData: Group[] = [
     groupDescription: "Essential grocery items",
     quantity: 200,
     levelName: "Level 2",
-    status: "ACTIVE"
-  }
+    status: "ACTIVE",
+  },
 ];
 
 // Add group table columns
@@ -329,6 +329,369 @@ interface GroupFormData {
   description: string;
 }
 
+// Add this interface for Add On data
+interface AddOn {
+  id: string | number;
+  name: string;
+  groupName: string;
+  type: string;
+  availableQuantity: number;
+  maximumQuantity: number;
+  costPerAddOn: number;
+  status: string;
+}
+
+// Add sample add-on data
+const addOnData: AddOn[] = [
+  {
+    id: 1,
+    name: "smal size pizza",
+    groupName: "Size",
+    type: "Veg",
+    availableQuantity: 1,
+    maximumQuantity: 10,
+    costPerAddOn: 0,
+    status: "ACTIVE",
+  },
+  {
+    id: 2,
+    name: "dfghj",
+    groupName: "dfghjk799",
+    type: "Veg",
+    availableQuantity: 10,
+    maximumQuantity: 10,
+    costPerAddOn: 2,
+    status: "ACTIVE",
+  },
+  {
+    id: 3,
+    name: "MANCHURIA",
+    groupName: "Test starter",
+    type: "Veg",
+    availableQuantity: 10,
+    maximumQuantity: 10,
+    costPerAddOn: 10,
+    status: "ACTIVE",
+  },
+];
+
+// Add add-on table columns
+const addOnTableColumns = [
+  {
+    id: "name",
+    key: "name",
+    label: "Name",
+    minWidth: 160,
+  },
+  {
+    id: "groupName",
+    key: "groupName",
+    label: "Group Name",
+    minWidth: 160,
+  },
+  {
+    id: "type",
+    key: "type",
+    label: "Type",
+    minWidth: 120,
+  },
+  {
+    id: "availableQuantity",
+    key: "availableQuantity",
+    label: "Available Quantity",
+    minWidth: 140,
+  },
+  {
+    id: "maximumQuantity",
+    key: "maximumQuantity",
+    label: "Maximum Quantity",
+    minWidth: 140,
+  },
+  {
+    id: "costPerAddOn",
+    key: "costPerAddOn",
+    label: "Cost per Add On (Rs.)",
+    type: "amount",
+    minWidth: 160,
+  },
+  {
+    id: "status",
+    key: "status",
+    label: "Status",
+    type: "status",
+    minWidth: 120,
+  },
+  {
+    id: "actions",
+    key: "actions",
+    label: "Action",
+    type: "actions",
+    minWidth: 100,
+    renderCell: (row: AddOn) => (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => handleEditAddOn(row)}
+          className="p-1 text-green-600 hover:text-green-700 rounded-full hover:bg-green-50"
+          title="Edit"
+        >
+          <Edit size={16} />
+        </button>
+        <button
+          onClick={() => handleViewAddOn(row)}
+          className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
+          title="View"
+        >
+          <Eye size={16} />
+        </button>
+      </div>
+    ),
+  },
+];
+
+// Add this interface for Menu data
+interface Menu {
+  id: string | number;
+  menuName: string;
+  menuCode: string;
+  menuCategory: string;
+  startDay: string;
+  endDay: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+}
+
+// Add sample menu data
+const menuData: Menu[] = [
+  {
+    id: 1,
+    menuName: "Breakfast Menu",
+    menuCode: "BF001",
+    menuCategory: "Breakfast",
+    startDay: "Monday",
+    endDay: "Sunday",
+    startTime: "07:00",
+    endTime: "11:00",
+    status: "ACTIVE",
+  },
+  {
+    id: 2,
+    menuName: "Lunch Special",
+    menuCode: "LN001",
+    menuCategory: "Lunch",
+    startDay: "Monday",
+    endDay: "Friday",
+    startTime: "12:00",
+    endTime: "15:00",
+    status: "ACTIVE",
+  },
+];
+
+// Add menu table columns
+const menuTableColumns = [
+  {
+    id: "menuName",
+    key: "menuName",
+    label: "Menu Name",
+    minWidth: 160,
+  },
+  {
+    id: "menuCode",
+    key: "menuCode",
+    label: "Menu Code",
+    minWidth: 140,
+  },
+  {
+    id: "menuCategory",
+    key: "menuCategory",
+    label: "Menu Category",
+    minWidth: 160,
+  },
+  {
+    id: "dayRange",
+    key: ["startDay", "endDay"],
+    label: "Start & End Day",
+    minWidth: 180,
+    renderCell: (row: Menu) => <span>{`${row.startDay} - ${row.endDay}`}</span>,
+  },
+  {
+    id: "timeRange",
+    key: ["startTime", "endTime"],
+    label: "Start & End Time",
+    minWidth: 180,
+    renderCell: (row: Menu) => (
+      <span>{`${row.startTime} - ${row.endTime}`}</span>
+    ),
+  },
+  {
+    id: "status",
+    key: "status",
+    label: "Status",
+    type: "status",
+    minWidth: 120,
+  },
+  {
+    id: "actions",
+    key: "actions",
+    label: "Action",
+    type: "actions",
+    minWidth: 100,
+    renderCell: (row: Menu) => (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => handleEditMenu(row)}
+          className="p-1 text-green-600 hover:text-green-700 rounded-full hover:bg-green-50"
+          title="Edit"
+        >
+          <Edit size={16} />
+        </button>
+        <button
+          onClick={() => handleViewMenu(row)}
+          className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
+          title="View"
+        >
+          <Eye size={16} />
+        </button>
+      </div>
+    ),
+  },
+];
+
+// Add this interface for Stock data
+interface Stock {
+  id: string | number;
+  productName: string;
+  skuId: string;
+  locationName: string;
+  quantityInHand: number;
+  alertQuantity: number;
+  status: string;
+}
+
+// Add sample stock data
+const stockData: Stock[] = [
+  {
+    id: 1,
+    productName: "shirts",
+    skuId: "SHRTM28",
+    locationName: "Bng Loc",
+    quantityInHand: 1,
+    alertQuantity: 5,
+    status: "Critical",
+  },
+  {
+    id: 2,
+    productName: "Gray T-shirt",
+    skuId: "7O08KC",
+    locationName: "MS warehouse",
+    quantityInHand: 1,
+    alertQuantity: 10,
+    status: "Critical",
+  },
+  {
+    id: 3,
+    productName: "t shirt",
+    skuId: "UDMI98",
+    locationName: "Bng Loc",
+    quantityInHand: 1,
+    alertQuantity: 10,
+    status: "Critical",
+  },
+  {
+    id: 4,
+    productName: "shirt",
+    skuId: "W27DGRHLTJNH",
+    locationName: "chennai",
+    quantityInHand: 5,
+    alertQuantity: 45,
+    status: "Critical",
+  },
+];
+
+// Add stock table columns
+const stockTableColumns = [
+  {
+    id: "productName",
+    key: "productName",
+    label: "Product Name",
+    minWidth: 200,
+    renderCell: (row: Stock) => (
+      <div className="flex items-center gap-3">
+        <img
+          src="/placeholder-image.jpg"
+          alt={row.productName}
+          className="w-12 h-12 rounded-lg object-cover"
+        />
+        <div>
+          <p className="font-medium">{row.productName}</p>
+          <p className="text-sm text-gray-500">{new Date().toLocaleString()}</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "skuId",
+    key: "skuId",
+    label: "SKU Id",
+    minWidth: 140,
+  },
+  {
+    id: "locationName",
+    key: "locationName",
+    label: "Location Name",
+    minWidth: 160,
+    renderCell: (row: Stock) => (
+      <div className="flex items-center gap-1">
+        {row.locationName}
+        <span className="text-blue-500 cursor-help" title="Location Info">
+          ⓘ
+        </span>
+      </div>
+    ),
+  },
+  {
+    id: "quantityInHand",
+    key: "quantityInHand",
+    label: "Quantity in hand",
+    minWidth: 140,
+    align: "center",
+  },
+  {
+    id: "alertQuantity",
+    key: "alertQuantity",
+    label: "Alert Quantity",
+    minWidth: 140,
+    align: "center",
+  },
+  {
+    id: "status",
+    key: "status",
+    label: "Status",
+    minWidth: 120,
+    renderCell: (row: Stock) => (
+      <span className="px-2 py-1 text-sm rounded-full bg-red-100 text-red-600">
+        {row.status}
+      </span>
+    ),
+  },
+  {
+    id: "action",
+    key: "action",
+    label: "Action",
+    minWidth: 100,
+    renderCell: (row: Stock) => (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => handleUpdateStock(row)}
+          className="px-3 py-1 text-sm text-white bg-primary-600 rounded hover:bg-primary-700"
+        >
+          Update
+        </button>
+      </div>
+    ),
+  },
+];
+
 const Products = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All Products");
@@ -336,34 +699,91 @@ const Products = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
-  
+
   // Separate pagination states for products and groups
   const [productPaginationState, setProductPaginationState] = useState({
     page_no: 1,
     per_page: 10,
-    total_rows: productData.length
+    total_rows: productData.length,
   });
 
   const [groupPaginationState, setGroupPaginationState] = useState({
     page_no: 1,
     per_page: 10,
-    total_rows: groupData.length
+    total_rows: groupData.length,
+  });
+
+  const [addOnPaginationState, setAddOnPaginationState] = useState({
+    page_no: 1,
+    per_page: 10,
+    total_rows: addOnData.length,
+  });
+
+  const [menuPaginationState, setMenuPaginationState] = useState({
+    page_no: 1,
+    per_page: 10,
+    total_rows: menuData.length,
+  });
+
+  const [stockPaginationState, setStockPaginationState] = useState({
+    page_no: 1,
+    per_page: 10,
+    total_rows: stockData.length,
   });
 
   // Separate handlers for product and group pagination
-  const handleProductPaginationChange = (params: { page_no?: number; per_page?: number }) => {
-    setProductPaginationState(prev => ({
+  const handleProductPaginationChange = (params: {
+    page_no?: number;
+    per_page?: number;
+  }) => {
+    setProductPaginationState((prev) => ({
       ...prev,
       page_no: params.page_no || prev.page_no,
-      per_page: params.per_page || prev.per_page
+      per_page: params.per_page || prev.per_page,
     }));
   };
 
-  const handleGroupPaginationChange = (params: { page_no?: number; per_page?: number }) => {
-    setGroupPaginationState(prev => ({
+  const handleGroupPaginationChange = (params: {
+    page_no?: number;
+    per_page?: number;
+  }) => {
+    setGroupPaginationState((prev) => ({
       ...prev,
       page_no: params.page_no || prev.page_no,
-      per_page: params.per_page || prev.per_page
+      per_page: params.per_page || prev.per_page,
+    }));
+  };
+
+  const handleAddOnPaginationChange = (params: {
+    page_no?: number;
+    per_page?: number;
+  }) => {
+    setAddOnPaginationState((prev) => ({
+      ...prev,
+      page_no: params.page_no || prev.page_no,
+      per_page: params.per_page || prev.per_page,
+    }));
+  };
+
+  const handleMenuPaginationChange = (params: {
+    page_no?: number;
+    per_page?: number;
+  }) => {
+    setMenuPaginationState((prev) => ({
+      ...prev,
+      page_no: params.page_no || prev.page_no,
+      per_page: params.per_page || prev.per_page,
+    }));
+  };
+
+  const handleStockPaginationChange = (params: {
+    page_no?: number;
+    per_page?: number;
+  }) => {
+    setStockPaginationState((prev) => ({
+      ...prev,
+      page_no: params.page_no || prev.page_no,
+      per_page: params.per_page || prev.per_page,
     }));
   };
 
@@ -378,7 +798,9 @@ const Products = () => {
           total_rows: groupData.length,
           page_no: groupPaginationState.page_no,
           per_page: groupPaginationState.per_page,
-          totalPages: Math.ceil(groupData.length / groupPaginationState.per_page)
+          totalPages: Math.ceil(
+            groupData.length / groupPaginationState.per_page
+          ),
         }}
         setParams={handleGroupPaginationChange}
       />
@@ -396,7 +818,9 @@ const Products = () => {
           total_rows: productData.length,
           page_no: productPaginationState.page_no,
           per_page: productPaginationState.per_page,
-          totalPages: Math.ceil(productData.length / productPaginationState.per_page)
+          totalPages: Math.ceil(
+            productData.length / productPaginationState.per_page
+          ),
         }}
         setParams={handleProductPaginationChange}
       />
@@ -405,7 +829,8 @@ const Products = () => {
 
   // Get paginated group data
   const getPaginatedGroupData = () => {
-    const startIndex = (groupPaginationState.page_no - 1) * groupPaginationState.per_page;
+    const startIndex =
+      (groupPaginationState.page_no - 1) * groupPaginationState.per_page;
     const endIndex = startIndex + groupPaginationState.per_page;
     return groupData.slice(startIndex, endIndex);
   };
@@ -413,15 +838,18 @@ const Products = () => {
   // Update getFilteredData to use productPaginationState
   const getFilteredData = () => {
     let filteredProducts = productData;
-    
+
     if (activeTab !== "All Products") {
-      const status = tabs.find(tab => tab.label === activeTab)?.status;
+      const status = tabs.find((tab) => tab.label === activeTab)?.status;
       if (status) {
-        filteredProducts = productData.filter(product => product.status === status);
+        filteredProducts = productData.filter(
+          (product) => product.status === status
+        );
       }
     }
 
-    const startIndex = (productPaginationState.page_no - 1) * productPaginationState.per_page;
+    const startIndex =
+      (productPaginationState.page_no - 1) * productPaginationState.per_page;
     const endIndex = startIndex + productPaginationState.per_page;
     return filteredProducts.slice(startIndex, endIndex);
   };
@@ -431,24 +859,24 @@ const Products = () => {
     const counts = {
       ACTIVE: 0,
       INACTIVE: 0,
-      DRAFT: 0
-    };
-    
-    productData.forEach(product => {
+      DRAFT: 0,
+    } as Record<string, number>;
+
+    productData.forEach((product) => {
       if (counts.hasOwnProperty(product.status)) {
         counts[product.status]++;
       }
     });
-    
+
     return counts;
   };
 
   const tabCounts = getTabCounts();
 
   // Update the tabs with actual counts
-  const updatedTabs = tabs.map(tab => {
-    if (tabCounts.hasOwnProperty(tab.status)) {
-      return { ...tab, count: tabCounts[tab.status] };
+  const updatedTabs = tabs.map((tab) => {
+    if (tab.status && tabCounts.hasOwnProperty(tab.status)) {
+      return { ...tab, count: tabCounts[tab.status as keyof typeof tabCounts] };
     }
     return tab;
   });
@@ -456,12 +884,28 @@ const Products = () => {
   // Add these handler functions in the Products component
   const handleViewGroup = (group: Group) => {
     // Implement view group logic
-    console.log('View group:', group);
+    console.log("View group:", group);
   };
 
   const handleEditGroup = (group: Group) => {
     // Implement edit group logic
-    console.log('Edit group:', group);
+    console.log("Edit group:", group);
+  };
+
+  const handleEditAddOn = (addOn: AddOn) => {
+    console.log("Edit add-on:", addOn);
+  };
+
+  const handleViewAddOn = (addOn: AddOn) => {
+    console.log("View add-on:", addOn);
+  };
+
+  const handleEditMenu = (menu: Menu) => {
+    console.log("Edit menu:", menu);
+  };
+
+  const handleViewMenu = (menu: Menu) => {
+    console.log("View menu:", menu);
   };
 
   // Add tableColumns definition inside Products component
@@ -687,7 +1131,7 @@ const Products = () => {
             </select>
           </div>
           <button
-            onClick={() => navigate('/dashboard/products/add-group')}
+            onClick={() => navigate("/dashboard/products/add-group")}
             className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
           >
             <Plus size={16} />
@@ -715,11 +1159,39 @@ const Products = () => {
             </div>
           </div>
           <button
-            onClick={() => console.log('Add Add-On')}
+            onClick={() => navigate("/dashboard/products/add-addon")}
             className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
           >
             <Plus size={16} />
             <span>ADD ADD-ON</span>
+          </button>
+        </div>
+      );
+    }
+
+    // For My Menu tab
+    if (activeTab === "My Menu") {
+      return (
+        <div className="flex flex-wrap gap-3 items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
+              <input
+                type="text"
+                placeholder="Search Menu"
+                className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/dashboard/products/add-menu")}
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
+          >
+            <Plus size={16} />
+            <span>ADD MENU</span>
           </button>
         </div>
       );
@@ -746,25 +1218,130 @@ const Products = () => {
   // Add this to the Products component
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [groupFormData, setGroupFormData] = useState<GroupFormData>({
-    groupName: '',
-    groupCode: '',
+    groupName: "",
+    groupCode: "",
     minCustomizations: 0,
     maxCustomizations: 1,
-    levelId: '',
-    description: ''
+    levelId: "",
+    description: "",
   });
 
   // Add these handler functions
   const handleGroupInputChange = (key: string, value: any) => {
-    setGroupFormData(prev => ({
+    setGroupFormData((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const handleSaveGroup = () => {
-    console.log('Saving group:', groupFormData);
+    console.log("Saving group:", groupFormData);
     setShowGroupModal(false);
+  };
+
+  // Add AddOnTable component
+  const AddOnTable: React.FC<{ data: AddOn[] }> = ({ data }) => (
+    <div className="bg-white rounded-lg shadow">
+      <CustomTable
+        headCells={addOnTableColumns}
+        data={data}
+        pagination={true}
+        meta_data={{
+          total_rows: addOnData.length,
+          page_no: addOnPaginationState.page_no,
+          per_page: addOnPaginationState.per_page,
+          totalPages: Math.ceil(
+            addOnData.length / addOnPaginationState.per_page
+          ),
+        }}
+        setParams={handleAddOnPaginationChange}
+      />
+    </div>
+  );
+
+  // Get paginated add-on data
+  const getPaginatedAddOnData = () => {
+    const startIndex =
+      (addOnPaginationState.page_no - 1) * addOnPaginationState.per_page;
+    const endIndex = startIndex + addOnPaginationState.per_page;
+    return addOnData.slice(startIndex, endIndex);
+  };
+
+  // Add MenuTable component
+  const MenuTable: React.FC<{ data: Menu[] }> = ({ data }) => (
+    <div className="bg-white rounded-lg shadow">
+      <CustomTable
+        headCells={menuTableColumns}
+        data={data}
+        pagination={true}
+        meta_data={{
+          total_rows: menuData.length,
+          page_no: menuPaginationState.page_no,
+          per_page: menuPaginationState.per_page,
+          totalPages: Math.ceil(menuData.length / menuPaginationState.per_page),
+        }}
+        setParams={handleMenuPaginationChange}
+      />
+    </div>
+  );
+
+  // Get paginated menu data
+  const getPaginatedMenuData = () => {
+    const startIndex =
+      (menuPaginationState.page_no - 1) * menuPaginationState.per_page;
+    const endIndex = startIndex + menuPaginationState.per_page;
+    return menuData.slice(startIndex, endIndex);
+  };
+
+  // Add StockTable component
+  const StockTable: React.FC<{ data: Stock[] }> = ({ data }) => (
+    <div className="bg-white rounded-lg shadow">
+      <CustomTable
+        headCells={stockTableColumns}
+        data={data}
+        pagination={true}
+        meta_data={{
+          total_rows: stockData.length,
+          page_no: stockPaginationState.page_no,
+          per_page: stockPaginationState.per_page,
+          totalPages: Math.ceil(
+            stockData.length / stockPaginationState.per_page
+          ),
+        }}
+        setParams={handleStockPaginationChange}
+      />
+    </div>
+  );
+
+  // Get paginated stock data
+  const getPaginatedStockData = () => {
+    const startIndex =
+      (stockPaginationState.page_no - 1) * stockPaginationState.per_page;
+    const endIndex = startIndex + stockPaginationState.per_page;
+    return stockData.slice(startIndex, endIndex);
+  };
+
+  // Add this state for the update quantity modal
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
+  const [updateQuantity, setUpdateQuantity] = useState<number>(0);
+
+  // Add this handler for updating stock
+  const handleUpdateStock = (stock: Stock) => {
+    setSelectedStock(stock);
+    setUpdateQuantity(stock.quantityInHand);
+    setShowUpdateModal(true);
+  };
+
+  // Add this handler for saving updated quantity
+  const handleSaveUpdate = () => {
+    if (selectedStock) {
+      console.log("Updating stock:", {
+        ...selectedStock,
+        quantityInHand: updateQuantity,
+      });
+      setShowUpdateModal(false);
+    }
   };
 
   return (
@@ -812,9 +1389,17 @@ const Products = () => {
 
         {/* Products Content */}
         <div className="p-4">
-          {activeTab === "My Groups" ? (
+          {activeTab === "Stock Overview" ? (
+            <StockTable data={getPaginatedStockData()} />
+          ) : activeTab === "My Menu" ? (
+            <MenuTable data={getPaginatedMenuData()} />
+          ) : activeTab === "Add Ons" ? (
+            <AddOnTable data={getPaginatedAddOnData()} />
+          ) : activeTab === "My Groups" ? (
             <GroupTable data={getPaginatedGroupData()} />
-          ) : ["All Products", "Active", "Inactive", "Draft"].includes(activeTab) ? (
+          ) : ["All Products", "Active", "Inactive", "Draft"].includes(
+              activeTab
+            ) ? (
             viewMode === "grid" ? (
               <ProductGrid data={getFilteredData()} />
             ) : (
@@ -971,15 +1556,23 @@ const Products = () => {
             <div className="space-y-6">
               {/* Header */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Create My Groups</h2>
-                <p className="text-sm text-gray-500">Create your custom groups for your customers</p>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Create My Groups
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Create your custom groups for your customers
+                </p>
               </div>
 
               {/* Basic Information Section */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">Basic Information</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                  Basic Information
+                </h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  This information is helpful for you to track your product. This information will be displayed publicly so be careful what you share.
+                  This information is helpful for you to track your product.
+                  This information will be displayed publicly so be careful what
+                  you share.
                 </p>
 
                 <AddForm
@@ -990,7 +1583,7 @@ const Products = () => {
                       label: "Custom Group Name",
                       required: true,
                       value: groupFormData.groupName,
-                      placeholder: "Custom Group Name"
+                      placeholder: "Custom Group Name",
                     },
                     {
                       type: "text",
@@ -998,7 +1591,7 @@ const Products = () => {
                       label: "Custom Group Code",
                       required: true,
                       value: groupFormData.groupCode,
-                      placeholder: "Custom Group Code"
+                      placeholder: "Custom Group Code",
                     },
                     {
                       type: "number",
@@ -1006,7 +1599,7 @@ const Products = () => {
                       label: "Add Minimum Customisations Allowed",
                       required: true,
                       value: groupFormData.minCustomizations,
-                      endIcon: <span className="text-gray-500">Units</span>
+                      endIcon: <span className="text-gray-500">Units</span>,
                     },
                     {
                       type: "number",
@@ -1014,7 +1607,7 @@ const Products = () => {
                       label: "Add Maximum Customisations Allowed",
                       required: true,
                       value: groupFormData.maxCustomizations,
-                      endIcon: <span className="text-gray-500">Units</span>
+                      endIcon: <span className="text-gray-500">Units</span>,
                     },
                     {
                       type: "select",
@@ -1025,9 +1618,9 @@ const Products = () => {
                       options: [
                         { value: "1", label: "Level 1" },
                         { value: "2", label: "Level 2" },
-                        { value: "3", label: "Level 3" }
+                        { value: "3", label: "Level 3" },
                       ],
-                      placeholder: "Select Level ID"
+                      placeholder: "Select Level ID",
                     },
                     {
                       type: "textarea",
@@ -1035,8 +1628,8 @@ const Products = () => {
                       label: "Group Description",
                       value: groupFormData.description,
                       placeholder: "Specific long description for your menu.",
-                      description: "Group description"
-                    }
+                      description: "Group description",
+                    },
                   ]}
                   handleInputonChange={handleGroupInputChange}
                   handleSelectonChange={handleGroupInputChange}
@@ -1056,6 +1649,112 @@ const Products = () => {
                   className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
                 >
                   Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUpdateModal && selectedStock && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <div className="space-y-6">
+              {/* Header */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Update Inventory
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Update your inventory in your Location
+                </p>
+              </div>
+
+              {/* Product Info */}
+              <div className="flex gap-4">
+                <img
+                  src="/placeholder-image.jpg"
+                  alt={selectedStock.productName}
+                  className="w-24 h-24 rounded-lg object-cover"
+                />
+                <div className="space-y-2">
+                  <h3 className="font-medium">{selectedStock.productName}</h3>
+                  <p className="text-sm text-gray-500">
+                    SKU ID- {selectedStock.skuId}
+                  </p>
+                </div>
+              </div>
+
+              {/* Location Info */}
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <p className="text-sm">
+                  <span className="font-medium">Location Name-</span> Marriott
+                  Hotel Whitefield, 8th Road, EPIP Zone
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Bengaluru, Karnataka</span>
+                </p>
+                <div className="flex justify-between">
+                  <p className="text-sm">
+                    <span className="font-medium">City -</span> Bengaluru
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Pincode -</span> 560066
+                  </p>
+                </div>
+              </div>
+
+              {/* Quantity Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Alert Quantity
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={selectedStock.alertQuantity}
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                      Unit
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Update Quantity
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={updateQuantity}
+                      onChange={(e) =>
+                        setUpdateQuantity(Number(e.target.value))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                      Unit
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  onClick={() => setShowUpdateModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  CANCEL
+                </button>
+                <button
+                  onClick={handleSaveUpdate}
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+                >
+                  Continue
                 </button>
               </div>
             </div>

@@ -12,11 +12,24 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (email === 'sellerapp_admin@adya.ai' || email === 'hub@adya.ai') {
+    // List of existing users
+    const existingUsers = ['sellerapp_admin@adya.ai', 'hub@adya.ai'];
+    
+    // Check if email is valid format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Check if it's an existing user
+    if (existingUsers.includes(email.toLowerCase())) {
       sessionStorage.setItem('pendingLoginEmail', email);
       navigate('/verify-otp');
     } else {
-      setError('Invalid email address');
+      // For new users, store email and redirect to onboarding
+      sessionStorage.setItem('pendingLoginEmail', email);
+      navigate('/onboarding');
     }
   };
 

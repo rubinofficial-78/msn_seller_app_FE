@@ -62,6 +62,10 @@ export const routes: RouteObject[] = [
     element: <VerifyOTP />,
   },
   {
+    path: "/onboarding",
+    element: <Onboarding />,
+  },
+  {
     path: "/sellers/onboarding",
     element: <SellerOnboarding />,
   },

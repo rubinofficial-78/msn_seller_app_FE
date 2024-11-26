@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Eye, Edit, LayoutGrid, List } from 'lucide-react';
+import { Plus, Eye, Edit, LayoutGrid, List, Search } from 'lucide-react';
+import CustomTable from '../components/CustomTable';
 
 interface Branch {
+  id: string;
   branchName: string;
   companyName: string;
   createdDate: string;
@@ -13,217 +15,252 @@ interface Branch {
   address: string;
   partnerCount: number;
   status: 'Active' | 'Inactive';
-  id: string; // Added id property to the Branch interface
 }
+
+// Define table columns for CustomTable
+const tableColumns = [
+  {
+    id: 'branchName',
+    key: 'branchName',
+    label: 'Branch Name',
+    minWidth: 180,
+  },
+  {
+    id: 'companyName',
+    key: 'companyName',
+    label: 'Company Name',
+    minWidth: 180,
+  },
+  {
+    id: 'createdDate',
+    key: 'createdDate',
+    label: 'Created Date',
+    minWidth: 140,
+  },
+  {
+    id: 'contactInformation',
+    key: ['contactInformation.email', 'contactInformation.phone'],
+    label: 'Contact Information',
+    minWidth: 200,
+    join: true,
+    join_type: 'multiline'
+  },
+  {
+    id: 'address',
+    key: 'address',
+    label: 'Address',
+    minWidth: 200,
+  },
+  {
+    id: 'partnerCount',
+    key: 'partnerCount',
+    label: 'Partner Count',
+    minWidth: 120,
+    type: 'number'
+  },
+  {
+    id: 'status',
+    key: 'status',
+    label: 'Status',
+    minWidth: 200,
+    type: 'status_toggle'
+  }
+];
+
+// Mock data
+const branchData: Branch[] = [
+  {
+    id: '1',
+    branchName: 'New Test Branch',
+    companyName: 'New Test Company',
+    createdDate: '18-10-2024',
+    contactInformation: {
+      email: 'new_company@test.com',
+      phone: '9896863423'
+    },
+    address: '3-44/3, gandhi nagar Chintal',
+    partnerCount: 1,
+    status: 'Active'
+  },
+  {
+    id: '2',
+    branchName: 'Downtown Branch',
+    companyName: 'New Test Company',
+    createdDate: '17-10-2024',
+    contactInformation: {
+      email: 'downtown@test.com',
+      phone: '9876543210'
+    },
+    address: '45 Main Street, Downtown',
+    partnerCount: 3,
+    status: 'Active'
+  },
+  {
+    id: '3',
+    branchName: 'East Side Branch',
+    companyName: 'New Test Company',
+    createdDate: '16-10-2024',
+    contactInformation: {
+      email: 'eastside@test.com',
+      phone: '9876543211'
+    },
+    address: '22 East Avenue',
+    partnerCount: 2,
+    status: 'Inactive'
+  }
+];
 
 const Branches: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All Branches');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'table'>('table');
+  const [params, setParams] = useState({
+    page: 1,
+    per_page: 10,
+    total: branchData.length
+  });
+  const [branches, setBranches] = useState(branchData);
 
-  // Mock data - replace with actual API call
-  const branches: Branch[] = [
-    {
-      branchName: 'New Test Branch',
-      companyName: 'New Test Company',
-      createdDate: '18-10-2024',
-      contactInformation: {
-        email: 'new_company@test.com',
-        phone: '9896863423'
-      },
-      address: '3-44/3, gandhi nagar Chintal',
-      partnerCount: 1,
-      status: 'Active',
-      id: '1', // Added id to the branch object
+  // Get filtered and paginated data
+  const getFilteredData = () => {
+    let filtered = branches;
+    
+    // Filter based on active tab
+    switch (activeTab) {
+      case 'Active Branches':
+        filtered = branches.filter(branch => branch.status === 'Active');
+        break;
+      case 'Inactive Branches':
+        filtered = filtered.filter(branch => branch.status === 'Inactive');
+        break;
     }
-  ];
 
-  const handleStatusToggle = (index: number) => {
-    // Here you would typically make an API call to update the status
-    const updatedBranches = [...branches];
-    updatedBranches[index].status = updatedBranches[index].status === 'Active' ? 'Inactive' : 'Active';
-    // setBranches(updatedBranches); // Uncomment when you have state management
+    // Calculate pagination
+    const startIndex = (params.page - 1) * params.per_page;
+    const endIndex = startIndex + params.per_page;
+    
+    return {
+      data: filtered.slice(startIndex, endIndex),
+      total: filtered.length
+    };
+  };
+
+  // Create metadata for pagination
+  const meta_data = {
+    total: getFilteredData().total,
+    per_page: params.per_page,
+    current_page: params.page,
+    last_page: Math.ceil(getFilteredData().total / params.per_page),
+    from: ((params.page - 1) * params.per_page) + 1,
+    to: Math.min(params.page * params.per_page, getFilteredData().total)
+  };
+
+  // Handle pagination params change
+  const handleParamsChange = (newParams: { page?: number; per_page?: number }) => {
+    setParams(prev => ({
+      ...prev,
+      page: newParams.page || prev.page,
+      per_page: newParams.per_page || prev.per_page,
+    }));
+  };
+
+  // Handle row click for view/edit actions
+  const handleRowClick = (row: Branch) => {
+    navigate(`view/${row.id}`);
+  };
+
+  // Add status toggle handler
+  const handleStatusToggle = async (row: Branch) => {
+    // Update the branches state with the toggled status
+    setBranches(prevBranches => 
+      prevBranches.map(branch => 
+        branch.id === row.id 
+          ? { ...branch, status: branch.status === 'Active' ? 'Inactive' : 'Active' }
+          : branch
+      )
+    );
   };
 
   return (
-    <div className="p-6">
+    <div className="space-y-4">
       {/* Tabs */}
-      <div className="border-b">
-        <div className="flex space-x-8">
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
           {['All Branches', 'Active Branches', 'Inactive Branches'].map((tab) => (
             <button
               key={tab}
-              className={`pb-4 ${
-                activeTab === tab
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-500'
-              }`}
               onClick={() => setActiveTab(tab)}
+              className={`
+                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                ${activeTab === tab
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
             >
               {tab}
             </button>
           ))}
-        </div>
+        </nav>
       </div>
 
       {/* Search and Actions */}
-      <div className="flex items-center justify-between my-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search by Branch Name"
-            className="pl-10 pr-4 py-2 border rounded-lg w-[300px]"
-          />
-          <span className="absolute left-3 top-2.5 text-gray-400">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-            </svg>
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex border rounded-lg overflow-hidden">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-500'}`}
-            >
-              <List size={20} />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-500'}`}
-            >
-              <LayoutGrid size={20} />
-            </button>
+      <div className="flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex flex-wrap gap-4 flex-1">
+          {/* Search */}
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search by Branch Name"
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
           </div>
+        </div>
+
+        {/* View Controls and Add Button */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+            title="List view"
+          >
+            <List size={20} />
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
+            title="Grid view"
+          >
+            <LayoutGrid size={20} />
+          </button>
           <button
             onClick={() => navigate('create')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus size={20} />
-            ADD
+            <span>ADD</span>
           </button>
         </div>
       </div>
 
-      {viewMode === 'list' ? (
-        <div className="bg-white rounded-lg mt-4">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-[#F8FAFC] border-b">
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">BRANCH NAME</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">COMPANY NAME</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">CREATED DATE</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">CONTACT INFORMATION</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">ADDRESS</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">PARTNER COUNT</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">STATUS</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">ACTION</th>
-              </tr>
-            </thead>
-            <tbody>
-              {branches.map((branch, index) => (
-                <tr key={branch.id} className="border-b"> {/* Changed key from index to branch.id */}
-                  <td className="px-6 py-4">{branch.branchName}</td>
-                  <td className="px-6 py-4">{branch.companyName}</td>
-                  <td className="px-6 py-4">{branch.createdDate}</td>
-                  <td className="px-6 py-4">
-                    <div>Email: {branch.contactInformation.email}</div>
-                    <div>Phone: {branch.contactInformation.phone}</div>
-                  </td>
-                  <td className="px-6 py-4">{branch.address}</td>
-                  <td className="px-6 py-4">
-                    <span className="text-blue-600 cursor-pointer">{branch.partnerCount}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={branch.status === 'Active'}
-                          onChange={() => handleStatusToggle(index)}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        branch.status === 'Active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {branch.status}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <Eye 
-                        className="w-5 h-5 text-blue-600 cursor-pointer" 
-                        onClick={() => navigate(`view/${branch.id}`)}
-                      />
-                      <Edit 
-                        className="w-5 h-5 text-blue-600 cursor-pointer" 
-                        onClick={() => navigate(`edit/${branch.id}`)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          {branches.map((branch, index) => (
-            <div key={branch.id} className="bg-white rounded-lg shadow p-6"> {/* Changed key from index to branch.id */}
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-medium">{branch.branchName}</h3>
-                  <p className="text-sm text-gray-500">{branch.companyName}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={branch.status === 'Active'}
-                      onChange={() => handleStatusToggle(index)}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    branch.status === 'Active' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {branch.status}
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <p className="text-gray-600">Created: {branch.createdDate}</p>
-                <div>
-                  <p className="text-gray-600">Contact Information:</p>
-                  <p>Email: {branch.contactInformation.email}</p>
-                  <p>Phone: {branch.contactInformation.phone}</p>
-                </div>
-                <p className="text-gray-600">Address: {branch.address}</p>
-                <p className="text-gray-600">
-                  Partner Count: <span className="text-blue-600 cursor-pointer">{branch.partnerCount}</span>
-                </p>
-              </div>
-              <div className="flex justify-end mt-4 gap-2">
-                <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-full">
-                  <Eye className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-full">
-                  <Edit className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Branches Table */}
+      <div className="bg-white rounded-lg shadow">
+        <CustomTable
+          headCells={tableColumns}
+          data={getFilteredData().data}
+          meta_data={meta_data}
+          setParams={handleParamsChange}
+          pagination={true}
+          onRowClick={handleRowClick}
+          onStatusToggle={handleStatusToggle}
+        />
+      </div>
+
+      {/* Pagination info */}
+      <div className="text-sm text-gray-500 text-right">
+        Showing {meta_data.from} to {meta_data.to} of {meta_data.total} entries
+      </div>
     </div>
   );
 };

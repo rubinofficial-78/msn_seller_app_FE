@@ -48,6 +48,7 @@ interface CustomTableProps {
   increment?: (index: number, value: number) => void;
   decrement?: (index: number, value: number) => void;
   onRowClick?: (row: any) => void;
+  onStatusToggle?: (row: any) => void;
 }
 
 const CustomTable: React.FC<CustomTableProps> = ({
@@ -57,6 +58,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
   setParams,
   pagination = true,
   onRowClick,
+  onStatusToggle
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -127,18 +129,28 @@ const CustomTable: React.FC<CustomTableProps> = ({
                               }
                             )}
                           </div>
-                        ) : cell.type === "status" ? (
-                          <span
-                            className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full
-                              ${
-                                row[cell.key as string] === "Active" ||
-                                row[cell.key as string] === "ACTIVE"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                          >
-                            {row[cell.key as string]}
-                          </span>
+                        ) : cell.type === "status_toggle" ? (
+                          <div className="flex items-center gap-2" onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusToggle && onStatusToggle(row);
+                          }}>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={row[cell.key as string] === 'Active'}
+                                onChange={() => {}}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              row[cell.key as string] === 'Active' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {row[cell.key as string]}
+                            </span>
+                          </div>
                         ) : cell.join ? (
                           <div className="text-gray-900">
                             {Array.isArray(cell.key)

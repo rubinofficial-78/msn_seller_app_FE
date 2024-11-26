@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, ExternalLink, LayoutList, LayoutGrid, Table, Eye, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import CustomTable from '../components/CustomTable';
 
 // Sample data for the companies table
 const companyData = [
@@ -304,19 +305,173 @@ const CompanyList: React.FC<CompanyTableProps> = ({ data }) => (
   </div>
 );
 
+// Define table columns for CustomTable
+const tableColumns = [
+  {
+    id: 'companyName',
+    key: 'companyName',
+    label: 'Company Name',
+    minWidth: 180,
+  },
+  {
+    id: 'whiteLabeledUrl',
+    key: 'whiteLabeledUrl',
+    label: 'White Labeled URL',
+    minWidth: 180,
+    type: 'link'
+  },
+  {
+    id: 'companyWebsite',
+    key: 'companyWebsite',
+    label: 'Company Website',
+    minWidth: 180,
+    type: 'link'
+  },
+  {
+    id: 'createdDate',
+    key: 'createdDate',
+    label: 'Created Date',
+    minWidth: 140,
+  },
+  {
+    id: 'contactInformation',
+    key: ['contactInformation.email', 'contactInformation.phone'],
+    label: 'Contact Information',
+    minWidth: 200,
+    join: true,
+    join_type: 'multiline'
+  },
+  {
+    id: 'address',
+    key: 'address',
+    label: 'Address',
+    minWidth: 200,
+  },
+  {
+    id: 'branchCount',
+    key: 'branchCount',
+    label: 'Branch Count',
+    minWidth: 120,
+    type: 'number'
+  },
+  {
+    id: 'systemUsersCount',
+    key: 'systemUsersCount',
+    label: 'System Users Count',
+    minWidth: 140,
+    type: 'number'
+  },
+  {
+    id: 'status',
+    key: 'status',
+    label: 'Status',
+    minWidth: 200,
+    type: 'status_toggle',
+  },
+  // {
+  //   id: 'actions',
+  //   key: 'actions',
+  //   label: 'Actions',
+  //   minWidth: 100,
+  //   type: 'actions',
+  // }
+];
+
 const Companies = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All Companies');
   const [viewMode, setViewMode] = useState<'table' | 'list' | 'grid'>('table');
+  const [params, setParams] = useState({
+    page: 1,
+    per_page: 10,
+    total: companyData.length
+  });
+  const [companies, setCompanies] = useState(companyData);
+
+  // Get filtered and paginated data
+  const getFilteredData = () => {
+    let filtered = companies;
+    
+    // Filter based on active tab
+    switch (activeTab) {
+      case 'Active Companies':
+        filtered = companies.filter(company => company.status === 'Active');
+        break;
+      case 'Inactive Companies':
+        filtered = filtered.filter(company => company.status === 'Inactive');
+        break;
+      case 'System Users':
+        filtered = filtered.filter(company => company.systemUsersCount > 0);
+        break;
+    }
+
+    // Calculate pagination
+    const startIndex = (params.page - 1) * params.per_page;
+    const endIndex = startIndex + params.per_page;
+    
+    return {
+      data: filtered.slice(startIndex, endIndex),
+      total: filtered.length
+    };
+  };
+
+  // Create metadata for pagination
+  const meta_data = {
+    total: getFilteredData().total,
+    per_page: params.per_page,
+    current_page: params.page,
+    last_page: Math.ceil(getFilteredData().total / params.per_page),
+    from: ((params.page - 1) * params.per_page) + 1,
+    to: Math.min(params.page * params.per_page, getFilteredData().total)
+  };
+
+  // Handle pagination params change
+  const handleParamsChange = (newParams: { page?: number; per_page?: number }) => {
+    setParams(prev => ({
+      ...prev,
+      page: newParams.page || prev.page,
+      per_page: newParams.per_page || prev.per_page,
+    }));
+  };
+
+  // Handle row click for view/edit actions
+  const handleRowClick = (row: any) => {
+    // You can customize this based on which column was clicked
+    navigate(`view/${row.id}`);
+  };
+
+  // Add status toggle handler
+  const handleStatusToggle = async (row: any) => {
+    // Update the companies state with the toggled status
+    setCompanies(prevCompanies => 
+      prevCompanies.map(company => 
+        company.id === row.id 
+          ? { ...company, status: company.status === 'Active' ? 'Inactive' : 'Active' }
+          : company
+      )
+    );
+  };
 
   const renderCompanies = () => {
     switch (viewMode) {
       case 'grid':
-        return <CompanyGrid data={companyData} />;
+        return <CompanyGrid data={getFilteredData().data} />;
       case 'list':
-        return <CompanyList data={companyData} />;
+        return <CompanyList data={getFilteredData().data} />;
       default:
-        return <CompanyTable data={companyData} />;
+        return (
+          <div className="bg-white rounded-lg shadow">
+            <CustomTable
+              headCells={tableColumns}
+              data={getFilteredData().data}
+              meta_data={meta_data}
+              setParams={handleParamsChange}
+              pagination={true}
+              onRowClick={handleRowClick}
+              onStatusToggle={handleStatusToggle} // Add status toggle handler
+            />
+          </div>
+        );
     }
   };
 

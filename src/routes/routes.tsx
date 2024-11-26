@@ -42,6 +42,7 @@ import AddProduct from "../pages/AddProduct";
 import BulkUpload from "../pages/BulkUpload";
 import UiConfig from '../pages/settings/UiConfig';
 import LogisticsDetails from "../pages/LogisticsDetails";
+import AddGroup from '../pages/AddGroup';
 // import ViewPartner from '../components/ViewPartner';
 // import EditPartner from '../components/EditPartner';
 
@@ -196,6 +197,10 @@ export const routes: RouteObject[] = [
                 <BulkUpload />
               </ProtectedRoute>
             ),
+          },
+          {
+            path: "add-group",
+            element: <AddGroup />
           },
         ],
       },

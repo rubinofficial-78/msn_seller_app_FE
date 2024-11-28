@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { BarChart3, DollarSign, Package, Users, ExternalLink, Settings } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
+import { getSellerDashboardCounts } from '../../redux/Action/action';
+import { AppDispatch } from '../../redux/store';
+import { RootState } from '../../redux/types';
+import { toast } from 'react-toastify';
 
 // Sample data for the category pie chart
 const categoryData = [
@@ -25,7 +30,34 @@ const orderData = [
 const COLORS = ['#4F46E5', '#EC4899', '#8B5CF6', '#10B981', '#F59E0B', '#6366F1'];
 
 const SellerDashboard = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const { isAdmin } = useAuth();
+  
+  const { 
+    data: dashboardCounts,
+    loading,
+    error 
+  } = useSelector((state: RootState) => state.data.sellerDashboard || {
+    loading: false,
+    error: null,
+    data: {
+      total_customers: 0,
+      total_products: 0,
+      total_orders: 0
+    }
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        await dispatch(getSellerDashboardCounts());
+      } catch (error: any) {
+        toast.error(error?.message || 'Failed to fetch dashboard data');
+      }
+    };
+
+    fetchDashboardData();
+  }, [dispatch]);
 
   return (
     <div className="p-4 space-y-6">
@@ -50,32 +82,38 @@ const SellerDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Revenue"
-          value="₹0"
-          icon={<DollarSign className="text-green-600" size={24} />}
-          bgColor="bg-green-50"
-        />
-        <StatCard
-          title="Total Orders"
-          value="48"
-          icon={<Package className="text-blue-600" size={24} />}
-          bgColor="bg-blue-50"
-        />
-        <StatCard
-          title="Active Products"
-          value="5"
-          icon={<BarChart3 className="text-orange-600" size={24} />}
-          bgColor="bg-orange-50"
-        />
-        <StatCard
-          title="Total Customers"
-          value="10"
-          icon={<Users className="text-purple-600" size={24} />}
-          bgColor="bg-purple-50"
-        />
-      </div>
+      {loading ? (
+        <div className="text-center py-4">Loading dashboard data...</div>
+      ) : error ? (
+        <div className="text-center text-red-600 py-4">{error}</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Total Revenue"
+            value="₹0"
+            icon={<DollarSign className="text-green-600" size={24} />}
+            bgColor="bg-green-50"
+          />
+          <StatCard
+            title="Total Orders"
+            value={dashboardCounts?.total_orders?.toString() || "0"}
+            icon={<Package className="text-blue-600" size={24} />}
+            bgColor="bg-blue-50"
+          />
+          <StatCard
+            title="Active Products"
+            value={dashboardCounts?.total_products?.toString() || "0"}
+            icon={<BarChart3 className="text-orange-600" size={24} />}
+            bgColor="bg-orange-50"
+          />
+          <StatCard
+            title="Total Customers"
+            value={dashboardCounts?.total_customers?.toString() || "0"}
+            icon={<Users className="text-purple-600" size={24} />}
+            bgColor="bg-purple-50"
+          />
+        </div>
+      )}
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

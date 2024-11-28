@@ -1,8 +1,15 @@
 import React, { useState } from "react";
-import AddForm from "../../../components/AddForm";
+import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
+import AddForm from "../../../components/AddForm";
+import { updateBankDetails } from "../../../redux/Action/action";
+import { AppDispatch } from "../../../redux/store";
+import { toast } from "react-toastify";
 
 const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  
   const [formValues, setFormValues] = useState({
     bankName: "",
     ifscCode: "",
@@ -10,8 +17,6 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
     beneficiaryName: "",
     cancelledCheque: "",
   });
-
-  const navigate = useNavigate();
 
   const handleInputChange = (key: string, value: any) => {
     setFormValues((prev) => ({
@@ -27,21 +32,70 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Save banking info
-    onNext(formValues);
+    // Validate required fields
+    if (!formValues.bankName.trim()) {
+      toast.error("Please enter bank name");
+      return;
+    }
+    if (!formValues.ifscCode.trim()) {
+      toast.error("Please enter IFSC code");
+      return;
+    }
+    if (!formValues.accountNumber.trim()) {
+      toast.error("Please enter account number");
+      return;
+    }
+    if (!formValues.beneficiaryName.trim()) {
+      toast.error("Please enter beneficiary name");
+      return;
+    }
+    if (!formValues.cancelledCheque) {
+      toast.error("Please upload cancelled cheque");
+      return;
+    }
 
-    // Get the email from local storage
-    const email = localStorage.getItem("pendingLoginEmail");
+    try {
+      const payload = {
+        account_holder_name: formValues.beneficiaryName.trim(),
+        account_number: formValues.accountNumber.trim(),
+        canceller_cheque: formValues.cancelledCheque,
+        ifsc_code: formValues.ifscCode.trim(),
+        bank_name: formValues.bankName.trim(),
+        section_key: "BANK_DETAILS"
+      };
 
-    if (email) {
-      // Mark onboarding as complete for this email
-      localStorage.setItem(`onboarding_${email}`, "true");
+      console.log('Submitting bank details:', payload);
 
-      // Go directly to seller dashboard after onboarding
-      navigate("/dashboard/seller-dashboard");
+      const result = await dispatch(updateBankDetails(2, payload));
+      console.log('Bank details update response:', result);
+
+      if (result?.payload?.meta?.status) {
+        toast.success("Bank details updated successfully");
+        
+        // Save banking info
+        onNext(formValues);
+
+        // Get the email from local storage
+        const email = localStorage.getItem("pendingLoginEmail");
+
+        if (email) {
+          // Mark onboarding as complete for this email
+          localStorage.setItem(`onboarding_${email}`, "true");
+          // Go directly to seller dashboard after onboarding
+          navigate("/dashboard ");
+        }
+      } else {
+        toast.error(result?.payload?.meta?.message || "Failed to update bank details");
+      }
+    } catch (error: any) {
+      console.error('Error updating bank details:', error);
+      const errorMessage = error?.response?.data?.meta?.message || 
+                          error?.message || 
+                          "An unexpected error occurred";
+      toast.error(errorMessage);
     }
   };
 
@@ -133,16 +187,21 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
       value: formValues.cancelledCheque,
       uploadText: "Upload a file",
       uploadDescription: "PNG, SVG up to 10MB",
-      handleImageLink: handleImageLink,
+      handleImageLink,
       description:
         "Upload your canceled Cheque which is required for banking verifications and penny drop",
       showLable: false,
+      required: true
     },
   ];
 
   return (
-    <form onSubmit={handleSubmit}>
-      <AddForm data={formFields} handleInputonChange={handleInputChange} />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <AddForm 
+        data={formFields} 
+        handleInputonChange={handleInputChange}
+        handleImageLink={handleImageLink}
+      />
 
       <div className="flex justify-between mt-6">
         <button

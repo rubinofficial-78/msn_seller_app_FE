@@ -17,6 +17,18 @@ export const GET_AFFILIATE_PARTNER_COUNTS_FAILURE = 'GET_AFFILIATE_PARTNER_COUNT
 export const GET_LOOKUP_CODES_REQUEST = 'GET_LOOKUP_CODES_REQUEST';
 export const GET_LOOKUP_CODES_SUCCESS = 'GET_LOOKUP_CODES_SUCCESS';
 export const GET_LOOKUP_CODES_FAILURE = 'GET_LOOKUP_CODES_FAILURE';
+export const UPDATE_USER_DETAILS_REQUEST = 'UPDATE_USER_DETAILS_REQUEST';
+export const UPDATE_USER_DETAILS_SUCCESS = 'UPDATE_USER_DETAILS_SUCCESS';
+export const UPDATE_USER_DETAILS_FAILURE = 'UPDATE_USER_DETAILS_FAILURE';
+export const UPDATE_STORE_DETAILS_REQUEST = 'UPDATE_STORE_DETAILS_REQUEST';
+export const UPDATE_STORE_DETAILS_SUCCESS = 'UPDATE_STORE_DETAILS_SUCCESS';
+export const UPDATE_STORE_DETAILS_FAILURE = 'UPDATE_STORE_DETAILS_FAILURE';
+export const FILE_UPLOAD_REQUEST = 'FILE_UPLOAD_REQUEST';
+export const FILE_UPLOAD_SUCCESS = 'FILE_UPLOAD_SUCCESS';
+export const FILE_UPLOAD_FAILURE = 'FILE_UPLOAD_FAILURE';
+export const GET_SELLER_DASHBOARD_COUNTS_REQUEST = 'GET_SELLER_DASHBOARD_COUNTS_REQUEST';
+export const GET_SELLER_DASHBOARD_COUNTS_SUCCESS = 'GET_SELLER_DASHBOARD_COUNTS_SUCCESS';
+export const GET_SELLER_DASHBOARD_COUNTS_FAILURE = 'GET_SELLER_DASHBOARD_COUNTS_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -53,6 +65,12 @@ export interface AuthState {
     error: string | null;
     data: LookupCode[] | null;
   };
+  fileUpload: {
+    loading: boolean;
+    error: string | null;
+    data: FileUploadResponse | null;
+  };
+  sellerDashboard: SellerDashboardState;
 }
 
 export interface RootState {
@@ -158,6 +176,66 @@ interface GetLookupCodesFailureAction {
   payload: string;
 }
 
+interface UpdateUserDetailsRequestAction {
+  type: typeof UPDATE_USER_DETAILS_REQUEST;
+}
+
+interface UpdateUserDetailsSuccessAction {
+  type: typeof UPDATE_USER_DETAILS_SUCCESS;
+  payload: any;
+}
+
+interface UpdateUserDetailsFailureAction {
+  type: typeof UPDATE_USER_DETAILS_FAILURE;
+  payload: string;
+}
+
+interface UpdateStoreDetailsRequestAction {
+  type: typeof UPDATE_STORE_DETAILS_REQUEST;
+}
+
+interface UpdateStoreDetailsSuccessAction {
+  type: typeof UPDATE_STORE_DETAILS_SUCCESS;
+  payload: any;
+}
+
+interface UpdateStoreDetailsFailureAction {
+  type: typeof UPDATE_STORE_DETAILS_FAILURE;
+  payload: string;
+}
+
+interface FileUploadRequestAction {
+  type: typeof FILE_UPLOAD_REQUEST;
+}
+
+interface FileUploadSuccessAction {
+  type: typeof FILE_UPLOAD_SUCCESS;
+  payload: FileUploadResponse;
+}
+
+interface FileUploadFailureAction {
+  type: typeof FILE_UPLOAD_FAILURE;
+  payload: string;
+}
+
+interface GetSellerDashboardCountsRequestAction {
+  type: typeof GET_SELLER_DASHBOARD_COUNTS_REQUEST;
+}
+
+interface GetSellerDashboardCountsSuccessAction {
+  type: typeof GET_SELLER_DASHBOARD_COUNTS_SUCCESS;
+  payload: {
+    total_customers: number;
+    total_products: number;
+    total_orders: number;
+  };
+}
+
+interface GetSellerDashboardCountsFailureAction {
+  type: typeof GET_SELLER_DASHBOARD_COUNTS_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -179,4 +257,59 @@ export type AuthActionTypes =
   | GetAffiliatePartnerCountsFailureAction
   | GetLookupCodesRequestAction
   | GetLookupCodesSuccessAction
-  | GetLookupCodesFailureAction; 
+  | GetLookupCodesFailureAction
+  | UpdateUserDetailsRequestAction
+  | UpdateUserDetailsSuccessAction
+  | UpdateUserDetailsFailureAction
+  | UpdateStoreDetailsRequestAction
+  | UpdateStoreDetailsSuccessAction
+  | UpdateStoreDetailsFailureAction
+  | FileUploadRequestAction
+  | FileUploadSuccessAction
+  | FileUploadFailureAction
+  | GetSellerDashboardCountsRequestAction
+  | GetSellerDashboardCountsSuccessAction
+  | GetSellerDashboardCountsFailureAction; 
+
+export interface FileUploadPayload {
+  data: string;      // base64 string without prefix
+  filetype: string;  // e.g., "image/png", "image/svg+xml"
+  extension: string; // e.g., ".png", ".svg"
+  module: string;    // e.g., "onboarding"
+} 
+
+interface SellerDashboardState {
+  loading: boolean;
+  error: string | null;
+  data: {
+    total_customers: number;
+    total_products: number;
+    total_orders: number;
+  } | null;
+} 
+
+interface StoreDetails {
+  id: number;
+  name: string;
+  code: string;
+  // ... other store details properties
+}
+
+interface UserDetailsResponse {
+  data: {
+    id: number;
+    name: string;
+    store_details: StoreDetails[];
+    // ... other user details properties
+  };
+  meta: {
+    status: boolean;
+    message: string;
+  };
+}
+
+interface UserDetailsState {
+  loading: boolean;
+  error: string | null;
+  data: UserDetailsResponse | null;
+} 

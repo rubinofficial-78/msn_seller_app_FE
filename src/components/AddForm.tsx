@@ -58,7 +58,7 @@ interface AddFormProps {
   handleLocation?: () => void;
   handleRadioChange?: (key: string, value: string) => void;
   handleSaveOnClick?: () => void;
-  handleImageLink?: (value: any) => void;
+  handleImageLink?: (id: string, link: string | null, index?: number) => void;
   showDeactivateButton?: boolean;
   onDeactivate?: () => void;
 }
@@ -193,19 +193,21 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
           id={field.key}
           value={field.value}
           label={field.label}
-          handleImageLink={handlers.handleImageLink}
+          handleImageLink={(id, imageUrl) => {
+            handlers.handleImageLink(id, imageUrl);
+          }}
           index={handlers.index}
           required={field.required}
         />
       );
 
-    case 'custom':
+    case "custom":
       return field.component;
 
-    case 'file':
+    case "file":
       return <FileUpload field={field} />;
 
-    case 'radio':
+    case "radio":
       return <CustomRadioGroup field={field} />;
 
     default:
@@ -213,17 +215,22 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
   }
 };
 
-const FileUpload: React.FC<{field: Field}> = ({ field }) => {
+const FileUpload: React.FC<{ field: Field }> = ({ field }) => {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700">
-        {field.label} {field.required && <span className="text-red-500">*</span>}
+        {field.label}{" "}
+        {field.required && <span className="text-red-500">*</span>}
       </label>
       <div className={field.uploadBoxStyle}>
         <div className="text-center">
           <div className="flex flex-col items-center justify-center">
-            <span className="text-blue-600 hover:text-blue-500">{field.uploadText}</span>
-            <p className="text-xs text-gray-500 mt-1">{field.uploadDescription}</p>
+            <span className="text-blue-600 hover:text-blue-500">
+              {field.uploadText}
+            </span>
+            <p className="text-xs text-gray-500 mt-1">
+              {field.uploadDescription}
+            </p>
           </div>
           <input
             type="file"
@@ -241,11 +248,12 @@ const FileUpload: React.FC<{field: Field}> = ({ field }) => {
   );
 };
 
-const CustomRadioGroup: React.FC<{field: Field}> = ({ field }) => {
+const CustomRadioGroup: React.FC<{ field: Field }> = ({ field }) => {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-3">
-        {field.label} {field.required && <span className="text-red-500">*</span>}
+        {field.label}{" "}
+        {field.required && <span className="text-red-500">*</span>}
       </label>
       <div className={field.radioStyle}>
         {field.options?.map((option) => (

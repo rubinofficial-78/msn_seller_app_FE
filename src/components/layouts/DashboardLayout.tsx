@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar';
 import { User, Settings, LogOut, Bell } from 'lucide-react';
 import NotificationDialog from '../NotificationDialog';
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../contexts/AuthContext';
+import { getUserDetails } from '../../redux/Action/action';
+import { AppDispatch } from '../../redux/store';
+import { RootState } from '../../redux/types';
+import { toast } from 'react-toastify';
 
 // Sample notifications (in real app, this would come from your state management)
 const sampleNotifications = [
@@ -19,11 +24,38 @@ const sampleNotifications = [
 ];
 
 const DashboardLayout = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState(sampleNotifications);
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+
+  const { data: userDetails, loading } = useSelector((state: RootState) => state.data.userDetails);
+  
+  const storeName = userDetails?.data?.store_details?.[0]?.name || 
+                   userDetails?.data?.name || 
+                   "Store";
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const userId = localStorage.getItem('userid');
+        if (!userId) {
+          console.error('No user ID found in localStorage');
+          return;
+        }
+
+        const result = await dispatch(getUserDetails(Number(userId)));
+        console.log('User Details Response:', result); // Debug log
+      } catch (error: any) {
+        console.error('Error fetching user details:', error);
+        toast.error(error?.message || 'Failed to fetch user details');
+      }
+    };
+
+    fetchUserDetails();
+  }, [dispatch, navigate]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -70,7 +102,7 @@ const DashboardLayout = () => {
                   className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg"
                 >
                   <span className="text-sm font-medium">
-                    {isAdmin ? "Seller Admin" : "Seller"}
+                    {loading ? "Loading..." : storeName}
                   </span>
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                     <User size={20} className="text-white" />

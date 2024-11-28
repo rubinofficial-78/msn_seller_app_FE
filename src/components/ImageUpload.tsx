@@ -1,103 +1,46 @@
+//@ts-nocheck
 import React, { useEffect, useState } from "react";
 import ImageUploading from "react-images-uploading";
-import Cropper from "react-easy-crop";
 import { Image } from "@chakra-ui/image";
 import { useDispatch } from "react-redux";
-import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Button } from "@mui/material";
+import { IconButton, Dialog, DialogTitle, DialogContent } from "@mui/material";
 import { toast } from "react-toastify";
-import { Trash2, Eye } from 'lucide-react';
+import { uploadFile } from "../redux/Action/action";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { Eye } from "lucide-react";
 
-interface ImageUploadProps {
-  id?: string;
-  value?: string | null;
-  label?: string;
-  aspect_ratio?: number | "free";
-  handleImageLink?: (id: string, link: string | null, index?: number) => void;
-  index?: number;
-  showLable?: boolean;
-  text?: string;
-  required?: boolean;
-  uploadText?: string;
-  uploadDescription?: string;
-  multiple?: boolean;
-}
-
-// Helper function to crop image
-const cropImage = async (imageSrc: string, pixelCrop: any) => {
-  return new Promise<string>((resolve, reject) => {
-    const image = document.createElement('img');
-    image.src = imageSrc;
-    
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) {
-        reject(new Error('No 2d context'));
-        return;
-      }
-
-      canvas.width = pixelCrop.width;
-      canvas.height = pixelCrop.height;
-
-      ctx.drawImage(
-        image,
-        pixelCrop.x,
-        pixelCrop.y,
-        pixelCrop.width,
-        pixelCrop.height,
-        0,
-        0,
-        pixelCrop.width,
-        pixelCrop.height
-      );
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error('Canvas is empty'));
-            return;
-          }
-          resolve(URL.createObjectURL(blob));
-        },
-        'image/jpeg',
-        1
-      );
-    };
-
-    image.onerror = () => {
-      reject(new Error('Failed to load image'));
-    };
-  });
-};
-
-const ImageUploadingButton: React.FC<{ value: any; onChange: (value: any) => void; uploadText?: string; uploadDescription?: string }> = 
-  ({ value, onChange, uploadText, uploadDescription }) => {
+const ImageUploadingButton = ({ value, onChange, ...props }) => {
   return (
     <ImageUploading
       value={value}
       onChange={onChange}
-      acceptType={["jpg", "png", "gif"]}
-      maxFileSize={10485760} // 10MB
-      multiple
+      acceptType={["png", "svg"]}
+      maxFileSize={10485760} // 10MB in bytes
     >
       {({ onImageUpload, onImageUpdate, isDragging, dragProps }) => (
         <div className="col-span-full">
           <div
-            className={`mt-2 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-10 cursor-pointer
-              ${isDragging ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-400'}`}
-            onClick={onImageUpload}
+            className={`mt-2 flex justify-center rounded-lg px-6 py-10`}
             {...dragProps}
+            style={{
+              backgroundColor: isDragging ? "rgb(229 231 235)" : "white",
+              backgroundImage: `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='15' ry='15' stroke='%2311182740' stroke-width='2' stroke-dasharray='8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e")`,
+              borderRadius: "15px",
+            }}
           >
             <div className="text-center">
-              <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                <label className="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 hover:text-blue-500">
-                  <span>{uploadText || 'Upload files'}</span>
+              <div className="flex text-sm leading-6 text-gray-600">
+                <label
+                  htmlFor="file-upload"
+                  className="relative cursor-pointer rounded-md font-semibold text-indigo-600"
+                  onClick={value ? onImageUpload : () => onImageUpdate(0)}
+                >
+                  Upload a file
                 </label>
                 <p className="pl-1">or drag and drop</p>
               </div>
               <p className="text-xs leading-5 text-gray-600">
-                {uploadDescription || 'PNG, JPG, GIF up to 10MB'}
+                PNG, SVG up to 10MB
               </p>
             </div>
           </div>
@@ -107,200 +50,203 @@ const ImageUploadingButton: React.FC<{ value: any; onChange: (value: any) => voi
   );
 };
 
-const ImageCropper: React.FC<{
-  open: boolean;
-  image: string;
-  onComplete: (croppedImage: string) => void;
-  containerStyle?: React.CSSProperties;
-  aspect_ratio: number;
-}> = ({ open, image, onComplete, containerStyle, aspect_ratio }) => {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+function TailAddSingleImage(props) {
+  const dispatch = useDispatch();
+  const { handleImageLink, id, index, required = false } = props;
+  const [storeLogo, setStoreLogo] = useState([]);
 
-  const handleCrop = async () => {
-    try {
-      const croppedImage = await cropImage(image, croppedAreaPixels);
-      onComplete(croppedImage);
-    } catch (error) {
-      console.error('Error cropping image:', error);
+  useEffect(() => {
+    if (storeLogo?.length) {
+      for (let index = 0; index < storeLogo?.length; index++) {
+        let reader = new FileReader();
+        reader.readAsDataURL(storeLogo[index]);
+        reader.onload = (e) => {
+          const payload = {
+            data: e.target.result.split(",")[1],
+            filetype: storeLogo[index]?.type,
+            extension:
+              "." +
+              storeLogo[index]?.name?.split(".")[
+                storeLogo[index]?.name?.split(".")?.length - 1
+              ],
+            module: "onboarding",
+          };
+          dispatch(
+            uploadFile(payload, (resp) => {
+              handleImageLink(id, resp?.data?.link, index);
+            })
+          );
+        };
+      }
     }
-  };
+  }, [storeLogo]);
 
   return (
-    <Dialog open={open} maxWidth="sm" fullWidth>
-      <DialogTitle>Crop Image</DialogTitle>
+    <label
+      htmlFor={id ?? "file-upload"}
+      className="relative cursor-pointer rounded-md font-semibold"
+    >
+      <div
+        className={`mt-2 gridjustify-center rounded-lg px-6 py-10 text-indigo-600`}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='15' ry='15' stroke='%2311182740' stroke-width='2' stroke-dasharray='8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e")`,
+          borderRadius: "15px",
+        }}
+      >
+        <div className="w-full text-center text-sm leading-6">
+          Upload a file
+        </div>
+        <p className="text-xs leading-5 text-gray-600">PNG, SVG up to 10MB</p>
+      </div>
+      <input
+        id={id ?? "file-upload"}
+        name={id ?? "file-upload"}
+        type="file"
+        accept="image/svg+xml, image/png"
+        className="sr-only"
+        onChange={(e) => {
+          setStoreLogo(e.target.files);
+        }}
+        required={required}
+      />
+    </label>
+  );
+}
+
+const ImagePreviewDialog = ({ open, onClose, imageUrl }) => {
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle className="flex justify-between items-center">
+        <span>Image Preview</span>
+        <IconButton onClick={onClose} size="small">
+          <span className="text-gray-500 text-xl">&times;</span>
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
-        <div style={containerStyle}>
-          <Cropper
-            image={image}
-            crop={crop}
-            zoom={zoom}
-            aspect={aspect_ratio}
-            onCropChange={setCrop}
-            onCropComplete={(_, croppedAreaPixels) => {
-              setCroppedAreaPixels(croppedAreaPixels);
-            }}
-            onZoomChange={setZoom}
+        <div className="flex justify-center p-4">
+          <img
+            src={imageUrl}
+            alt="Preview"
+            className="max-w-full max-h-[60vh] object-contain"
+            style={{ margin: "auto" }}
           />
         </div>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleCrop}>
-          Finish
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };
 
-const ImageUpload: React.FC<ImageUploadProps> = ({
+export default function ImageUpload({
   id,
   value = null,
   label = "Image Upload",
-  aspect_ratio = 1,
   handleImageLink = () => {},
   index,
   showLable = true,
   text = "",
   required = false,
-  uploadText,
-  uploadDescription,
-  multiple = false
-}) => {
-  const [images, setImages] = useState<any[]>([]);
-  const [croppedImages, setCroppedImages] = useState<string[]>([]);
-  const [currentImage, setCurrentImage] = useState<string>('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string>('');
+}) {
+  const dispatch = useDispatch();
+  const [images, setImages] = useState([]);
+  const [uploadedImage, setUploadedImage] = useState(value);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (croppedImages.length > 0) {
-      handleImageLink(id || '', croppedImages.join(','), index);
+    setUploadedImage(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (images.length > 0) {
+      const file = images[0].file;
+      const file_type = file?.type?.split("/")[1];
+
+      if (["png", "svg", "svg+xml"]?.includes(file_type)) {
+        const payload = {
+          data: images[0].dataURL.split(",")[1],
+          filetype: file.type,
+          extension: "." + file_type,
+          module: "company_details",
+        };
+
+        dispatch(
+          uploadFile(payload, (resp) => {
+            if (resp?.meta?.status) {
+              const imageUrl = resp?.data?.link;
+              setUploadedImage(imageUrl);
+              handleImageLink(id, imageUrl, index);
+            } else {
+              toast.error(resp?.meta?.message || "Failed to upload image");
+            }
+          })
+        );
+      } else {
+        toast.error("The supported formats are PNG and SVG");
+      }
     }
-  }, [croppedImages]);
+  }, [images]);
 
-  const handleDeleteImage = (index: number) => {
-    const newCroppedImages = croppedImages.filter((_, i) => i !== index);
-    setCroppedImages(newCroppedImages);
-    handleImageLink(id || '', newCroppedImages.join(','), index);
-  };
-
-  const handleNewImages = (imageList: any) => {
-    setImages(imageList);
-    if (aspect_ratio === 'free') {
-      // If no cropping needed, directly use the images
-      const newImages = imageList.map((img: any) => img.dataURL);
-      setCroppedImages(prev => [...prev, ...newImages]);
-    } else {
-      // If cropping needed, open dialog for each image
-      setCurrentImage(imageList[0].dataURL);
-      setDialogOpen(true);
-    }
-  };
-
-  const handleCroppedImage = (croppedImage: string) => {
-    setCroppedImages(prev => [...prev, croppedImage]);
-    setDialogOpen(false);
-  };
-
-  const handleViewImage = (image: string) => {
-    setSelectedImage(image);
-    setViewDialogOpen(true);
+  const handleDeleteImage = () => {
+    setUploadedImage(null);
+    setImages([]);
+    handleImageLink(id, null, index);
   };
 
   return (
-    <div className="w-full">
+    <div className="">
       {showLable && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
+        <span className="text-[#181E7F] font-medium">
+          {label ?? "Upload Your Image"}
+        </span>
       )}
-
-      <div className="space-y-4">
-        {/* Image Preview Grid */}
-        {croppedImages.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {croppedImages.map((img, idx) => (
-              <div key={idx} className="relative group">
-                <img
-                  src={img}
-                  alt={`Product ${idx + 1}`}
-                  className="h-24 w-24 object-cover rounded-lg"
-                />
-                <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {/* View Button */}
-                  <button
-                    onClick={() => handleViewImage(img)}
-                    className="p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                    title="View Image"
-                  >
-                    <Eye size={16} />
-                  </button>
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => handleDeleteImage(idx)}
-                    className="p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                    title="Delete Image"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+      <div className="mt-4 place-items-center grid grid-cols-2 max-w-xl">
+        <div className="">
+          {uploadedImage ? (
+            <div className="relative group w-24 h-24">
+              <Image
+                src={uploadedImage}
+                alt="image"
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <button
+                  onClick={() => setPreviewDialogOpen(true)}
+                  className="p-1 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
+                  title="View Image"
+                >
+                  <Eye size={16} className="text-blue-600" />
+                </button>
+                <button
+                  onClick={handleDeleteImage}
+                  className="p-1 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
+                  title="Delete Image"
+                >
+                  <DeleteIcon fontSize="small" className="text-red-600" />
+                </button>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ) : (
+            <ImageUploadingButton
+              className="w-fit"
+              value={images}
+              onChange={setImages}
+            />
+          )}
+        </div>
 
-        {/* Upload Button */}
-        <ImageUploadingButton
-          value={images}
-          onChange={handleNewImages}
-          uploadText={uploadText}
-          uploadDescription={uploadDescription}
-        />
+        <div className="text-[10px] md:text-sm font-medium">
+          {text
+            ? text
+            : "For the logo image, please ensure it has a transparent background. Additionally, the file size should not exceed 10 megabytes. Accepted formats include PNG, SVG."}
+        </div>
       </div>
 
-      {/* Cropper Dialog */}
-      {aspect_ratio !== 'free' && (
-        <ImageCropper
-          open={dialogOpen}
-          image={currentImage}
-          onComplete={handleCroppedImage}
-          aspect_ratio={aspect_ratio}
-          containerStyle={{
-            position: "relative",
-            width: "100%",
-            height: 300,
-          }}
+      {uploadedImage && (
+        <ImagePreviewDialog
+          open={previewDialogOpen}
+          onClose={() => setPreviewDialogOpen(false)}
+          imageUrl={uploadedImage}
         />
       )}
-
-      {/* Image View Dialog */}
-      <Dialog 
-        open={viewDialogOpen} 
-        onClose={() => setViewDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle className="flex justify-between items-center">
-          Image Preview
-          <IconButton onClick={() => setViewDialogOpen(false)} size="small">
-            <span className="text-gray-500">&times;</span>
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <div className="flex justify-center">
-            <img
-              src={selectedImage}
-              alt="Preview"
-              className="max-h-[70vh] object-contain"
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
-};
-
-export default ImageUpload; 
+}

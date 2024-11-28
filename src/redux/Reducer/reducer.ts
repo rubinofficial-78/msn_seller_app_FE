@@ -16,7 +16,14 @@ import {
   GET_AFFILIATE_PARTNER_COUNTS_FAILURE, 
   GET_LOOKUP_CODES_REQUEST, 
   GET_LOOKUP_CODES_SUCCESS, 
-  GET_LOOKUP_CODES_FAILURE 
+  GET_LOOKUP_CODES_FAILURE, 
+  FILE_UPLOAD_REQUEST, 
+  FILE_UPLOAD_SUCCESS, 
+  FILE_UPLOAD_FAILURE, 
+  GET_SELLER_DASHBOARD_COUNTS_REQUEST, 
+  GET_SELLER_DASHBOARD_COUNTS_SUCCESS, 
+  GET_SELLER_DASHBOARD_COUNTS_FAILURE, 
+  GET_USER_SUCCESS 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -53,6 +60,20 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  fileUpload: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  sellerDashboard: {
+    loading: false,
+    error: null,
+    data: {
+      total_customers: 0,
+      total_products: 0,
+      total_orders: 0
+    }
   }
 };
 
@@ -210,6 +231,69 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           ...state.lookupCodes,
           loading: false,
           error: action.payload
+        }
+      };
+    case FILE_UPLOAD_REQUEST:
+      return {
+        ...state,
+        fileUpload: {
+          ...state.fileUpload,
+          loading: true,
+          error: null
+        }
+      };
+    case FILE_UPLOAD_SUCCESS:
+      return {
+        ...state,
+        fileUpload: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case FILE_UPLOAD_FAILURE:
+      return {
+        ...state,
+        fileUpload: {
+          ...state.fileUpload,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_SELLER_DASHBOARD_COUNTS_REQUEST:
+      return {
+        ...state,
+        sellerDashboard: {
+          ...state.sellerDashboard,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_SELLER_DASHBOARD_COUNTS_SUCCESS:
+      return {
+        ...state,
+        sellerDashboard: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_SELLER_DASHBOARD_COUNTS_FAILURE:
+      return {
+        ...state,
+        sellerDashboard: {
+          ...state.sellerDashboard,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_USER_SUCCESS:
+      return {
+        ...state,
+        userDetails: {
+          loading: false,
+          error: null,
+          data: action.payload.data
         }
       };
     default:

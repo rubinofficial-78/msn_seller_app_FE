@@ -1,13 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from 'react-redux';
 import AddForm from "../../../components/AddForm";
+import { getLookupCodes } from "../../../redux/Action/action";
+import { RootState } from "../../../redux/types";
+import { AppDispatch } from "../../../redux/store";
 
 const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: businessTypes, loading } = useSelector((state: RootState) => state.data.lookupCodes);
+  
   const [formValues, setFormValues] = useState({
     gstNumber: "",
-    businessType: "Sole Proprietorship",
+    businessType: "",
     govtId: "",
     signature: "",
   });
+
+  useEffect(() => {
+    dispatch(getLookupCodes('TYPE_OF_BUSINESS'));
+  }, [dispatch]);
 
   const handleInputChange = (key: string, value: any) => {
     setFormValues(prev => ({
@@ -71,23 +82,23 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
             Business Type
           </label>
           <div className="space-y-3">
-            {[
-              "Sole Proprietorship",
-              "Private Limited Company",
-              "Partnerships"
-            ].map((type) => (
-              <label key={type} className="flex items-center">
-                <input
-                  type="radio"
-                  name="businessType"
-                  value={type}
-                  checked={formValues.businessType === type}
-                  onChange={(e) => handleInputChange("businessType", e.target.value)}
-                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">{type}</span>
-              </label>
-            ))}
+            {loading ? (
+              <div>Loading business types...</div>
+            ) : (
+              businessTypes?.map((type) => (
+                <label key={type.id} className="flex items-center">
+                  <input
+                    type="radio"
+                    name="businessType"
+                    value={type.lookup_code}
+                    checked={formValues.businessType === type.lookup_code}
+                    onChange={(e) => handleInputChange("businessType", e.target.value)}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">{type.display_name}</span>
+                </label>
+              ))
+            )}
           </div>
         </div>
       )

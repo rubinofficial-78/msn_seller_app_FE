@@ -287,7 +287,7 @@ export const routes: RouteObject[] = [
             element: <LocationServices />,
           },
           {
-            path: "shipping-details/:id",
+            path: "shipping/:id",
             element: <ShippingDetailsPage />,
           },
         ],

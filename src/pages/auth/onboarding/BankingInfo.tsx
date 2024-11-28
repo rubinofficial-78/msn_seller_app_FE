@@ -14,34 +14,34 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
   const navigate = useNavigate();
 
   const handleInputChange = (key: string, value: any) => {
-    setFormValues(prev => ({
+    setFormValues((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const handleImageLink = (id: string, link: string | null) => {
-    setFormValues(prev => ({
+    setFormValues((prev) => ({
       ...prev,
-      [id]: link || ""
+      [id]: link || "",
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Save banking info
     onNext(formValues);
 
-    // Get the email from session storage
-    const email = sessionStorage.getItem('pendingLoginEmail');
-    
+    // Get the email from local storage
+    const email = localStorage.getItem("pendingLoginEmail");
+
     if (email) {
       // Mark onboarding as complete for this email
-      sessionStorage.setItem(`onboarding_${email}`, 'true');
-      
+      localStorage.setItem(`onboarding_${email}`, "true");
+
       // Go directly to seller dashboard after onboarding
-      navigate('/dashboard/seller-dashboard');
+      navigate("/dashboard/seller-dashboard");
     }
   };
 
@@ -55,7 +55,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
             Banking Details
           </h2>
         </div>
-      )
+      ),
     },
     {
       type: "custom",
@@ -87,7 +87,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
             />
           </div>
         </div>
-      )
+      ),
     },
     {
       type: "custom",
@@ -101,25 +101,30 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
             <input
               type="text"
               value={formValues.accountNumber}
-              onChange={(e) => handleInputChange("accountNumber", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("accountNumber", e.target.value)
+              }
               placeholder="Account number"
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name Of Beneficiary Account holder <span className="text-red-500">*</span>
+              Name Of Beneficiary Account holder{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formValues.beneficiaryName}
-              onChange={(e) => handleInputChange("beneficiaryName", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("beneficiaryName", e.target.value)
+              }
               placeholder="Name Of Beneficiary Account holder"
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
         </div>
-      )
+      ),
     },
     {
       type: "image",
@@ -129,18 +134,16 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
       uploadText: "Upload a file",
       uploadDescription: "PNG, SVG up to 10MB",
       handleImageLink: handleImageLink,
-      description: "Upload your canceled Cheque which is required for banking verifications and penny drop",
-      showLable: false
-    }
+      description:
+        "Upload your canceled Cheque which is required for banking verifications and penny drop",
+      showLable: false,
+    },
   ];
 
   return (
     <form onSubmit={handleSubmit}>
-      <AddForm
-        data={formFields}
-        handleInputonChange={handleInputChange}
-      />
-      
+      <AddForm data={formFields} handleInputonChange={handleInputChange} />
+
       <div className="flex justify-between mt-6">
         <button
           type="button"
@@ -160,4 +163,4 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
   );
 };
 
-export default BankingInfo; 
+export default BankingInfo;

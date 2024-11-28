@@ -1,5 +1,9 @@
-import React from 'react';
-import { Users, ShoppingCart, Store, Package, CheckCircle, Clock, XCircle, RotateCcw } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Users, ShoppingCart, Store, Package, CheckCircle, Clock, XCircle, RotateCcw, DollarSign } from 'lucide-react';
+import { getDashboardCounts, getSellerCounts, getAffiliatePartnerCounts } from '../redux/Action/action';
+import { RootState } from '../redux/types';
+import { AppDispatch } from '../redux/store';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Sample data for the chart
@@ -62,30 +66,54 @@ const StatCard = ({ title, value, icon: Icon, subStats = [], className = "bg-whi
 );
 
 const Dashboard = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: dashboardData, loading: dashboardLoading } = useSelector((state: RootState) => state.data.dashboardCounts);
+  const { data: sellerCounts, loading: sellerLoading } = useSelector((state: RootState) => state.data.sellerCounts);
+  const { data: affiliatePartnerCounts, loading: affiliateLoading } = useSelector((state: RootState) => state.data.affiliatePartnerCounts);
+
+  useEffect(() => {
+    dispatch(getDashboardCounts());
+    dispatch(getSellerCounts());
+    dispatch(getAffiliatePartnerCounts());
+  }, [dispatch]);
+
   return (
     <div className="space-y-6">
       {/* Stats Grid - Made it 4 columns */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Revenue Card */}
+        <StatCard
+          title="Total Revenue"
+          value={`$${dashboardData?.total_revenue._sum.order_amount || 0}`}
+          icon={DollarSign}
+        />
+        
         <StatCard
           title="Total Partners"
-          value="30"
+          value={affiliatePartnerCounts?.Total.toString() || "0"}
           icon={Users}
           subStats={[
             {
               icon: <Users className="text-blue-500" size={14} />,
               label: "Active Partners",
-              value: "23"
+              value: affiliatePartnerCounts?.Approved.toString() || "0"
             },
             {
-              icon: <Users className="text-orange-500" size={14} />,
-              label: "In-Active Partners",
-              value: "2"
+              icon: <Clock className="text-orange-500" size={14} />,
+              label: "Pending Partners",
+              value: affiliatePartnerCounts?.Pending.toString() || "0"
+            },
+            {
+              icon: <XCircle className="text-red-500" size={14} />,
+              label: "Rejected Partners",
+              value: affiliatePartnerCounts?.Rejected.toString() || "0"
             }
           ]}
         />
+        
         <StatCard
           title="Total Orders"
-          value="2678"
+          value={dashboardData?.total_sales_orders.toString() || "0"}
           icon={ShoppingCart}
           subStats={[
             {
@@ -115,31 +143,33 @@ const Dashboard = () => {
             }
           ]}
         />
+        
         <StatCard
           title="Total Sellers"
-          value="1096"
+          value={dashboardData?.total_sellers.toString() || "0"}
           icon={Store}
           subStats={[
             {
               icon: <Store className="text-blue-500" size={14} />,
-              label: "Active Sellers",
-              value: "3"
+              label: "Approved Sellers",
+              value: sellerCounts?.Approved.toString() || "0"
             },
             {
               icon: <Clock className="text-orange-500" size={14} />,
               label: "Pending Approval",
-              value: "698"
+              value: sellerCounts?.Pending.toString() || "0"
             },
             {
               icon: <XCircle className="text-red-500" size={14} />,
               label: "Rejected Approval",
-              value: "395"
+              value: sellerCounts?.Rejected.toString() || "0"
             }
           ]}
         />
+        
         <StatCard
           title="Total Products"
-          value="2702"
+          value={dashboardData?.total_products.toString() || "0"}
           icon={Package}
         />
       </div>

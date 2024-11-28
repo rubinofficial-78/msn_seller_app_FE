@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   user: { email: string; role: string } | null;
@@ -10,33 +10,35 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; role: string } | null>(
+    null
+  );
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const email = sessionStorage.getItem('pendingLoginEmail');
+    const email = localStorage.getItem("pendingLoginEmail");
     if (email) {
       login(email);
     }
   }, []);
 
   const login = (email: string) => {
-    const isAdminUser = email.includes('admin');
-    
+    const isAdminUser = email.includes("admin");
+
     setIsAdmin(isAdminUser);
-    
+
     setUser({
       email,
-      role: isAdminUser ? 'SELLER_ADMIN' : 'SELLER'
+      role: isAdminUser ? "SELLER_ADMIN" : "SELLER",
     });
 
-    sessionStorage.setItem('pendingLoginEmail', email);
+    localStorage.setItem("pendingLoginEmail", email);
   };
 
   const logout = () => {
     setUser(null);
     setIsAdmin(false);
-    sessionStorage.removeItem('pendingLoginEmail');
+    localStorage.removeItem("pendingLoginEmail");
   };
 
   return (
@@ -49,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-} 
+}

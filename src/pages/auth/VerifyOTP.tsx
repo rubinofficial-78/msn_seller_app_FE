@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import adyaLogo from '../../assests/adya.png';
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { verifyOTP, getUserDetails } from "../../redux/Action/action";
+import { RootState } from "../../redux/types";
+import adyaLogo from "../../assests/adya.png";
+import { toast } from "react-toastify";
 
 export default function VerifyOTP() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [error, setError] = useState('');
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const email = sessionStorage.getItem('pendingLoginEmail');
+  const dispatch = useDispatch();
+  const email = localStorage.getItem("pendingLoginEmail");
+
+  const loading = useSelector(
+    (state: RootState) => state.data.otpVerification.loading
+  );
+  const reduxError = useSelector(
+    (state: RootState) => state.data.otpVerification.error
+  );
 
   // Handle input change for each OTP digit
   const handleChange = (index: number, value: string) => {
@@ -25,37 +37,69 @@ export default function VerifyOTP() {
   };
 
   // Handle backspace
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`);
       prevInput?.focus();
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const otpValue = otp.join('');
-    
+    setError("");
+
+    const otpValue = otp.join("");
+
     if (otpValue.length !== 6) {
-      setError('Please enter a valid 6-digit OTP');
+      setError("Please enter a valid 6-digit OTP");
       return;
     }
 
-    if (email === 'hub@adya.ai') {
-      // Get the redirect path from location state or use default
-      const redirectTo = location.state?.redirectTo || '/dashboard/seller-dashboard';
-      navigate(redirectTo);
-    } else if (email?.includes('admin')) {
-      navigate('/dashboard');
-    } else {
-      // This case shouldn't happen as other users don't need OTP
-      navigate('/dashboard/seller-dashboard');
+    try {
+      const userId = localStorage.getItem("userid");
+      const isNewUser = localStorage.getItem("isNewUser") === "true";
+
+      // Verify OTP
+      const otpResponse = await dispatch(
+        verifyOTP(Number(userId), otpValue) as any
+      );
+
+      // Store the token
+      if (otpResponse?.data?.token) {
+        localStorage.setItem("token", otpResponse.data.token);
+      }
+
+      // Get user details
+      const userResponse = await dispatch(
+        getUserDetails(Number(userId)) as any
+      );
+
+      // Clear verification data
+      localStorage.removeItem("pendingLoginEmail");
+
+      if (isNewUser) {
+        // New users always go to onboarding first
+        navigate("/onboarding");
+      } else {
+        // Check user type for existing users
+        const userType = userResponse?.data?.user_type?.value;
+        if (userType === "ADMIN") {
+          navigate("/dashboard");
+        } else {
+          navigate("/dashboard/seller-dashboard");
+        }
+      }
+    } catch (err) {
+      setError(reduxError || "OTP verification failed. Please try again.");
     }
   };
 
   const handleResendOTP = () => {
     // Add resend OTP logic here
-    console.log('Resending OTP...');
+    toast.info("Resending OTP...", { autoClose: 2000 });
   };
 
   return (
@@ -68,7 +112,7 @@ export default function VerifyOTP() {
             Please provide your email or mobile number to sign up or log in.
           </p>
         </div>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
             {error}
@@ -101,15 +145,17 @@ export default function VerifyOTP() {
               onClick={handleResendOTP}
               className="text-blue-600 hover:text-blue-800 text-sm"
             >
-              Resend OTP to {email ? `s***${email.slice(email.indexOf('@'))}` : ''}
+              Resend OTP to{" "}
+              {email ? `s***${email.slice(email.indexOf("@"))}` : ""}
             </button>
           </div>
 
           <button
             type="submit"
             className="mt-6 w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={loading}
           >
-            CONTINUE
+            {loading ? "Verifying..." : "CONTINUE"}
           </button>
         </form>
       </div>

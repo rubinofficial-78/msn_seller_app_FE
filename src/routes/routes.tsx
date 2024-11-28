@@ -40,11 +40,19 @@ import AddSeller from "../components/AddSeller";
 import SellerOnboarding from "../components/SellerOnboarding";
 import AddProduct from "../pages/AddProduct";
 import BulkUpload from "../pages/BulkUpload";
-import UiConfig from '../pages/settings/UiConfig';
+import UiConfig from "../pages/settings/UiConfig";
 import LogisticsDetails from "../pages/LogisticsDetails";
-import AddGroup from '../pages/AddGroup';
-import AddAddOn from '../pages/AddAddOn';
-import AddMenu from '../pages/AddMenu';
+import AddGroup from "../pages/AddGroup";
+import AddAddOn from "../pages/AddAddOn";
+import AddMenu from "../pages/AddMenu";
+import ShippingDetailsPage from "../pages/sellerSettings/ShippingDetailsPage";
+import CreateOffer from "../pages/products/CreateOffer";
+import AccessManagement from "../pages/settings/AccessManagement";
+import CreateRole from "../pages/settings/CreateRole";
+import CreateUser from "../pages/settings/CreateUser";
+import CreateTicket from "../pages/support/CreateTicket";
+import NotificationSettings from '../pages/settings/NotificationSettings';
+import MapSettings from '../pages/settings/MapSettings';
 // import ViewPartner from '../components/ViewPartner';
 // import EditPartner from '../components/EditPartner';
 
@@ -206,15 +214,15 @@ export const routes: RouteObject[] = [
           },
           {
             path: "add-group",
-            element: <AddGroup />
+            element: <AddGroup />,
           },
           {
             path: "add-addon",
-            element: <AddAddOn />
+            element: <AddAddOn />,
           },
           {
             path: "add-menu",
-            element: <AddMenu />
+            element: <AddMenu />,
           },
         ],
       },
@@ -272,8 +280,17 @@ export const routes: RouteObject[] = [
         element: <AccountDetails />,
       },
       {
-        path: "settings/location-services",
-        element: <LocationServices />,
+        path: "/dashboard/settings/location-services",
+        children: [
+          {
+            index: true,
+            element: <LocationServices />,
+          },
+          {
+            path: "shipping-details/:id",
+            element: <ShippingDetailsPage />,
+          },
+        ],
       },
       {
         path: "settings/banking-details",
@@ -311,6 +328,50 @@ export const routes: RouteObject[] = [
         path: "/dashboard/logistics/:orderId",
         element: <LogisticsDetails />,
       },
+      {
+        path: "/dashboard/products/create-offer",
+        element: <CreateOffer />,
+      },
+      {
+        path: "/dashboard/settings/access-management",
+        element: <AccessManagement />
+      },
+      {
+        path: "/dashboard/settings/access-management/create-role",
+        element: <CreateRole />
+      },
+      {
+        path: "/dashboard/settings/access-management/edit-role/:roleName",
+        element: <CreateRole />
+      },
+      {
+        path: "/dashboard/settings/access-management/create-user",
+        element: <CreateUser />
+      },
+      {
+        path: "/dashboard/settings/access-management/edit-user/:userName",
+        element: <CreateUser />
+      },
+      {
+        path: "/dashboard/support/create",
+        element: <CreateTicket />
+      },
+      {
+        path: "/dashboard/settings/email-sms",
+        element: <NotificationSettings />
+      },
+      {
+        path: "/dashboard/seller-settings/email-sms",
+        element: <NotificationSettings />
+      },
+      {
+        path: "/dashboard/settings/maps",
+        element: <MapSettings />
+      },
+      {
+        path: "/dashboard/seller-settings/maps",
+        element: <MapSettings />
+      }
     ],
   },
 ];

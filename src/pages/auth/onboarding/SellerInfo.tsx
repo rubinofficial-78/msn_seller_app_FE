@@ -1,58 +1,130 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-
-const schema = z.object({
-  sellerName: z.string().min(1, 'Seller name is required'),
-  mobileNumber: z.string().min(10, 'Invalid mobile number'),
-  email: z.string().email('Invalid email'),
-  storeName: z.string().min(1, 'Store name is required'),
-  storeWebsite: z.string().url().optional(),
-  address: z.string().min(1, 'Address is required'),
-  state: z.string().min(1, 'State is required'),
-  city: z.string().min(1, 'City is required'),
-  pinCode: z.string().min(6, 'Invalid pin code'),
-});
+import React, { useState } from "react";
+import AddForm from "../../../components/AddForm";
 
 const SellerInfo = ({ onNext }: { onNext: (data: any) => void }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema)
+  const [formValues, setFormValues] = useState({
+    sellerName: "",
+    mobileNumber: "",
+    email: "",
+    storeName: "",
+    storeWebsite: "",
+    address: "",
+    state: "",
+    city: "",
+    pinCode: "",
   });
 
+  const handleInputChange = (key: string, value: any) => {
+    setFormValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const handleSelectChange = (key: string, value: any) => {
+    const selectedValue = value?.value || value;
+    setFormValues(prev => ({
+      ...prev,
+      [key]: selectedValue
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onNext(formValues);
+  };
+
+  const formFields = [
+    {
+      type: "text",
+      key: "sellerName",
+      label: "Seller Name",
+      placeholder: "Enter your full name",
+      value: formValues.sellerName,
+    },
+    {
+      type: "text",
+      key: "mobileNumber",
+      label: "Mobile Number",
+      placeholder: "Enter mobile number",
+      value: formValues.mobileNumber,
+    },
+    {
+      type: "email",
+      key: "email",
+      label: "Email Address",
+      placeholder: "Enter your email address",
+      value: formValues.email,
+    },
+    {
+      type: "text",
+      key: "storeName",
+      label: "Store Name",
+      placeholder: "Enter your store name",
+      value: formValues.storeName,
+    },
+    {
+      type: "text",
+      key: "storeWebsite",
+      label: "Store Website",
+      placeholder: "Enter your store website (optional)",
+      value: formValues.storeWebsite,
+    },
+    {
+      type: "textarea",
+      key: "address",
+      label: "Address",
+      placeholder: "Enter your complete address",
+      value: formValues.address,
+    },
+    {
+      type: "select",
+      key: "state",
+      label: "State",
+      value: formValues.state,
+      options: [
+        { label: "Select State", value: "" },
+        { label: "Maharashtra", value: "maharashtra" },
+        { label: "Delhi", value: "delhi" },
+        { label: "Karnataka", value: "karnataka" },
+        { label: "Tamil Nadu", value: "tamil_nadu" },
+        { label: "Gujarat", value: "gujarat" },
+      ],
+    },
+    {
+      type: "text",
+      key: "city",
+      label: "City",
+      placeholder: "Enter your city",
+      value: formValues.city,
+    },
+    {
+      type: "text",
+      key: "pinCode",
+      label: "PIN Code",
+      placeholder: "Enter PIN code",
+      value: formValues.pinCode,
+    },
+  ];
+
   return (
-    <form onSubmit={handleSubmit(onNext)} className="space-y-6">
-      <div className="bg-blue-50 p-4 rounded-lg mb-6">
-        <h2 className="text-lg font-semibold text-blue-900">Seller Information</h2>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Seller Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            {...register('sellerName')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.sellerName ? (
-            <p className="mt-1 text-sm text-red-600">{errors.sellerName.message as string}</p>
-          ) : null}
-        </div>
-        
-        {/* Add other form fields similarly */}
-      </div>
-
-      <div className="flex justify-end">
+    <form onSubmit={handleSubmit}>
+      <AddForm
+        data={formFields}
+        handleInputonChange={handleInputChange}
+        handleSelectonChange={handleSelectChange}
+      />
+      
+      <div className="flex justify-end mt-6">
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Next
+          Next Step
         </button>
       </div>
     </form>
   );
 };
 
-export default SellerInfo; 
+export default SellerInfo;

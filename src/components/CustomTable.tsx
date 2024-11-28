@@ -2,7 +2,17 @@ import React, { useRef, useState, useEffect } from "react";
 import moment from "moment";
 import { Image } from "@chakra-ui/image";
 import Pagination from "./Pagination";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  ToggleLeft,
+  ToggleRight,
+  Save,
+  Copy,
+  Trash2,
+  Edit,
+} from "lucide-react";
 
 // Helper function to get image source
 const getImageSrc = (path: string) => {
@@ -10,11 +20,17 @@ const getImageSrc = (path: string) => {
   return path;
 };
 
-interface Column {
+export interface ColumnButton {
+  label: string;
+  icon: string;
+  onClick: (row: any) => void;
+}
+
+export interface Column {
   id: string;
   key: string | string[];
   label: string;
-  type?: string;
+  type?: 'custom' | 'status' | 'image_text' | 'amount' | 'status_toggle' | 'number';
   maxWidth?: number;
   minWidth?: number;
   join?: boolean;
@@ -23,7 +39,7 @@ interface Column {
   tooltip?: string;
   tooltipKey?: string;
   image_path?: string;
-  buttons?: any[];
+  buttons?: ColumnButton[];
   func?: (row: any) => void;
   buttonLabel?: string;
   color?: string;
@@ -34,6 +50,7 @@ interface Column {
   gst?: boolean;
   defaultValue?: string;
   max_limit_key?: string;
+  renderCell?: (row: any) => React.ReactNode;
 }
 
 interface CustomTableProps {
@@ -94,7 +111,19 @@ const CustomTable: React.FC<CustomTableProps> = ({
                         className="px-6 py-4 whitespace-nowrap text-sm"
                         style={{ minWidth: cell.minWidth || 150 }}
                       >
-                        {cell.type === "image_text" ? (
+                        {cell.type === 'custom' && cell.renderCell ? (
+                          cell.renderCell(row)
+                        ) : cell.type === 'status' ? (
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              row[cell.key as string] === "Active"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {row[cell.key as string]}
+                          </span>
+                        ) : cell.type === 'image_text' ? (
                           <div className="flex items-center">
                             {cell.image_path && (
                               <Image
@@ -118,7 +147,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                               )}
                             </div>
                           </div>
-                        ) : cell.type === "amount" ? (
+                        ) : cell.type === 'amount' ? (
                           <div className="font-medium text-gray-900">
                             ₹
                             {Number(row[cell.key as string]).toLocaleString(
@@ -129,7 +158,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                               }
                             )}
                           </div>
-                        ) : cell.type === "status_toggle" ? (
+                        ) : cell.type === 'status_toggle' ? (
                           <div
                             className="flex items-center gap-2"
                             onClick={(e) => {

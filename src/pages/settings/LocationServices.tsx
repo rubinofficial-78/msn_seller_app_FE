@@ -13,7 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import CustomTable from "../../components/CustomTable";
+import CustomTable, { Column } from "../../components/CustomTable";
 
 type TabType = "stores" | "shipping";
 type ViewType = "table" | "grid";
@@ -186,127 +186,6 @@ interface ShippingDetailsForm {
   shippingFee: string;
 }
 
-// Define table columns for Stores tab
-const storeColumns: Column[] = [
-  {
-    id: "storeName",
-    key: "storeName",
-    label: "Store Name",
-  },
-  {
-    id: "address",
-    key: "address",
-    label: "Address",
-  },
-  {
-    id: "createdDate",
-    key: "createdDate",
-    label: "Created Date & Time",
-  },
-  {
-    id: "city",
-    key: "city",
-    label: "City",
-  },
-  {
-    id: "pincode",
-    key: "pincode",
-    label: "Pincode",
-  },
-  {
-    id: "status",
-    key: "status",
-    label: "Status",
-    type: "status",
-  },
-  {
-    id: "actions",
-    key: "actions",
-    label: "Actions",
-    type: "custom",
-    buttons: [
-      {
-        label: "View",
-        icon: "eye",
-        onClick: (row: any) => setShowShippingDetails(true),
-      },
-      {
-        label: "Toggle Status",
-        icon: "toggle",
-        onClick: (row: any) => console.log("Toggle status", row),
-      },
-    ],
-  },
-];
-
-// Define table columns for Shipping tab
-const shippingColumns: Column[] = [
-  {
-    id: "storeName",
-    key: "storeName",
-    label: "Store Name",
-  },
-  {
-    id: "address",
-    key: "address",
-    label: "Address",
-  },
-  {
-    id: "createdDate",
-    key: "createdDate",
-    label: "Created Date & Time",
-  },
-  {
-    id: "shippingDistance",
-    key: "shippingDistance",
-    label: "Shipping Distance",
-  },
-  {
-    id: "domain",
-    key: "domain",
-    label: "Domain",
-  },
-  {
-    id: "city",
-    key: "city",
-    label: "City",
-  },
-  {
-    id: "pincode",
-    key: "pincode",
-    label: "Pincode",
-  },
-  {
-    id: "status",
-    key: "status",
-    label: "Status",
-    type: "status",
-  },
-  {
-    id: "actions",
-    key: "actions",
-    label: "Actions",
-    type: "custom",
-    buttons: [
-      {
-        label: "View",
-        icon: "eye",
-        onClick: (row: any) => setShowShippingDetails(true),
-      },
-      {
-        label: "Edit",
-        icon: "edit",
-        onClick: (row: any) => console.log("Edit", row),
-      },
-      {
-        label: "Toggle Status",
-        icon: "toggle",
-        onClick: (row: any) => console.log("Toggle status", row),
-      },
-    ],
-  },
-];
-
 const LocationServices = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("stores");
@@ -428,7 +307,7 @@ const LocationServices = () => {
           <div className="mt-4 flex justify-end">
             <ActionButtons
               status={item.status}
-              onView={() => setShowShippingDetails(true)}
+              onView={() => navigate(`/dashboard/settings/location-services/shipping-details/${item.id}`)}
             />
           </div>
         </div>
@@ -492,7 +371,7 @@ const LocationServices = () => {
               <td className="px-6 py-4 whitespace-nowrap">
                 <ActionButtons
                   status={item.status}
-                  onView={() => setShowShippingDetails(true)}
+                  onView={() => navigate(`/dashboard/settings/location-services/shipping-details/${item.id}`)}
                 />
               </td>
             </tr>
@@ -892,6 +771,126 @@ const LocationServices = () => {
       </div>
     );
   };
+
+  // Move the column definitions inside the component to access setShowShippingDetails
+  const storeColumns: Column[] = [
+    {
+      id: "storeName",
+      key: "storeName",
+      label: "Store Name",
+    },
+    {
+      id: "address",
+      key: "address",
+      label: "Address",
+    },
+    {
+      id: "createdDate",
+      key: "createdDate",
+      label: "Created Date & Time",
+    },
+    {
+      id: "city",
+      key: "city",
+      label: "City",
+    },
+    {
+      id: "pincode",
+      key: "pincode",
+      label: "Pincode",
+    },
+    {
+      id: "status",
+      key: "status",
+      label: "Status",
+      type: "status",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Actions",
+      type: "custom",
+      buttons: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => navigate(`shipping-details/${row.id}`),
+        },
+        {
+          label: "Toggle Status",
+          icon: "toggle",
+          onClick: (row: any) => console.log("Toggle status", row),
+        },
+      ],
+    },
+  ];
+
+  const shippingColumns: Column[] = [
+    {
+      id: "storeName",
+      key: "storeName",
+      label: "Store Name",
+    },
+    {
+      id: "address",
+      key: "address",
+      label: "Address",
+    },
+    {
+      id: "createdDate",
+      key: "createdDate",
+      label: "Created Date & Time",
+    },
+    {
+      id: "shippingDistance",
+      key: "shippingDistance",
+      label: "Shipping Distance",
+    },
+    {
+      id: "domain",
+      key: "domain",
+      label: "Domain",
+    },
+    {
+      id: "city",
+      key: "city",
+      label: "City",
+    },
+    {
+      id: "pincode",
+      key: "pincode",
+      label: "Pincode",
+    },
+    {
+      id: "status",
+      key: "status",
+      label: "Status",
+      type: "status",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Actions",
+      type: "custom",
+      buttons: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => navigate(`shipping-details/${row.id}`),
+        },
+        {
+          label: "Edit",
+          icon: "edit",
+          onClick: (row: any) => console.log("Edit", row),
+        },
+        {
+          label: "Toggle Status",
+          icon: "toggle",
+          onClick: (row: any) => console.log("Toggle status", row),
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="space-y-6">

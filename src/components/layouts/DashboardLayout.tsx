@@ -4,6 +4,7 @@ import Sidebar from '../Sidebar';
 import { User, Settings, LogOut, Bell } from 'lucide-react';
 import NotificationDialog from '../NotificationDialog';
 import { colors } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Sample notifications (in real app, this would come from your state management)
 const sampleNotifications = [
@@ -22,6 +23,7 @@ const DashboardLayout = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState(sampleNotifications);
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -67,7 +69,9 @@ const DashboardLayout = () => {
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg"
                 >
-                  <span className="text-sm font-medium">Seller Admin</span>
+                  <span className="text-sm font-medium">
+                    {isAdmin ? "Seller Admin" : "Seller"}
+                  </span>
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                     <User size={20} className="text-white" />
                   </div>
@@ -78,7 +82,7 @@ const DashboardLayout = () => {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                     <button
                       onClick={() => {
-                        navigate('/dashboard/settings');
+                        navigate(isAdmin ? '/dashboard/settings' : '/dashboard/seller-settings');
                         setIsProfileMenuOpen(false);
                       }}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"

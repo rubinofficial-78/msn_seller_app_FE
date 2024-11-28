@@ -12,9 +12,6 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // List of existing users
-    const existingUsers = ['sellerapp_admin@adya.ai', 'hub@adya.ai'];
-    
     // Check if email is valid format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -22,13 +19,31 @@ export default function Login() {
       return;
     }
 
-    // Check if it's an existing user
-    if (existingUsers.includes(email.toLowerCase())) {
-      sessionStorage.setItem('pendingLoginEmail', email);
+    // Login the user
+    login(email);
+
+    // Store email for verification
+    sessionStorage.setItem('pendingLoginEmail', email);
+
+    // Get stored onboarding status
+    const hasCompletedOnboarding = sessionStorage.getItem(`onboarding_${email}`);
+
+    // Route based on email type and onboarding status
+    if (email === 'hub@adya.ai') {
+      // Only hub@adya.ai needs OTP verification
+      navigate('/verify-otp', { 
+        state: { 
+          redirectTo: '/dashboard/seller-dashboard' 
+        }
+      });
+    } else if (email.includes('admin')) {
+      // Admin user goes to OTP verification
       navigate('/verify-otp');
+    } else if (hasCompletedOnboarding === 'true') {
+      // Completed onboarding users go directly to dashboard
+      navigate('/dashboard/seller-dashboard');
     } else {
-      // For new users, store email and redirect to onboarding
-      sessionStorage.setItem('pendingLoginEmail', email);
+      // New users go to onboarding
       navigate('/onboarding');
     }
   };

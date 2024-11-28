@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart3, DollarSign, Package, Users, ExternalLink, Settings } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Sample data for the category pie chart
 const categoryData = [
@@ -24,15 +25,21 @@ const orderData = [
 const COLORS = ['#4F46E5', '#EC4899', '#8B5CF6', '#10B981', '#F59E0B', '#6366F1'];
 
 const SellerDashboard = () => {
+  const { isAdmin } = useAuth();
+
   return (
     <div className="p-4 space-y-6">
       {/* Welcome Section */}
       <div className="bg-white rounded-lg p-6 shadow-sm">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-gray-900">Get going with ONDC</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isAdmin ? "Seller Admin Dashboard" : "Seller Dashboard"}
+            </h1>
             <p className="text-gray-600">
-              Fill-up your important data and get started with ONDC, Receive Your first order and fulfil and satisfy your customers.
+              {isAdmin 
+                ? "Manage your sellers and monitor platform performance"
+                : "Fill-up your important data and get started with ONDC"}
             </p>
           </div>
           <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">

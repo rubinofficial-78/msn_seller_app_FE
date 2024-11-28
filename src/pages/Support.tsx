@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Download } from 'lucide-react';
 import CustomTable from '../components/CustomTable';
 import * as XLSX from 'xlsx';
+import { useNavigate } from 'react-router-dom';
 
 interface Ticket {
   ticketType: string;
@@ -137,6 +138,8 @@ function Support() {
     total_rows: dummyData.length
   });
 
+  const navigate = useNavigate();
+
   // Filter data based on all criteria
   const filteredData = React.useMemo(() => {
     return dummyData.filter(ticket => {
@@ -233,7 +236,10 @@ function Support() {
       {/* Controls - Updated Layout to match screenshot */}
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex flex-wrap items-center gap-4">
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+          <button 
+            onClick={() => navigate('/dashboard/support/create')} 
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+          >
             RAISE TICKET
           </button>
 

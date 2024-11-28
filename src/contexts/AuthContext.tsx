@@ -1,43 +1,55 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole } from '../types/auth';
 
 interface AuthContextType {
-  user: User | null;
+  user: { email: string; role: string } | null;
   login: (email: string) => void;
   logout: () => void;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const email = sessionStorage.getItem('pendingLoginEmail');
+    if (email) {
+      login(email);
+    }
+  }, []);
 
   const login = (email: string) => {
-    const role: UserRole = email === 'sellerapp_admin@adya.ai' ? 'SELLER_ADMIN' : 'SELLER';
-    const user = { email, role };
-    setUser(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    const isAdminUser = email.includes('admin');
+    
+    setIsAdmin(isAdminUser);
+    
+    setUser({
+      email,
+      role: isAdminUser ? 'SELLER_ADMIN' : 'SELLER'
+    });
+
+    sessionStorage.setItem('pendingLoginEmail', email);
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    setIsAdmin(false);
+    sessionStorage.removeItem('pendingLoginEmail');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+} 

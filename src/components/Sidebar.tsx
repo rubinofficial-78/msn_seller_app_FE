@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -82,7 +82,7 @@ const sellerNavItems = [
     path: "/dashboard",
   },
   {
-    icon: <Package size={20} />,
+    icon: <Package size={20} className="flex-shrink-0" />,
     label: "My Listings",
     path: "/dashboard/my-listings",
   },
@@ -104,12 +104,20 @@ const sellerNavItems = [
 ];
 
 const Sidebar = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
 
-  const navItems =
-    user?.role === "SELLER_ADMIN" ? sellerAdminNavItems : sellerNavItems;
+  // Check if we're in the onboarding flow
+  const isOnboarding = location.pathname.includes('/onboarding');
+
+  // Determine which nav items to show
+  const navItems = isAdmin 
+    ? sellerAdminNavItems 
+    : isOnboarding 
+      ? sellerNavItems.slice(0, 5) // Only show first 5 items during onboarding
+      : sellerNavItems;
 
   const handleLogout = () => {
     // Add your logout logic here
@@ -144,7 +152,7 @@ const Sidebar = () => {
                   ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}
                 `}
               >
-                Seller Admin
+                {isAdmin ? "Seller Admin" : "Seller"}
               </h1>
             </div>
           </div>
@@ -170,7 +178,7 @@ const Sidebar = () => {
                   <NavLink
                     to={item.path}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap
                       ${!isOpen && "justify-center"}
                       ${
                         isActive
@@ -180,12 +188,12 @@ const Sidebar = () => {
                     }
                     title={!isOpen ? item.label : ""}
                   >
-                    <div className={`${!isOpen ? "transform scale-110" : ""} transition-transform duration-200`}>
+                    <div className={`flex-shrink-0 ${!isOpen ? "transform scale-110" : ""} transition-transform duration-200`}>
                       {item.icon}
                     </div>
                     <span
                       className={`
-                        transition-all duration-300 text-sm font-medium
+                        transition-all duration-300 text-sm font-medium truncate
                         ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}
                       `}
                     >

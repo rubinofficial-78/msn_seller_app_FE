@@ -1,7 +1,18 @@
 import React, { useState } from "react";
-import { ArrowLeft, Eye, LayoutGrid, List, ToggleLeft, ToggleRight, X, Save, Copy, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  LayoutGrid,
+  List,
+  ToggleLeft,
+  ToggleRight,
+  X,
+  Save,
+  Copy,
+  Trash2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import CustomTable from "../../components/CustomTable";
+import CustomTable, { Column } from "../../components/CustomTable";
 
 type TabType = "stores" | "shipping";
 type ViewType = "table" | "grid";
@@ -101,7 +112,7 @@ const regions: Region[] = [
       { name: "Haryana", checked: false },
       { name: "Delhi", checked: false },
       { name: "Rajasthan", checked: false },
-    ]
+    ],
   },
   {
     zone: "South",
@@ -111,7 +122,7 @@ const regions: Region[] = [
       { name: "Karnataka", checked: false },
       { name: "Andhra Pradesh", checked: false },
       { name: "Telangana", checked: false },
-    ]
+    ],
   },
   {
     zone: "East",
@@ -120,7 +131,7 @@ const regions: Region[] = [
       { name: "Bihar", checked: false },
       { name: "Odisha", checked: false },
       { name: "Jharkhand", checked: false },
-    ]
+    ],
   },
   {
     zone: "West",
@@ -128,7 +139,7 @@ const regions: Region[] = [
       { name: "Gujarat", checked: false },
       { name: "Maharashtra", checked: false },
       { name: "Goa", checked: false },
-    ]
+    ],
   },
   {
     zone: "North East",
@@ -141,7 +152,7 @@ const regions: Region[] = [
       { name: "Mizoram", checked: false },
       { name: "Arunachal Pradesh", checked: false },
       { name: "Tripura", checked: false },
-    ]
+    ],
   },
   {
     zone: "Union Territories",
@@ -152,7 +163,7 @@ const regions: Region[] = [
       { name: "Daman and Diu", checked: false },
       { name: "Lakshadweep", checked: false },
       { name: "Puducherry", checked: false },
-    ]
+    ],
   },
 ];
 
@@ -174,129 +185,138 @@ interface ShippingDetailsForm {
   shippingFee: string;
 }
 
-// Define table columns for Stores tab
-const storeColumns: Column[] = [
-  {
-    id: "storeName",
-    key: "storeName",
-    label: "Store Name",
-  },
-  {
-    id: "address",
-    key: "address",
-    label: "Address",
-  },
-  {
-    id: "createdDate",
-    key: "createdDate",
-    label: "Created Date & Time",
-  },
-  {
-    id: "city",
-    key: "city",
-    label: "City",
-  },
-  {
-    id: "pincode",
-    key: "pincode",
-    label: "Pincode",
-  },
-  {
-    id: "status",
-    key: "status",
-    label: "Status",
-    type: "status",
-  },
-  {
-    id: "actions",
-    key: "actions",
-    label: "Actions",
-    type: "custom",
-    buttons: [
-      {
-        label: "View",
-        icon: "eye",
-        onClick: (row: any) => setShowShippingDetails(true),
-      },
-      {
-        label: "Toggle Status",
-        icon: "toggle",
-        onClick: (row: any) => console.log("Toggle status", row),
-      },
-    ],
-  },
-];
-
-// Define table columns for Shipping tab
-const shippingColumns: Column[] = [
-  {
-    id: "storeName",
-    key: "storeName",
-    label: "Store Name",
-  },
-  {
-    id: "address",
-    key: "address",
-    label: "Address",
-  },
-  {
-    id: "createdDate",
-    key: "createdDate",
-    label: "Created Date & Time",
-  },
-  {
-    id: "shippingDistance",
-    key: "shippingDistance",
-    label: "Shipping Distance",
-  },
-  {
-    id: "domain",
-    key: "domain",
-    label: "Domain",
-  },
-  {
-    id: "city",
-    key: "city",
-    label: "City",
-  },
-  {
-    id: "pincode",
-    key: "pincode",
-    label: "Pincode",
-  },
-  {
-    id: "status",
-    key: "status",
-    label: "Status",
-    type: "status",
-  },
-  {
-    id: "actions",
-    key: "actions",
-    label: "Actions",
-    type: "custom",
-    buttons: [
-      {
-        label: "View",
-        icon: "eye",
-        onClick: (row: any) => setShowShippingDetails(true),
-      },
-      {
-        label: "Toggle Status",
-        icon: "toggle",
-        onClick: (row: any) => console.log("Toggle status", row),
-      },
-    ],
-  },
-];
-
 const LocationServices = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("stores");
   const [viewType, setViewType] = useState<ViewType>("table");
-  const [showShippingDetails, setShowShippingDetails] = useState(false);
 
-  const ActionButtons = ({ status, onView }: { status: string; onView: () => void }) => {
+  const storeColumns = [
+    {
+      id: "storeName",
+      key: "storeName",
+      label: "Store Name",
+    },
+    {
+      id: "address",
+      key: "address",
+      label: "Address",
+    },
+    {
+      id: "createdDate",
+      key: "createdDate",
+      label: "Created Date & Time",
+    },
+    {
+      id: "city",
+      key: "city",
+      label: "City",
+    },
+    {
+      id: "pincode",
+      key: "pincode",
+      label: "Pincode",
+    },
+    {
+      id: "status",
+      key: "status",
+      label: "Status",
+      type: "status",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Actions",
+      type: "custom",
+      buttons: [
+        {
+          label: "View Details",
+          icon: "eye",
+          onClick: (row: any) => {
+            navigate(
+              `/dashboard/settings/location-services/shipping/${row.id}`
+            );
+          },
+        },
+        {
+          label: "Toggle Status",
+          icon: "toggle",
+          onClick: (row: any) => {
+            console.log("Toggle status for row:", row);
+          },
+        },
+      ],
+    },
+  ];
+
+  const shippingColumns = [
+    {
+      id: "storeName",
+      key: "storeName",
+      label: "Store Name",
+    },
+    {
+      id: "address",
+      key: "address",
+      label: "Address",
+    },
+    {
+      id: "createdDate",
+      key: "createdDate",
+      label: "Created Date & Time",
+    },
+    {
+      id: "shippingDistance",
+      key: "shippingDistance",
+      label: "Shipping Distance",
+    },
+    {
+      id: "domain",
+      key: "domain",
+      label: "Domain",
+    },
+    {
+      id: "city",
+      key: "city",
+      label: "City",
+    },
+    {
+      id: "pincode",
+      key: "pincode",
+      label: "Pincode",
+    },
+    {
+      id: "status",
+      key: "status",
+      label: "Status",
+      type: "status",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Actions",
+      type: "custom",
+      buttons: [
+        {
+          label: "View Details",
+          icon: "eye",
+          onClick: (row: any) => {
+            navigate(
+              `/dashboard/settings/location-services/shipping/${row.id}`
+            );
+          },
+        },
+        {
+          label: "Toggle Status",
+          icon: "toggle",
+          onClick: (row: any) => {
+            console.log("Toggle status for row:", row);
+          },
+        },
+      ],
+    },
+  ];
+
+  const ActionButtons = ({ status, id }: { status: string; id: number }) => {
     const [isActive, setIsActive] = useState(status === "Active");
 
     const handleToggle = () => {
@@ -305,15 +325,21 @@ const LocationServices = () => {
 
     return (
       <div className="flex gap-2">
-        <button 
+        <button
           className="p-1 text-gray-600 hover:text-gray-800"
           title="View Details"
-          onClick={onView}
+          onClick={() =>
+            navigate(`/dashboard/settings/location-services/shipping/${id}`)
+          }
         >
           <Eye size={18} />
         </button>
-        <button 
-          className={`p-1 ${isActive ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-gray-600'}`}
+        <button
+          className={`p-1 ${
+            isActive
+              ? "text-green-600 hover:text-green-800"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
           title={isActive ? "Deactivate" : "Activate"}
           onClick={handleToggle}
         >
@@ -360,9 +386,14 @@ const LocationServices = () => {
   const GridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {shippingData.map((item) => (
-        <div key={item.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div
+          key={item.id}
+          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+        >
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">{item.storeName}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {item.storeName}
+            </h3>
             <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
               {item.status}
             </span>
@@ -375,20 +406,19 @@ const LocationServices = () => {
               <span className="font-medium">Domain:</span> {item.domain}
             </p>
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Shipping:</span> {item.shippingDistance}
+              <span className="font-medium">Shipping:</span>{" "}
+              {item.shippingDistance}
             </p>
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Location:</span> {item.city}, {item.pincode}
+              <span className="font-medium">Location:</span> {item.city},{" "}
+              {item.pincode}
             </p>
             <p className="text-sm text-gray-600">
               <span className="font-medium">Created:</span> {item.createdDate}
             </p>
           </div>
           <div className="mt-4 flex justify-end">
-            <ActionButtons 
-              status={item.status} 
-              onView={() => setShowShippingDetails(true)}
-            />
+            <ActionButtons status={item.status} id={item.id} />
           </div>
         </div>
       ))}
@@ -434,8 +464,12 @@ const LocationServices = () => {
             <tr key={item.id}>
               <td className="px-6 py-4 whitespace-nowrap">{item.storeName}</td>
               <td className="px-6 py-4 whitespace-nowrap">{item.address}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{item.createdDate}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{item.shippingDistance}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {item.createdDate}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {item.shippingDistance}
+              </td>
               <td className="px-6 py-4 whitespace-nowrap">{item.domain}</td>
               <td className="px-6 py-4 whitespace-nowrap">{item.city}</td>
               <td className="px-6 py-4 whitespace-nowrap">{item.pincode}</td>
@@ -445,10 +479,7 @@ const LocationServices = () => {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <ActionButtons 
-                  status={item.status} 
-                  onView={() => setShowShippingDetails(true)}
-                />
+                <ActionButtons status={item.status} id={item.id} />
               </td>
             </tr>
           ))}
@@ -465,8 +496,10 @@ const LocationServices = () => {
           <div className="w-64">
             <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
               <option value="">Filter by Store</option>
-              {shippingData.map(item => (
-                <option key={item.id} value={item.storeName}>{item.storeName}</option>
+              {shippingData.map((item) => (
+                <option key={item.id} value={item.storeName}>
+                  {item.storeName}
+                </option>
               ))}
             </select>
           </div>
@@ -484,14 +517,22 @@ const LocationServices = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setViewType("table")}
-            className={`p-2 rounded ${viewType === "table" ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`p-2 rounded ${
+              viewType === "table"
+                ? "bg-blue-100 text-blue-600"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
             title="Table View"
           >
             <List size={20} />
           </button>
           <button
             onClick={() => setViewType("grid")}
-            className={`p-2 rounded ${viewType === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`p-2 rounded ${
+              viewType === "grid"
+                ? "bg-blue-100 text-blue-600"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
             title="Grid View"
           >
             <LayoutGrid size={20} />
@@ -511,293 +552,6 @@ const LocationServices = () => {
       )}
     </>
   );
-
-  // Add form field options
-  const options = {
-    shippingType: ["ONDC Logistics", "Own Shipping"],
-    category: ["F&B", "Fashion", "Electronics", "Beauty & Personal Care", "Home & Decor"],
-    deliveryType: ["Standard", "Express", "Same Day"],
-    preferences: ["Fast", "Cheap", "Balanced"],
-  };
-
-  // Create columns for the regions table
-  const regionTableColumns = [
-    {
-      id: "regions",
-      key: "regions",
-      label: "Regions",
-      type: "checkboxGroup",
-    },
-    {
-      id: "shippingType",
-      key: "shippingType",
-      label: "Shipping Type",
-      type: "select",
-      options: options.shippingType,
-    },
-    {
-      id: "category",
-      key: "category",
-      label: "Category",
-      type: "select",
-      options: options.category,
-    },
-    {
-      id: "deliveryType",
-      key: "deliveryType",
-      label: "Delivery Type",
-      type: "select",
-      options: options.deliveryType,
-    },
-    {
-      id: "preferences",
-      key: "preferences",
-      label: "Preferences",
-      type: "select",
-      options: options.preferences,
-    },
-    {
-      id: "transitTime",
-      key: "transitTime",
-      label: "Transit Time",
-      type: "text",
-    },
-    {
-      id: "shippingFee",
-      key: "shippingFee",
-      label: "Shipping Fee",
-      type: "number",
-    },
-    {
-      id: "actions",
-      key: "actions",
-      label: "Actions",
-      type: "actions",
-    },
-  ];
-
-  // Add RegionActions component
-  const RegionActions = ({ 
-    regionZone, 
-    onSave, 
-    onDuplicate, 
-    onDelete 
-  }: { 
-    regionZone: string;
-    onSave: () => void;
-    onDuplicate: () => void;
-    onDelete: () => void;
-  }) => (
-    <div className="flex gap-2">
-      <button
-        onClick={onSave}
-        className="p-1 text-blue-600 hover:text-blue-800"
-        title="Save"
-      >
-        <Save size={18} />
-      </button>
-      <button
-        onClick={onDuplicate}
-        className="p-1 text-gray-600 hover:text-gray-800"
-        title="Duplicate"
-      >
-        <Copy size={18} />
-      </button>
-      <button
-        onClick={onDelete}
-        className="p-1 text-red-600 hover:text-red-800"
-        title="Delete"
-      >
-        <Trash2 size={18} />
-      </button>
-    </div>
-  );
-
-  // Update ShippingDetailsView component
-  const ShippingDetailsView = ({ onClose }: { onClose: () => void }) => {
-    const [formData, setFormData] = useState<ShippingDetailsForm>({
-      store: "Delhi house",
-      domain: "Electronics",
-      shippingDistance: "Pan India",
-      regions: {},
-      shippingType: "",
-      category: "",
-      deliveryType: "",
-      preferences: "",
-      transitTime: "",
-      shippingFee: "",
-    });
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-6 w-[95%] max-w-7xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Shipping Details</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Input Fields */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Store</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                value={formData.store}
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Domain</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                value={formData.domain}
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Distance</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                value={formData.shippingDistance}
-                disabled
-              />
-            </div>
-          </div>
-
-          {/* Regions and Configuration Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-blue-50">
-                <tr>
-                  {regionTableColumns.map((column) => (
-                    <th
-                      key={column.id}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {column.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {regions.map((region) => (
-                  <tr key={region.zone}>
-                    <td className="px-6 py-4">
-                      <div className="space-y-2">
-                        <div className="font-medium">{region.zone}</div>
-                        {region.states.map((state) => (
-                          <label key={state.name} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={formData.regions[region.zone]?.[state.name] || false}
-                              onChange={(e) => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  regions: {
-                                    ...prev.regions,
-                                    [region.zone]: {
-                                      ...prev.regions[region.zone],
-                                      [state.name]: e.target.checked
-                                    }
-                                  }
-                                }));
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                            <span className="text-sm">{state.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </td>
-                    {regionTableColumns.slice(1, -1).map((column) => (
-                      <td key={column.id} className="px-6 py-4">
-                        {column.type === 'select' ? (
-                          <select
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                            value={formData[column.key as keyof ShippingDetailsForm] as string}
-                            onChange={(e) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                [column.key]: e.target.value
-                              }));
-                            }}
-                          >
-                            <option value="">Select {column.label}</option>
-                            {column.options?.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type={column.type}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                            value={formData[column.key as keyof ShippingDetailsForm] as string}
-                            onChange={(e) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                [column.key]: e.target.value
-                              }));
-                            }}
-                            placeholder={`Enter ${column.label}`}
-                          />
-                        )}
-                      </td>
-                    ))}
-                    <td className="px-6 py-4">
-                      <RegionActions
-                        regionZone={region.zone}
-                        onSave={() => {
-                          const regionData = {
-                            zone: region.zone,
-                            states: formData.regions[region.zone],
-                            shippingType: formData.shippingType,
-                            category: formData.category,
-                            deliveryType: formData.deliveryType,
-                            preferences: formData.preferences,
-                            transitTime: formData.transitTime,
-                            shippingFee: formData.shippingFee,
-                          };
-                          console.log("Save configuration for", regionData);
-                          // Add your save logic here
-                        }}
-                        onDuplicate={() => {
-                          console.log("Duplicate configuration for", region.zone);
-                          // Add your duplicate logic here
-                        }}
-                        onDelete={() => {
-                          if (window.confirm(`Are you sure you want to delete the configuration for ${region.zone}?`)) {
-                            console.log("Delete configuration for", region.zone);
-                            // Add your delete logic here
-                          }
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Only keep the cancel button */}
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -842,13 +596,8 @@ const LocationServices = () => {
       <div className="space-y-6">
         {activeTab === "stores" ? <StoresTab /> : <ShippingTab />}
       </div>
-
-      {/* Add ShippingDetailsView modal */}
-      {showShippingDetails && (
-        <ShippingDetailsView onClose={() => setShowShippingDetails(false)} />
-      )}
     </div>
   );
 };
 
-export default LocationServices; 
+export default LocationServices;

@@ -692,6 +692,136 @@ const stockTableColumns = [
   },
 ];
 
+// Add this interface near the top with other interfaces
+interface Offer {
+  id: string | number;
+  offerName: string;
+  couponCode: string;
+  offerDescription: string;
+  offerType: string;
+  fromDate: string;
+  toDate: string;
+  status: string;
+}
+
+// Add sample offer data after other sample data
+const offerData: Offer[] = [
+  {
+    id: 1,
+    offerName: "Summer Special",
+    couponCode: "SUMMER2024",
+    offerDescription: "Get 20% off on all summer items",
+    offerType: "Percentage",
+    fromDate: "2024-03-01",
+    toDate: "2024-05-31",
+    status: "Active",
+  },
+  {
+    id: 2,
+    offerName: "Welcome Discount",
+    couponCode: "WELCOME50",
+    offerDescription: "Flat ₹50 off on your first order",
+    offerType: "Fixed Amount",
+    fromDate: "2024-01-01",
+    toDate: "2024-12-31",
+    status: "Active",
+  },
+  {
+    id: 3,
+    offerName: "Weekend Sale",
+    couponCode: "WEEKEND25",
+    offerDescription: "25% off on weekends",
+    offerType: "Percentage",
+    fromDate: "2024-03-15",
+    toDate: "2024-04-15",
+    status: "Inactive",
+  },
+];
+
+// Add offer table columns configuration after other column configurations
+const offerTableColumns = [
+  {
+    id: "offerName",
+    key: "offerName",
+    label: "Offer Name",
+    minWidth: 160,
+  },
+  {
+    id: "couponCode",
+    key: "couponCode",
+    label: "Coupon Code",
+    minWidth: 140,
+  },
+  {
+    id: "offerDescription",
+    key: "offerDescription",
+    label: "Offer Desc",
+    minWidth: 200,
+  },
+  {
+    id: "offerType",
+    key: "offerType",
+    label: "Offer type",
+    minWidth: 120,
+  },
+  {
+    id: "dateRange",
+    key: ["fromDate", "toDate"],
+    label: "From & To Date",
+    minWidth: 180,
+    renderCell: (row: Offer) => (
+      <span>{`${new Date(row.fromDate).toLocaleDateString()} - ${new Date(
+        row.toDate
+      ).toLocaleDateString()}`}</span>
+    ),
+  },
+  {
+    id: "status",
+    key: "status",
+    label: "Status",
+    type: "status",
+    minWidth: 120,
+  },
+  {
+    id: "actions",
+    key: "actions",
+    label: "Action",
+    type: "custom",
+    minWidth: 100,
+    buttons: [
+      {
+        label: "Edit",
+        icon: "edit",
+        onClick: (row: Offer) => {
+          handleEditOffer(row);
+        },
+      },
+      {
+        label: "View",
+        icon: "eye",
+        onClick: (row: Offer) => {
+          handleViewOffer(row);
+        },
+      },
+    ],
+  },
+];
+
+// Add this interface for the form data
+interface OfferFormData {
+  offerTitle: string;
+  offerDescription: string;
+  couponCode: string;
+  maxCount: number;
+  offerType: string;
+  fromDate: string;
+  toDate: string;
+  usageMaximumLimit: number;
+  currentUsageLimit: number;
+  storeLocations: string;
+  products: string;
+}
+
 const Products = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All Products");
@@ -1197,6 +1327,34 @@ const Products = () => {
       );
     }
 
+    // For Offers & Discounts tab
+    if (activeTab === "Offers & Discounts") {
+      return (
+        <div className="flex flex-wrap gap-3 items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
+              <input
+                type="text"
+                placeholder="Search Offer"
+                className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/dashboard/products/create-offer")}
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
+          >
+            <Plus size={16} />
+            <span>CREATE OFFER</span>
+          </button>
+        </div>
+      );
+    }
+
     // Default return for other tabs
     return (
       <div className="flex flex-wrap gap-3 items-center justify-between p-4 border-b border-gray-200">
@@ -1344,6 +1502,63 @@ const Products = () => {
     }
   };
 
+  // Add these handler functions in the Products component
+  const handleEditOffer = (offer: Offer) => {
+    navigate(`/dashboard/products/edit-offer/${offer.id}`);
+  };
+
+  const handleViewOffer = (offer: Offer) => {
+    // Handle view offer logic
+    console.log("View offer:", offer);
+  };
+
+  // Add pagination state for offers
+  const [offerPaginationState, setOfferPaginationState] = useState({
+    page_no: 1,
+    per_page: 10,
+    total_rows: offerData.length,
+  });
+
+  // Add pagination handler for offers
+  const handleOfferPaginationChange = (params: {
+    page_no?: number;
+    per_page?: number;
+  }) => {
+    setOfferPaginationState((prev) => ({
+      ...prev,
+      page_no: params.page_no || prev.page_no,
+      per_page: params.per_page || prev.per_page,
+    }));
+  };
+
+  // Add OfferTable component
+  const OfferTable: React.FC<{ data: Offer[] }> = ({ data }) => (
+    <div className="bg-white rounded-lg shadow">
+      <CustomTable
+        headCells={offerTableColumns}
+        data={data}
+        pagination={true}
+        meta_data={{
+          total_rows: offerData.length,
+          page_no: offerPaginationState.page_no,
+          per_page: offerPaginationState.per_page,
+          totalPages: Math.ceil(
+            offerData.length / offerPaginationState.per_page
+          ),
+        }}
+        setParams={handleOfferPaginationChange}
+      />
+    </div>
+  );
+
+  // Get paginated offer data
+  const getPaginatedOfferData = () => {
+    const startIndex =
+      (offerPaginationState.page_no - 1) * offerPaginationState.per_page;
+    const endIndex = startIndex + offerPaginationState.per_page;
+    return offerData.slice(startIndex, endIndex);
+  };
+
   return (
     <div className="space-y-4">
       {/* Enhanced Stats Display */}
@@ -1397,6 +1612,8 @@ const Products = () => {
             <AddOnTable data={getPaginatedAddOnData()} />
           ) : activeTab === "My Groups" ? (
             <GroupTable data={getPaginatedGroupData()} />
+          ) : activeTab === "Offers & Discounts" ? (
+            <OfferTable data={getPaginatedOfferData()} />
           ) : ["All Products", "Active", "Inactive", "Draft"].includes(
               activeTab
             ) ? (

@@ -1,121 +1,157 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Upload } from 'lucide-react';
-
-const schema = z.object({
-  accountHolderName: z.string().min(1, 'Account holder name is required'),
-  accountNumber: z.string().min(8, 'Invalid account number'),
-  confirmAccountNumber: z.string().min(8, 'Invalid account number'),
-  ifscCode: z.string().min(11, 'IFSC code must be 11 characters').max(11),
-  bankName: z.string().min(1, 'Bank name is required'),
-  branchName: z.string().min(1, 'Branch name is required'),
-  cancelledCheque: z.any().refine((file) => file?.length > 0, 'Cancelled cheque is required'),
-}).refine((data) => data.accountNumber === data.confirmAccountNumber, {
-  message: "Account numbers don't match",
-  path: ['confirmAccountNumber'],
-});
+import React, { useState } from "react";
+import AddForm from "../../../components/AddForm";
+import { useNavigate } from "react-router-dom";
 
 const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema)
+  const [formValues, setFormValues] = useState({
+    bankName: "",
+    ifscCode: "",
+    accountNumber: "",
+    beneficiaryName: "",
+    cancelledCheque: "",
   });
 
-  return (
-    <form onSubmit={handleSubmit(onNext)} className="space-y-6">
-      <div className="bg-blue-50 p-4 rounded-lg mb-6">
-        <h2 className="text-lg font-semibold text-blue-900">Banking Details</h2>
-      </div>
+  const navigate = useNavigate();
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Account Holder Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            {...register('accountHolderName')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Enter account holder name"
-          />
-          {errors.accountHolderName && (
-            <p className="mt-1 text-sm text-red-600">{errors.accountHolderName.message as string}</p>
-          )}
+  const handleInputChange = (key: string, value: any) => {
+    setFormValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const handleImageLink = (id: string, link: string | null) => {
+    setFormValues(prev => ({
+      ...prev,
+      [id]: link || ""
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Save banking info
+    onNext(formValues);
+
+    // Get the email from session storage
+    const email = sessionStorage.getItem('pendingLoginEmail');
+    
+    if (email) {
+      // Mark onboarding as complete for this email
+      sessionStorage.setItem(`onboarding_${email}`, 'true');
+      
+      // Go directly to seller dashboard after onboarding
+      navigate('/dashboard/seller-dashboard');
+    }
+  };
+
+  const formFields = [
+    {
+      type: "custom",
+      key: "header",
+      component: (
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <h2 className="text-lg font-semibold text-blue-900">
+            Banking Details
+          </h2>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Account Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            {...register('accountNumber')}
-            type="password"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Enter account number"
-          />
-          {errors.accountNumber && (
-            <p className="mt-1 text-sm text-red-600">{errors.accountNumber.message as string}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Confirm Account Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            {...register('confirmAccountNumber')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Confirm account number"
-          />
-          {errors.confirmAccountNumber && (
-            <p className="mt-1 text-sm text-red-600">{errors.confirmAccountNumber.message as string}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            IFSC Code <span className="text-red-500">*</span>
-          </label>
-          <input
-            {...register('ifscCode')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Enter IFSC code"
-          />
-          {errors.ifscCode && (
-            <p className="mt-1 text-sm text-red-600">{errors.ifscCode.message as string}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Upload Cancelled Cheque <span className="text-red-500">*</span>
-          </label>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              <Upload className="mx-auto h-12 w-12 text-gray-400" />
-              <div className="flex text-sm text-gray-600">
-                <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
-                  <span>Upload a file</span>
-                  <input
-                    {...register('cancelledCheque')}
-                    type="file"
-                    className="sr-only"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                  />
-                </label>
-              </div>
-            </div>
+      )
+    },
+    {
+      type: "custom",
+      key: "bankDetails",
+      component: (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Bank Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formValues.bankName}
+              onChange={(e) => handleInputChange("bankName", e.target.value)}
+              placeholder="Bank Name"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
           </div>
-          {errors.cancelledCheque && (
-            <p className="mt-1 text-sm text-red-600">{errors.cancelledCheque.message as string}</p>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              IFSC Code <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formValues.ifscCode}
+              onChange={(e) => handleInputChange("ifscCode", e.target.value)}
+              placeholder="IFSC Code"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
         </div>
-      </div>
+      )
+    },
+    {
+      type: "custom",
+      key: "accountDetails",
+      component: (
+        <div className="space-y-6 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Account Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formValues.accountNumber}
+              onChange={(e) => handleInputChange("accountNumber", e.target.value)}
+              placeholder="Account number"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name Of Beneficiary Account holder <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formValues.beneficiaryName}
+              onChange={(e) => handleInputChange("beneficiaryName", e.target.value)}
+              placeholder="Name Of Beneficiary Account holder"
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      )
+    },
+    {
+      type: "image",
+      key: "cancelledCheque",
+      label: "Upload Blank Cheque",
+      value: formValues.cancelledCheque,
+      uploadText: "Upload a file",
+      uploadDescription: "PNG, SVG up to 10MB",
+      handleImageLink: handleImageLink,
+      description: "Upload your canceled Cheque which is required for banking verifications and penny drop",
+      showLable: false
+    }
+  ];
 
-      <div className="flex justify-end">
+  return (
+    <form onSubmit={handleSubmit}>
+      <AddForm
+        data={formFields}
+        handleInputonChange={handleInputChange}
+      />
+      
+      <div className="flex justify-between mt-6">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Back
+        </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           Go to Dashboard
         </button>

@@ -18,6 +18,7 @@ import {
   Bell,
   User,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -37,6 +38,7 @@ const navItems = [
 function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const { isAdmin } = useAuth();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -54,7 +56,9 @@ function Layout() {
                 {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-gray-800">MSN Seller Admin</span>
+                <span className="text-xl font-bold text-gray-800">
+                  {isAdmin ? "MSN Seller Admin" : "MSN Seller"}
+                </span>
               </div>
             </div>
             <div className="flex items-center space-x-4">

@@ -53,8 +53,8 @@ import CreateUser from "../pages/settings/CreateUser";
 import CreateTicket from "../pages/support/CreateTicket";
 import NotificationSettings from '../pages/settings/NotificationSettings';
 import MapSettings from '../pages/settings/MapSettings';
-// import ViewPartner from '../components/ViewPartner';
-// import EditPartner from '../components/EditPartner';
+import ViewPartner from '../pages/partners/ViewPartner';
+import EditPartner from '../pages/partners/EditPartner';
 
 export const routes: RouteObject[] = [
   {
@@ -175,14 +175,14 @@ export const routes: RouteObject[] = [
             path: "create",
             element: <CreatePartner />,
           },
-          // {
-          //   path: "view/:id",
-          //   element: <ViewPartner />
-          // },
-          // {
-          //   path: "edit/:id",
-          //   element: <EditPartner />
-          // }
+          {
+            path: "view/:id",
+            element: <ViewPartner />
+          },
+          {
+            path: "edit/:id",
+            element: <EditPartner />
+          }
         ],
       },
       {

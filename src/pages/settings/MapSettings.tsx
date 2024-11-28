@@ -101,20 +101,7 @@ const MapSettings = () => {
             </div>
           </div>
 
-          {/* All Map Providers */}
-          <h3 className="text-lg font-medium mb-4">All Maps Service providers</h3>
-          <div className="border rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div 
-                  className="w-16 h-16 flex items-center justify-center bg-white rounded-lg border p-2 cursor-pointer"
-                  onClick={() => setShowDetails(true)}
-                >
-                  <img src={adyaLogo} alt="Google Maps" className="w-full h-full object-contain" />
-                </div>
-              </div>
-            </div>
-          </div>
+           
         </div>
       </div>
     );

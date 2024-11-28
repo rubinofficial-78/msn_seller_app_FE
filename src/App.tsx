@@ -1,10 +1,10 @@
 import { Provider } from "react-redux";
-import { store } from "./store/store";
+import store from "./redux/store";
 import { AuthProvider } from "./contexts/AuthContext";
 import { routes } from "./routes/routes";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./styles/table.css";
-import AddGroup from "./pages/AddGroup";
+ 
 
 export default function App() {
   return (

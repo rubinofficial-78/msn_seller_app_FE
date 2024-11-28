@@ -6,53 +6,72 @@ import AddForm from '../../components/AddForm';
 const BankingDetails = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    accountNumber: '',
-    bankName: '',
-    ifscCode: '',
-    accountHolderName: '',
-    cancelledCheque: ''
+    gstnumber: '',
+    panNumber: '',
+    tanNumber: '',
+    currentBankName: '',
+    currentAccountNumber: '',
+    currentIfscCode: '',
+    currentBankHolderName: '',
   });
 
   const formFields = [
     {
       type: 'text',
-      key: 'accountNumber',
-      label: 'Account Number',
-      value: formData.accountNumber,
+      key: 'gstnumber',
+      label: 'GST No',
+      value: formData.gstnumber,
       required: true,
-      placeholder: 'Enter your account number'
+      placeholder: 'Enter your GST number'
     },
     {
       type: 'text',
-      key: 'bankName',
-      label: 'Bank Name',
-      value: formData.bankName,
+      key: 'pannumber',
+      label: 'Pan No',
+      value: formData.panNumber,
       required: true,
-      placeholder: 'Enter your bank name'
+      placeholder: 'Enter your PAN number'
     },
     {
       type: 'text',
-      key: 'ifscCode',
-      label: 'IFSC Code',
-      value: formData.ifscCode,
+      key: 'tanNumber',
+      label: 'Tan No',
+      value: formData.tanNumber,
       required: true,
-      placeholder: 'Enter IFSC code'
+      placeholder: 'Enter TAN number'
     },
     {
       type: 'text',
-      key: 'accountHolderName',
-      label: 'Account Holder Name',
-      value: formData.accountHolderName,
+      key: 'currentBankName',
+      label: 'Current Bank Name',
+      value: formData.currentBankName,
       required: true,
-      placeholder: 'Enter account holder name'
+      placeholder: 'Enter current bank name'
     },
     {
-      type: 'image',
-      key: 'cancelledCheque',
-      label: 'Upload Your Cancelled Cheque',
-      value: formData.cancelledCheque,
-      required: true
-    }
+      type: 'text',
+      key: 'currentAccountNumber',
+      label: 'Current Account Number',
+      value: formData.currentAccountNumber,
+      required: true,
+      placeholder: 'Enter current account number'
+    },
+    {
+      type: 'text',
+      key: 'currentIfscCode',
+      label: 'Current IFSC Code',
+      value: formData.currentIfscCode,
+      required: true,
+      placeholder: 'Enter current IFSC code'
+    },
+    {
+      type: 'text',
+      key: 'currentBankHolderName',
+      label: 'Current Bank Holder Name',
+      value: formData.currentBankHolderName,
+      required: true,
+      placeholder: 'Enter current bank holder name'
+    } 
   ];
 
   const handleInputChange = (key: string, value: any) => {
@@ -79,17 +98,13 @@ const BankingDetails = () => {
             </p>
           </div>
         </div>
-        <button className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-          Deactivate
+        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+          Save and Update
         </button>
       </div>
 
       <div className="bg-white rounded-lg p-6">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-red-500">
-            Bank Details Not Verified - 0/3
-          </h2>
-        </div>
+         
         
         <AddForm
           data={formFields}

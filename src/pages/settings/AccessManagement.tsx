@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Plus, Edit, Users, UserCheck } from 'lucide-react';
 import CustomTable from '../../components/CustomTable';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 interface User {
   userName: string;
@@ -249,6 +250,7 @@ const AccessManagement = () => {
 
   return (
     <div className="space-y-4">
+      
       {/* Enhanced Stats Display */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-3">
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 transition-all hover:shadow-sm">
@@ -277,10 +279,17 @@ const AccessManagement = () => {
           </div>
         </div>
       </div>
+      
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
+        <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <ArrowLeft size={20} />
+          </button>
           {['All users', 'Roles'].map((tab) => (
             <button
               key={tab}

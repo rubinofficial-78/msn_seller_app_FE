@@ -111,7 +111,42 @@ const CustomTable: React.FC<CustomTableProps> = ({
                         className="px-6 py-4 whitespace-nowrap text-sm"
                         style={{ minWidth: cell.minWidth || 150 }}
                       >
-                        {cell.type === 'custom' && cell.renderCell ? (
+                        {cell.type === 'status_toggle' ? (
+                          <div 
+                            className="flex items-center gap-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onStatusToggle && onStatusToggle(row);
+                            }}
+                          >
+                            <button 
+                              className={`
+                                relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                                transition-colors duration-200 ease-in-out focus:outline-none
+                                ${row.status?.lookup_code === 'ACTIVE' ? 'bg-blue-600' : 'bg-gray-200'}
+                              `}
+                            >
+                              <span
+                                className={`
+                                  pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                                  transition duration-200 ease-in-out
+                                  ${row.status?.lookup_code === 'ACTIVE' ? 'translate-x-5' : 'translate-x-0'}
+                                `}
+                              />
+                            </button>
+                            <span 
+                              className={`
+                                text-sm font-medium px-3 py-1 rounded-full
+                                ${row.status?.lookup_code === 'ACTIVE' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                                }
+                              `}
+                            >
+                              {row.status?.display_name || row.status?.lookup_code || 'Inactive'}
+                            </span>
+                          </div>
+                        ) : cell.type === 'custom' && cell.renderCell ? (
                           cell.renderCell(row)
                         ) : cell.type === 'status' ? (
                           <span
@@ -157,41 +192,6 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                 maximumFractionDigits: 2,
                               }
                             )}
-                          </div>
-                        ) : cell.type === 'status_toggle' ? (
-                          <div 
-                            className="flex items-center gap-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onStatusToggle && onStatusToggle(row);
-                            }}
-                          >
-                            <button 
-                              className={`
-                                relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-                                transition-colors duration-200 ease-in-out focus:outline-none
-                                ${row[cell.key as string] === 'ACTIVE' ? 'bg-blue-600' : 'bg-gray-200'}
-                              `}
-                            >
-                              <span
-                                className={`
-                                  pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
-                                  transition duration-200 ease-in-out
-                                  ${row[cell.key as string] === 'ACTIVE' ? 'translate-x-5' : 'translate-x-0'}
-                                `}
-                              />
-                            </button>
-                            <span 
-                              className={`
-                                text-sm font-medium px-3 py-1 rounded-full
-                                ${row[cell.key as string] === 'ACTIVE' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                                }
-                              `}
-                            >
-                              {row[cell.key as string] === 'ACTIVE' ? 'Active' : 'Inactive'}
-                            </span>
                           </div>
                         ) : cell.join ? (
                           <div className="text-gray-900">

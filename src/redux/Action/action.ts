@@ -70,7 +70,10 @@ import {
   UPDATE_BRANCH_FAILURE,
   GET_BRANCH_BY_ID_REQUEST,
   GET_BRANCH_BY_ID_SUCCESS,
-  GET_BRANCH_BY_ID_FAILURE
+  GET_BRANCH_BY_ID_FAILURE,
+  GET_BRANCH_STATUS_LOOKUP_REQUEST,
+  GET_BRANCH_STATUS_LOOKUP_SUCCESS,
+  GET_BRANCH_STATUS_LOOKUP_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -859,20 +862,30 @@ export const getCompanyUsers = (
 };
 
 export const getBranches = (
-  params: { page_no: number; per_page: number }
+  params: { 
+    page_no: number; 
+    per_page: number;
+    status_id?: number;
+    company_id?: number;
+    search?: string;
+  }
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_BRANCHES_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams({
+        per_page: params.per_page.toString(),
+        page_no: params.page_no.toString(),
+        ...(params.status_id ? { status_id: params.status_id.toString() } : {}),
+        ...(params.company_id ? { company_id: params.company_id.toString() } : {}),
+        ...(params.search ? { search: params.search } : {})
+      });
+
       const response = await axios.get(
-        `${API_BASE_URL}/backend_master/company_branches`,
+        `${API_BASE_URL}/backend_master/company_branches?${queryParams}`,
         {
-          params: {
-            per_page: params.per_page,
-            page_no: params.page_no
-          },
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -999,6 +1012,7 @@ export const updateBranch = (
     email: string;
     mobile_number: string;
     created_by_id: number;
+    status_id: number;
     default_address: {
       address: string;
       state: string;
@@ -1012,7 +1026,7 @@ export const updateBranch = (
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(
+      const response = await axios.post(
         `${API_BASE_URL}/backend_master/company_branches/${id}/update`,
         data,
         {
@@ -1054,7 +1068,7 @@ export const getBranchById = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_BASE_URL}/backend_master/company_partners/get/${id}`,
+        `${API_BASE_URL}/backend_master/company_branches/get/${id}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1077,6 +1091,43 @@ export const getBranchById = (
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch branch details';
       dispatch({
         type: GET_BRANCH_BY_ID_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getBranchStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_BRANCH_STATUS_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/COMPANY_BRANCHES_STATUS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_BRANCH_STATUS_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch status lookup');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch status lookup';
+      dispatch({
+        type: GET_BRANCH_STATUS_LOOKUP_FAILURE,
         payload: errorMessage
       });
       throw error;

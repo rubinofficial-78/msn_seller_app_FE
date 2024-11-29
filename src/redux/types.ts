@@ -50,6 +50,9 @@ export const GET_COMPANY_DROPDOWN_FAILURE = 'GET_COMPANY_DROPDOWN_FAILURE';
 export const CREATE_BRANCH_REQUEST = 'CREATE_BRANCH_REQUEST';
 export const CREATE_BRANCH_SUCCESS = 'CREATE_BRANCH_SUCCESS';
 export const CREATE_BRANCH_FAILURE = 'CREATE_BRANCH_FAILURE';
+export const GET_BRANCH_STATUS_LOOKUP_REQUEST = 'GET_BRANCH_STATUS_LOOKUP_REQUEST';
+export const GET_BRANCH_STATUS_LOOKUP_SUCCESS = 'GET_BRANCH_STATUS_LOOKUP_SUCCESS';
+export const GET_BRANCH_STATUS_LOOKUP_FAILURE = 'GET_BRANCH_STATUS_LOOKUP_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -119,6 +122,11 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: CompanyDropdownItem[];
+  };
+  branchStatusLookup: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
   };
 }
 
@@ -386,6 +394,20 @@ interface CreateBranchFailureAction {
   payload: string;
 }
 
+interface GetBranchStatusLookupRequestAction {
+  type: typeof GET_BRANCH_STATUS_LOOKUP_REQUEST;
+}
+
+interface GetBranchStatusLookupSuccessAction {
+  type: typeof GET_BRANCH_STATUS_LOOKUP_SUCCESS;
+  payload: any[];
+}
+
+interface GetBranchStatusLookupFailureAction {
+  type: typeof GET_BRANCH_STATUS_LOOKUP_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -440,7 +462,10 @@ export type AuthActionTypes =
   | GetCompanyDropdownFailureAction
   | CreateBranchRequestAction
   | CreateBranchSuccessAction
-  | CreateBranchFailureAction; 
+  | CreateBranchFailureAction
+  | GetBranchStatusLookupRequestAction
+  | GetBranchStatusLookupSuccessAction
+  | GetBranchStatusLookupFailureAction; 
 
 export interface FileUploadPayload {
   data: string;      // base64 string without prefix

@@ -41,7 +41,10 @@ import {
   GET_COMPANY_DROPDOWN_FAILURE, 
   UPDATE_BRANCH_REQUEST, 
   UPDATE_BRANCH_SUCCESS, 
-  UPDATE_BRANCH_FAILURE 
+  UPDATE_BRANCH_FAILURE, 
+  GET_BRANCH_STATUS_LOOKUP_REQUEST, 
+  GET_BRANCH_STATUS_LOOKUP_SUCCESS, 
+  GET_BRANCH_STATUS_LOOKUP_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -112,6 +115,11 @@ const initialState: AuthState = {
     meta: null
   },
   companyDropdown: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  branchStatusLookup: {
     loading: false,
     error: null,
     data: []
@@ -483,6 +491,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         loading: false,
         error: action.payload
+      };
+    case GET_BRANCH_STATUS_LOOKUP_REQUEST:
+      return {
+        ...state,
+        branchStatusLookup: {
+          ...state.branchStatusLookup,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_BRANCH_STATUS_LOOKUP_SUCCESS:
+      return {
+        ...state,
+        branchStatusLookup: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_BRANCH_STATUS_LOOKUP_FAILURE:
+      return {
+        ...state,
+        branchStatusLookup: {
+          ...state.branchStatusLookup,
+          loading: false,
+          error: action.payload
+        }
       };
     default:
       return state;

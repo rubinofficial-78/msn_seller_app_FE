@@ -44,21 +44,16 @@ const EditBranch: React.FC = () => {
       if (!id) return;
       const branchData = await dispatch(getBranchById(parseInt(id)));
       
-      // Find the company name from companies list
-      const selectedCompany = companies.find(
-        company => company.id.toString() === branchData.created_by_id?.toString()
-      );
-
       setFormData({
         branchName: branchData.name || '',
-        companyName: selectedCompany?.name || '', // Store company name instead of ID
+        companyName: branchData.parent?.name || '',
         email: branchData.email || '',
         mobileNumber: branchData.mobile_number || '',
         address: branchData.default_address?.address || '',
         state: branchData.default_address?.state || '',
         city: branchData.default_address?.city || '',
         pincode: branchData.default_address?.pincode || '',
-        created_by_id: branchData.created_by_id // Store the ID separately
+        created_by_id: branchData.parent?.id
       });
     } catch (error) {
       console.error('Error fetching branch details:', error);
@@ -120,12 +115,12 @@ const EditBranch: React.FC = () => {
 
   const formFields = [
     {
-      type: 'text', // Changed from select to text
+      type: 'text',
       key: 'companyName',
       label: 'Company Name',
       required: true,
       value: formData.companyName,
-      disabled: true, // Make it read-only
+      disabled: true,
       placeholder: 'Company Name'
     },
     {

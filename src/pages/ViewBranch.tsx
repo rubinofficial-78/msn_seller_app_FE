@@ -1,16 +1,10 @@
 import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { getBranchById, getCompanyDropdown } from "../redux/Action/action";
+import { useDispatch } from "react-redux";
+import { getBranchById } from "../redux/Action/action";
 import { AppDispatch } from "../redux/store";
-import type { RootState } from "../redux/types";
 import { ArrowLeft, Edit } from "lucide-react";
 import { toast } from "react-hot-toast";
-
-interface Company {
-  id: number;
-  name: string;
-}
 
 const ViewBranch: React.FC = () => {
   const navigate = useNavigate();
@@ -18,12 +12,7 @@ const ViewBranch: React.FC = () => {
   const { id } = useParams();
   const [branchData, setBranchData] = React.useState<any>(null);
 
-  const { data: companies = [] } = useSelector(
-    (state: RootState) => state.data.companyDropdown || {}
-  );
-
   useEffect(() => {
-    dispatch(getCompanyDropdown());
     if (id) {
       fetchBranchDetails();
     }
@@ -46,18 +35,10 @@ const ViewBranch: React.FC = () => {
 
   if (!branchData) return <div>Loading...</div>;
 
-  const selectedCompany = companies.find(
-    (company: Company) =>
-      company.id.toString() === branchData.created_by_id?.toString()
-  );
-
-  const renderField = (
-    label: string,
-    value: string | number | null | undefined
-  ) => (
+  const renderField = (label: string, value: string | number | undefined) => (
     <div>
-      <h3 className="text-sm font-medium text-gray-500">{label}</h3>
-      <p className="mt-1">{value || "N/A"}</p>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="mt-1 text-sm font-medium text-gray-900">{value || "-"}</p>
     </div>
   );
 
@@ -88,34 +69,20 @@ const ViewBranch: React.FC = () => {
       <div className="bg-white rounded-lg p-6">
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           {/* Basic Information */}
-          {renderField("Branch Name", branchData.name)}
-          {renderField("Company Name", selectedCompany?.name)}
-          {renderField("Email", branchData.email)}
-          {renderField("Mobile Number", branchData.mobile_number)}
+          {renderField("Branch Name", branchData?.name)}
+          {renderField("Company Name", branchData?.parent?.name)}
+          {renderField("Email", branchData?.email)}
+          {renderField("Mobile Number", branchData?.mobile_number)}
 
           {/* Address Information - Full Width */}
           <div className="col-span-2">
-            {renderField("Address", branchData.default_address?.address)}
+            {renderField("Address", branchData?.default_address?.address)}
           </div>
 
           {/* Location Details */}
-          {renderField("State", branchData.default_address?.state)}
-          {renderField("City", branchData.default_address?.city)}
-          {renderField("Pincode", branchData.default_address?.pincode)}
-
-          {/* Additional Details */}
-          {renderField(
-            "Created Date",
-            new Date(branchData.createdAt).toLocaleDateString()
-          )}
-          {renderField(
-            "Last Updated",
-            new Date(branchData.updatedAt).toLocaleDateString()
-          )}
-
-          {/* Partner Count if available */}
-          {branchData.partner_count !== undefined &&
-            renderField("Partner Count", branchData.partner_count)}
+          {renderField("State", branchData?.default_address?.state)}
+          {renderField("City", branchData?.default_address?.city)}
+          {renderField("Pincode", branchData?.default_address?.pincode)}
         </div>
       </div>
     </div>

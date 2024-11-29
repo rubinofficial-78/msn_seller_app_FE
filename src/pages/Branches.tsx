@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, Edit, LayoutGrid, List, Search } from 'lucide-react';
 import CustomTable, { Column } from '../components/CustomTable';
 import { useDispatch, useSelector } from 'react-redux';
-import { getBranches, getCompanyDropdown } from '../redux/Action/action';
+import { getBranches, getCompanyDropdown, updateBranch, getBranchStatusLookup } from '../redux/Action/action';
 import { AppDispatch, RootState } from '../redux/types';
 import { toast } from 'react-hot-toast';
 
@@ -53,7 +53,7 @@ const tableColumns: Column[] = [
     key: 'status.lookup_code',
     label: 'Status',
     minWidth: 120,
-    type: 'status_toggle' as const
+    type: 'status_toggle'
   }
 ];
 
@@ -65,16 +65,75 @@ const Branches: React.FC = () => {
   
   const [params, setParams] = useState({
     page_no: 1,
-    per_page: 10
+    per_page: 10,
+    status_id: undefined as number | undefined,
+    company_id: undefined as number | undefined,
+    search: undefined as string | undefined
   });
 
   const [selectedCompany, setSelectedCompany] = useState<string>('');
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Get branches data from Redux store
   const { data: branches = [], loading = false, meta = null, error = null } = useSelector((state: RootState) => state.data.branches || {});
 
   // Get company dropdown data from Redux store
   const { data: companies = [] } = useSelector((state: RootState) => state.data.companyDropdown || {});
+
+  // Get status lookup data from Redux store
+  const { data: statusLookup = [] } = useSelector(
+    (state: RootState) => state.data.branchStatusLookup || {}
+  );
+
+  // Add debounce function to prevent too many API calls
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+
+  // Handle search input change
+  const handleSearch = debounce((value: string) => {
+    setParams(prev => ({
+      ...prev,
+      page_no: 1, // Reset to first page when searching
+      search: value || undefined
+    }));
+  }, 500); // 500ms delay
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    handleSearch(value);
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    let statusId: number | undefined;
+    
+    switch(tab) {
+      case 'Active Branches':
+        statusId = 425; // Active status ID
+        break;
+      case 'Inactive Branches':
+        statusId = 426; // Inactive status ID
+        break;
+      default:
+        statusId = undefined;
+    }
+
+    setParams(prev => ({
+      ...prev,
+      page_no: 1, // Reset to first page when changing tabs
+      status_id: statusId
+    }));
+  };
 
   // Fetch branches on mount and when params change
   useEffect(() => {
@@ -84,6 +143,11 @@ const Branches: React.FC = () => {
   // Fetch companies on mount
   useEffect(() => {
     dispatch(getCompanyDropdown());
+  }, [dispatch]);
+
+  // Fetch status lookup data on mount
+  useEffect(() => {
+    dispatch(getBranchStatusLookup());
   }, [dispatch]);
 
   // Handle pagination params change
@@ -100,14 +164,50 @@ const Branches: React.FC = () => {
     navigate(`view/${row.id}`);
   };
 
-  // Add status toggle handler
+  // Handle status toggle
   const handleStatusToggle = async (row: any) => {
     try {
-      // TODO: Implement status toggle API call
-      toast.success('Status updated successfully');
+      const currentStatus = row.status?.lookup_code;
+      const newStatusId = currentStatus === 'ACTIVE' ? 426 : 425;
+
+      const payload = {
+        name: row.name,
+        email: row.email,
+        mobile_number: row.mobile_number,
+        created_by_id: row.parent?.id,
+        status_id: newStatusId,
+        default_address: row.default_address || {
+          address: '',
+          state: '',
+          city: '',
+          pincode: ''
+        }
+      };
+
+      const response = await dispatch(updateBranch(row.id, payload));
+      
+      if (response?.meta?.status) {
+        toast.success(`Branch ${newStatusId === 425 ? 'activated' : 'deactivated'} successfully`);
+        // Refresh the branches list with current params
+        dispatch(getBranches(params));
+      } else {
+        toast.error(response?.meta?.message || 'Failed to update status');
+      }
     } catch (error) {
+      console.error('Error updating status:', error);
       toast.error('Failed to update status');
     }
+  };
+
+  // Update company selection handler
+  const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const companyId = e.target.value ? parseInt(e.target.value) : undefined;
+    setSelectedCompany(e.target.value);
+    setParams(prev => ({
+      ...prev,
+      page_no: 1, // Reset to first page when changing company
+      company_id: companyId
+    }));
   };
 
   return (
@@ -118,7 +218,7 @@ const Branches: React.FC = () => {
           {['All Branches', 'Active Branches', 'Inactive Branches'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
                 ${activeTab === tab
@@ -140,10 +240,10 @@ const Branches: React.FC = () => {
           <div className="relative flex-1 max-w-xs">
             <select
               value={selectedCompany}
-              onChange={(e) => setSelectedCompany(e.target.value)}
+              onChange={handleCompanyChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <option value="">Select Company</option>
+              <option value="">All Companies</option>
               {companies.map((company) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
@@ -157,6 +257,8 @@ const Branches: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
+              value={searchTerm}
+              onChange={handleSearchInputChange}
               placeholder="Search by Branch Name"
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
             />

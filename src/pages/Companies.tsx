@@ -16,6 +16,7 @@ import {
   getCompanies,
   getStatusLookup,
   updateCompany,
+  getCompanyUsers,
 } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import CompanyGrid from "../components/CompanyGrid";
@@ -100,6 +101,40 @@ const tableColumns = [
   },
 ];
 
+// Add columns for system users table
+const systemUserColumns = [
+  {
+    id: 'parent',
+    key: 'parent.name',
+    label: 'Company Name',
+    minWidth: 180,
+  },
+  {
+    id: 'name',
+    key: 'name',
+    label: 'Name',
+    minWidth: 180,
+  },
+  {
+    id: 'email',
+    key: 'email',
+    label: 'Email',
+    minWidth: 180,
+  },
+  {
+    id: 'mobile_number',
+    key: 'mobile_number',
+    label: 'Mobile Number',
+    minWidth: 140,
+  },
+  {
+    id: 'createdAt',
+    key: 'createdAt',
+    label: 'Created Date',
+    minWidth: 140,
+  }
+];
+
 const Companies = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -116,11 +151,19 @@ const Companies = () => {
   const [params, setParams] = useState({
     page_no: 1,
     per_page: 10,
+    status_id: null as number | null
   });
+
+  // Add state for filtered status ID
+  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
 
   // Create a fetchCompanies function that can be called to refresh the list
   const fetchCompanies = useCallback(() => {
-    dispatch(getCompanies(params));
+    const queryParams = {
+      ...params,
+      status_id: params.status_id || undefined // Only include if not null
+    };
+    dispatch(getCompanies(queryParams));
   }, [dispatch, params]);
 
   // Fetch on mount and when location changes (navigation back)
@@ -217,8 +260,57 @@ const Companies = () => {
     navigate("create");
   };
 
-  // Update renderCompanies to only show table view for now
+  // Add state for system users
+  const { data: systemUsers, loading: usersLoading, meta: usersMeta } = 
+    useSelector((state: RootState) => state.data.companyUsers);
+
+  // Update handleTabChange
+  const handleTabChange = (tabLabel: string) => {
+    setActiveTab(tabLabel);
+    
+    if (tabLabel === "System Users") {
+      dispatch(getCompanyUsers(params));
+    } else {
+      // Find corresponding status ID from lookup
+      let statusId = null;
+      if (tabLabel === "Active Companies") {
+        const activeStatus = statusLookup.find(s => s.lookup_code === "ACTIVE");
+        statusId = activeStatus?.id || null;
+      } else if (tabLabel === "Inactive Companies") {
+        const inactiveStatus = statusLookup.find(s => s.lookup_code === "IN-ACTIVE");
+        statusId = inactiveStatus?.id || null;
+      }
+
+      setParams(prev => ({
+        ...prev,
+        status_id: statusId,
+        page_no: 1
+      }));
+    }
+  };
+
+  // Update renderCompanies
   const renderCompanies = () => {
+    if (activeTab === "System Users") {
+      if (usersLoading) {
+        return <div className="flex justify-center items-center h-64">Loading...</div>;
+      }
+
+      return (
+        <div className="bg-white rounded-lg shadow">
+          <CustomTable
+            headCells={systemUserColumns}
+            data={systemUsers || []}
+            meta_data={usersMeta?.pagination}
+            setParams={handleParamsChange}
+            pagination={true}
+            onRowClick={handleRowClick}
+            onStatusToggle={handleStatusToggle}
+          />
+        </div>
+      );
+    }
+
     if (loading) {
       return (
         <div className="flex justify-center items-center h-64">Loading...</div>
@@ -253,7 +345,7 @@ const Companies = () => {
           {tabs.map((tab) => (
             <button
               key={tab.label}
-              onClick={() => setActiveTab(tab.label)}
+              onClick={() => handleTabChange(tab.label)}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
                 ${

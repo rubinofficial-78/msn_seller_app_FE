@@ -1,45 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, Edit, LayoutGrid, List, Search } from 'lucide-react';
-import CustomTable from '../components/CustomTable';
-
-interface Branch {
-  id: string;
-  branchName: string;
-  companyName: string;
-  createdDate: string;
-  contactInformation: {
-    email: string;
-    phone: string;
-  };
-  address: string;
-  partnerCount: number;
-  status: 'Active' | 'Inactive';
-}
+import CustomTable, { Column } from '../components/CustomTable';
+import { useDispatch, useSelector } from 'react-redux';
+import { getBranches, getCompanyDropdown } from '../redux/Action/action';
+import { AppDispatch, RootState } from '../redux/types';
+import { toast } from 'react-hot-toast';
 
 // Define table columns for CustomTable
-const tableColumns = [
+const tableColumns: Column[] = [
   {
-    id: 'branchName',
-    key: 'branchName',
+    id: 'name',
+    key: 'name',
     label: 'Branch Name',
     minWidth: 180,
   },
   {
-    id: 'companyName',
-    key: 'companyName',
+    id: 'parent',
+    key: 'parent.name',
     label: 'Company Name',
     minWidth: 180,
   },
   {
-    id: 'createdDate',
-    key: 'createdDate',
+    id: 'createdAt',
+    key: 'createdAt',
     label: 'Created Date',
     minWidth: 140,
   },
   {
-    id: 'contactInformation',
-    key: ['contactInformation.email', 'contactInformation.phone'],
+    id: 'contact',
+    key: ['email', 'mobile_number'],
     label: 'Contact Information',
     minWidth: 200,
     join: true,
@@ -47,138 +37,77 @@ const tableColumns = [
   },
   {
     id: 'address',
-    key: 'address',
+    key: 'default_address.address',
     label: 'Address',
     minWidth: 200,
   },
   {
-    id: 'partnerCount',
-    key: 'partnerCount',
+    id: 'partner_counts',
+    key: 'partner_counts',
     label: 'Partner Count',
     minWidth: 120,
     type: 'number'
   },
   {
     id: 'status',
-    key: 'status',
+    key: 'status.lookup_code',
     label: 'Status',
-    minWidth: 200,
-    type: 'status_toggle'
-  }
-];
-
-// Mock data
-const branchData: Branch[] = [
-  {
-    id: '1',
-    branchName: 'New Test Branch',
-    companyName: 'New Test Company',
-    createdDate: '18-10-2024',
-    contactInformation: {
-      email: 'new_company@test.com',
-      phone: '9896863423'
-    },
-    address: '3-44/3, gandhi nagar Chintal',
-    partnerCount: 1,
-    status: 'Active'
-  },
-  {
-    id: '2',
-    branchName: 'Downtown Branch',
-    companyName: 'New Test Company',
-    createdDate: '17-10-2024',
-    contactInformation: {
-      email: 'downtown@test.com',
-      phone: '9876543210'
-    },
-    address: '45 Main Street, Downtown',
-    partnerCount: 3,
-    status: 'Active'
-  },
-  {
-    id: '3',
-    branchName: 'East Side Branch',
-    companyName: 'New Test Company',
-    createdDate: '16-10-2024',
-    contactInformation: {
-      email: 'eastside@test.com',
-      phone: '9876543211'
-    },
-    address: '22 East Avenue',
-    partnerCount: 2,
-    status: 'Inactive'
+    minWidth: 120,
+    type: 'status_toggle' as const
   }
 ];
 
 const Branches: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const [activeTab, setActiveTab] = useState('All Branches');
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'table'>('table');
+  
   const [params, setParams] = useState({
-    page: 1,
-    per_page: 10,
-    total: branchData.length
+    page_no: 1,
+    per_page: 10
   });
-  const [branches, setBranches] = useState(branchData);
 
-  // Get filtered and paginated data
-  const getFilteredData = () => {
-    let filtered = branches;
-    
-    // Filter based on active tab
-    switch (activeTab) {
-      case 'Active Branches':
-        filtered = branches.filter(branch => branch.status === 'Active');
-        break;
-      case 'Inactive Branches':
-        filtered = filtered.filter(branch => branch.status === 'Inactive');
-        break;
-    }
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
 
-    // Calculate pagination
-    const startIndex = (params.page - 1) * params.per_page;
-    const endIndex = startIndex + params.per_page;
-    
-    return {
-      data: filtered.slice(startIndex, endIndex),
-      total: filtered.length
-    };
-  };
+  // Get branches data from Redux store
+  const { data: branches = [], loading = false, meta = null, error = null } = useSelector((state: RootState) => state.data.branches || {});
 
-  // Create metadata for pagination
-  const meta_data = {
-    total: getFilteredData().total,
-    per_page: params.per_page,
-    current_page: params.page,
-    last_page: Math.ceil(getFilteredData().total / params.per_page),
-    from: ((params.page - 1) * params.per_page) + 1,
-    to: Math.min(params.page * params.per_page, getFilteredData().total)
-  };
+  // Get company dropdown data from Redux store
+  const { data: companies = [] } = useSelector((state: RootState) => state.data.companyDropdown || {});
+
+  // Fetch branches on mount and when params change
+  useEffect(() => {
+    dispatch(getBranches(params));
+  }, [dispatch, params]);
+
+  // Fetch companies on mount
+  useEffect(() => {
+    dispatch(getCompanyDropdown());
+  }, [dispatch]);
 
   // Handle pagination params change
   const handleParamsChange = (newParams: { page?: number; per_page?: number }) => {
     setParams(prev => ({
       ...prev,
-      page: newParams.page || prev.page,
+      page_no: newParams.page || prev.page_no,
       per_page: newParams.per_page || prev.per_page,
     }));
   };
 
   // Handle row click for view/edit actions
-  const handleRowClick = (row: Branch) => {
+  const handleRowClick = (row: any) => {
     navigate(`view/${row.id}`);
   };
 
   // Add status toggle handler
-  const handleStatusToggle = async (row: Branch) => {
-    // Update the branches state with the toggled status
-    setBranches(prevBranches => 
-      prevBranches.map(branch => 
-        branch.id === row.id 
-          ? { ...branch, status: branch.status === 'Active' ? 'Inactive' : 'Active' }
-          : branch
-      )
-    );
+  const handleStatusToggle = async (row: any) => {
+    try {
+      // TODO: Implement status toggle API call
+      toast.success('Status updated successfully');
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
   };
 
   return (
@@ -207,6 +136,22 @@ const Branches: React.FC = () => {
       {/* Search and Actions */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex flex-wrap gap-4 flex-1">
+          {/* Company Dropdown */}
+          <div className="relative flex-1 max-w-xs">
+            <select
+              value={selectedCompany}
+              onChange={(e) => setSelectedCompany(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">Select Company</option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Search */}
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -221,20 +166,6 @@ const Branches: React.FC = () => {
         {/* View Controls and Add Button */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-            title="List view"
-          >
-            <List size={20} />
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-            title="Grid view"
-          >
-            <LayoutGrid size={20} />
-          </button>
-          <button
             onClick={() => navigate('create')}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
@@ -245,22 +176,23 @@ const Branches: React.FC = () => {
       </div>
 
       {/* Branches Table */}
-      <div className="bg-white rounded-lg shadow">
-        <CustomTable
-          headCells={tableColumns}
-          data={getFilteredData().data}
-          meta_data={meta_data}
-          setParams={handleParamsChange}
-          pagination={true}
-          onRowClick={handleRowClick}
-          onStatusToggle={handleStatusToggle}
-        />
-      </div>
-
-      {/* Pagination info */}
-      <div className="text-sm text-gray-500 text-right">
-        Showing {meta_data.from} to {meta_data.to} of {meta_data.total} entries
-      </div>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">Loading...</div>
+      ) : error ? (
+        <div className="text-red-500 text-center">{error}</div>
+      ) : (
+        <div className="bg-white rounded-lg shadow">
+          <CustomTable
+            headCells={tableColumns}
+            data={branches}
+            meta_data={meta?.pagination}
+            setParams={handleParamsChange}
+            pagination={true}
+            onRowClick={handleRowClick}
+            onStatusToggle={handleStatusToggle}
+          />
+        </div>
+      )}
     </div>
   );
 };

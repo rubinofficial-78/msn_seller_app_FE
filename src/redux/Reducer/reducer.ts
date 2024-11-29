@@ -29,7 +29,19 @@ import {
   GET_COMPANIES_FAILURE, 
   UPDATE_COMPANY_REQUEST, 
   UPDATE_COMPANY_SUCCESS, 
-  UPDATE_COMPANY_FAILURE 
+  UPDATE_COMPANY_FAILURE, 
+  GET_COMPANY_USERS_REQUEST, 
+  GET_COMPANY_USERS_SUCCESS, 
+  GET_COMPANY_USERS_FAILURE, 
+  GET_BRANCHES_REQUEST, 
+  GET_BRANCHES_SUCCESS, 
+  GET_BRANCHES_FAILURE, 
+  GET_COMPANY_DROPDOWN_REQUEST, 
+  GET_COMPANY_DROPDOWN_SUCCESS, 
+  GET_COMPANY_DROPDOWN_FAILURE, 
+  UPDATE_BRANCH_REQUEST, 
+  UPDATE_BRANCH_SUCCESS, 
+  UPDATE_BRANCH_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -86,6 +98,23 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: null
+  },
+  companyUsers: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  branches: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  companyDropdown: {
+    loading: false,
+    error: null,
+    data: []
   }
 };
 
@@ -349,6 +378,107 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         error: null
       };
     case UPDATE_COMPANY_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+    case GET_COMPANY_USERS_REQUEST:
+      return {
+        ...state,
+        companyUsers: {
+          ...state.companyUsers,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_COMPANY_USERS_SUCCESS:
+      return {
+        ...state,
+        companyUsers: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_COMPANY_USERS_FAILURE:
+      return {
+        ...state,
+        companyUsers: {
+          ...state.companyUsers,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_BRANCHES_REQUEST:
+      return {
+        ...state,
+        branches: {
+          ...state.branches,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_BRANCHES_SUCCESS:
+      return {
+        ...state,
+        branches: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_BRANCHES_FAILURE:
+      return {
+        ...state,
+        branches: {
+          ...state.branches,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_COMPANY_DROPDOWN_REQUEST:
+      return {
+        ...state,
+        companyDropdown: {
+          ...state.companyDropdown,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_COMPANY_DROPDOWN_SUCCESS:
+      return {
+        ...state,
+        companyDropdown: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_COMPANY_DROPDOWN_FAILURE:
+      return {
+        ...state,
+        companyDropdown: {
+          ...state.companyDropdown,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case UPDATE_BRANCH_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case UPDATE_BRANCH_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null
+      };
+    case UPDATE_BRANCH_FAILURE:
       return {
         ...state,
         loading: false,

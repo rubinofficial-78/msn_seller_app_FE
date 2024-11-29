@@ -1,38 +1,195 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateBranch, getCompanyDropdown, getBranchById } from '../redux/Action/action';
+import { RootState } from '../redux/types';
+import { AppDispatch } from '../redux/store';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import AddForm from '../components/AddForm';
 
 interface FormData {
   branchName: string;
   companyName: string;
-  createdDate: string;
-  contactInformation: string;
+  email: string;
+  mobileNumber: string;
   address: string;
-  partnerCount: string;
-  status: 'Active' | 'Inactive';
+  state: string;
+  city: string;
+  pincode: string;
+  created_by_id: number;
 }
 
 const EditBranch: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams();
+  const [formData, setFormData] = useState<FormData>({} as FormData);
 
-  // Mock initial data - replace with API call
-  const [formData, setFormData] = useState({
-    branchName: 'New Test Branch',
-    companyName: 'New Test Company',
-    email: 'new_company@test.com',
-    phone: '9896863423',
-    address: '3-44/3, gandhi nagar Chintal',
-    partnerCount: '1'
-  });
+  // Get companies from Redux store
+  const { data: companies = [] } = useSelector(
+    (state: RootState) => state.data.companyDropdown || {}
+  );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log(formData);
-    // Navigate back after successful update
-    navigate(-1);
+  // Fetch companies and branch details on mount
+  useEffect(() => {
+    dispatch(getCompanyDropdown());
+    if (id) {
+      fetchBranchDetails();
+    }
+  }, [dispatch, id]);
+
+  const fetchBranchDetails = async () => {
+    try {
+      if (!id) return;
+      const branchData = await dispatch(getBranchById(parseInt(id)));
+      
+      // Find the company name from companies list
+      const selectedCompany = companies.find(
+        company => company.id.toString() === branchData.created_by_id?.toString()
+      );
+
+      setFormData({
+        branchName: branchData.name || '',
+        companyName: selectedCompany?.name || '', // Store company name instead of ID
+        email: branchData.email || '',
+        mobileNumber: branchData.mobile_number || '',
+        address: branchData.default_address?.address || '',
+        state: branchData.default_address?.state || '',
+        city: branchData.default_address?.city || '',
+        pincode: branchData.default_address?.pincode || '',
+        created_by_id: branchData.created_by_id // Store the ID separately
+      });
+    } catch (error) {
+      console.error('Error fetching branch details:', error);
+      toast.error('Failed to fetch branch details');
+    }
   };
+
+  const handleInputChange = (key: string, value: any) => {
+    if (key === 'companyName') {
+      const actualValue = typeof value === 'object' ? value.value : value;
+      console.log('Company Selection:', { value, actualValue });
+      setFormData(prev => ({ ...prev, [key]: actualValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [key]: value }));
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (!id) {
+        toast.error('Branch ID is missing');
+        return;
+      }
+
+      if (!formData.branchName || !formData.email || !formData.mobileNumber) {
+        toast.error('Please fill all required fields');
+        return;
+      }
+
+      const payload = {
+        name: formData.branchName,
+        email: formData.email,
+        mobile_number: formData.mobileNumber,
+        created_by_id: formData.created_by_id, // Use the stored ID
+        default_address: {
+          address: formData.address || '',
+          state: formData.state || '',
+          city: formData.city || '',
+          pincode: formData.pincode || ''
+        }
+      };
+
+      console.log('Submitting payload:', payload);
+
+      const response = await dispatch(updateBranch(parseInt(id), payload));
+      
+      if (response?.meta?.status) {
+        toast.success('Branch updated successfully');
+        navigate(-1);
+      } else {
+        toast.error(response?.meta?.message || 'Failed to update branch');
+      }
+    } catch (error) {
+      console.error('Error updating branch:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to update branch: ${errorMessage}`);
+    }
+  };
+
+  const formFields = [
+    {
+      type: 'text', // Changed from select to text
+      key: 'companyName',
+      label: 'Company Name',
+      required: true,
+      value: formData.companyName,
+      disabled: true, // Make it read-only
+      placeholder: 'Company Name'
+    },
+    {
+      type: 'text',
+      key: 'branchName',
+      label: 'Branch Name',
+      required: true,
+      value: formData.branchName,
+      placeholder: 'Enter Branch Name'
+    },
+    {
+      type: 'email',
+      key: 'email',
+      label: 'Email',
+      required: true,
+      value: formData.email,
+      placeholder: 'Enter Email'
+    },
+    {
+      type: 'text',
+      key: 'mobileNumber',
+      label: 'Mobile Number',
+      required: true,
+      value: formData.mobileNumber,
+      placeholder: 'Enter Mobile Number'
+    },
+    {
+      type: 'textarea',
+      key: 'address',
+      label: 'Address',
+      required: true,
+      value: formData.address,
+      placeholder: 'Enter Address'
+    },
+    {
+      type: 'text',
+      key: 'state',
+      label: 'State',
+      required: true,
+      value: formData.state,
+      placeholder: 'Enter State'
+    },
+    {
+      type: 'text',
+      key: 'city',
+      label: 'City',
+      required: true,
+      value: formData.city,
+      placeholder: 'Enter City'
+    },
+    {
+      type: 'text',
+      key: 'pincode',
+      label: 'Pincode',
+      required: true,
+      value: formData.pincode,
+      placeholder: 'Enter Pincode'
+    }
+  ];
+
+  useEffect(() => {
+    console.log('Current Form Data:', formData);
+    console.log('Available Companies:', companies);
+  }, [formData, companies]);
 
   return (
     <div className="p-6">
@@ -49,95 +206,21 @@ const EditBranch: React.FC = () => {
 
       {/* Form */}
       <div className="bg-white rounded-lg p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Branch Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.branchName}
-              onChange={(e) => setFormData({...formData, branchName: e.target.value})}
-              className="w-full p-2 border rounded-lg"
-              required
-            />
-          </div>
+        <AddForm
+          data={formFields}
+          handleInputonChange={handleInputChange}
+          handleSelectonChange={handleInputChange}
+        />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Company Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.companyName}
-              onChange={(e) => setFormData({...formData, companyName: e.target.value})}
-              className="w-full p-2 border rounded-lg"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="w-full p-2 border rounded-lg"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full p-2 border rounded-lg"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
-              className="w-full p-2 border rounded-lg"
-              rows={3}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Partner Count <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              value={formData.partnerCount}
-              onChange={(e) => setFormData({...formData, partnerCount: e.target.value})}
-              className="w-full p-2 border rounded-lg"
-              required
-            />
-          </div>
-
-          {/* Save Button */}
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
+        {/* Save Button */}
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Save Changes
+          </button>
+        </div>
       </div>
     </div>
   );

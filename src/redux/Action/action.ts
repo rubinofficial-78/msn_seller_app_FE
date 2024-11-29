@@ -52,9 +52,29 @@ import {
   UPDATE_COMPANY_FAILURE,
   GET_STATUS_LOOKUP_REQUEST,
   GET_STATUS_LOOKUP_SUCCESS,
-  GET_STATUS_LOOKUP_FAILURE
+  GET_STATUS_LOOKUP_FAILURE,
+  GET_COMPANY_USERS_REQUEST,
+  GET_COMPANY_USERS_SUCCESS,
+  GET_COMPANY_USERS_FAILURE,
+  GET_BRANCHES_REQUEST,
+  GET_BRANCHES_SUCCESS,
+  GET_BRANCHES_FAILURE,
+  GET_COMPANY_DROPDOWN_REQUEST,
+  GET_COMPANY_DROPDOWN_SUCCESS,
+  GET_COMPANY_DROPDOWN_FAILURE,
+  CREATE_BRANCH_REQUEST,
+  CREATE_BRANCH_SUCCESS,
+  CREATE_BRANCH_FAILURE,
+  UPDATE_BRANCH_REQUEST,
+  UPDATE_BRANCH_SUCCESS,
+  UPDATE_BRANCH_FAILURE,
+  GET_BRANCH_BY_ID_REQUEST,
+  GET_BRANCH_BY_ID_SUCCESS,
+  GET_BRANCH_BY_ID_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const loginUser = (
   email: string
@@ -63,7 +83,7 @@ export const loginUser = (
     dispatch({ type: LOGIN_REQUEST });
 
     try {
-      const response = await axios.post('http://localhost:3001/api/v1/backend_master/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/backend_master/auth/login`, {
         login: email
       }, {
         headers: {
@@ -97,7 +117,7 @@ export const verifyOTP = (
 
     try {
       const response = await axios.post(
-        'http://localhost:3001/api/v1/backend_master/auth/verify_otp',
+        `${API_BASE_URL}/backend_master/auth/verify_otp`,
         {
           id: userId,
           otp: otp
@@ -135,7 +155,7 @@ export const getUserDetails = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:3001/api/v1/backend_master/auth/get/${userId}`,
+        `${API_BASE_URL}/backend_master/auth/get/${userId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -168,7 +188,7 @@ export const getDashboardCounts = (): ThunkAction<Promise<any>, RootState, unkno
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        'http://localhost:3001/api/v1/backend_master/dashboard/count',
+        `${API_BASE_URL}/backend_master/dashboard/count`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -201,7 +221,7 @@ export const getSellerCounts = (): ThunkAction<Promise<any>, RootState, unknown,
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        'http://localhost:3001/api/v1/backend_master/seller/count',
+        `${API_BASE_URL}/backend_master/seller/count`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -234,7 +254,7 @@ export const getAffiliatePartnerCounts = (): ThunkAction<Promise<any>, RootState
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        'http://localhost:3001/api/v1/backend_master/affiliate_partners_basic_details/count',
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/count`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -269,7 +289,7 @@ export const getLookupCodes = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get<LookupCodeResponse>(
-        `http://localhost:3001/api/v1/backend_master/core/lookup_code/list/${type}`,
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/${type}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -324,7 +344,7 @@ export const updateUserDetails = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `http://localhost:3001/api/v1/backend_master/auth/${userId}/update`,
+        `${API_BASE_URL}/backend_master/auth/${userId}/update`,
         data,
         {
           headers: {
@@ -361,7 +381,7 @@ export const updateStoreDetails = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `http://localhost:3001/api/v1/backend_master/auth/store_details/${storeId}/update`,
+        `${API_BASE_URL}/backend_master/auth/store_details/${storeId}/update`,
         data,
         {
           headers: {
@@ -398,7 +418,7 @@ export const uploadFile = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post<FileUploadResponse>(
-        'http://localhost:3001/api/v1/backend_master/file_upload/upload',
+        `${API_BASE_URL}/backend_master/file_upload/upload`,
         payload,
         {
           headers: {
@@ -449,7 +469,7 @@ export const updateBusinessSettings = (
       }
 
       const response = await axios.post(
-        `http://localhost:3001/api/v1/backend_master/auth/business_settings/${userId}/update`,
+        `${API_BASE_URL}/backend_master/auth/business_settings/${userId}/update`,
         data,
         {
           headers: {
@@ -523,7 +543,7 @@ export const updateBankDetails = (
 
       // Log request details for debugging
       console.log('Making bank details update request:', {
-        url: `http://localhost:3001/api/v1/backend_master/auth/bank_details/${userId}/update`,
+        url: `${API_BASE_URL}/backend_master/auth/bank_details/${userId}/update`,
         data,
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -532,7 +552,7 @@ export const updateBankDetails = (
       });
 
       const response = await axios.post(
-        `http://localhost:3001/api/v1/backend_master/auth/bank_details/${userId}/update`,
+        `${API_BASE_URL}/backend_master/auth/bank_details/${userId}/update`,
         data,
         {
           headers: {
@@ -593,7 +613,7 @@ export const getSellerDashboardCounts = (): ThunkAction<Promise<any>, RootState,
       }
 
       const response = await axios.get(
-        'http://localhost:3001/api/v1/backend_master/dashboard/seller/count',
+        `${API_BASE_URL}/backend_master/dashboard/seller/count`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -627,7 +647,11 @@ export const getSellerDashboardCounts = (): ThunkAction<Promise<any>, RootState,
 };
 
 export const getCompanies = (
-  params: { page_no: number; per_page: number }
+  params: { 
+    page_no: number; 
+    per_page: number;
+    status_id?: number;
+  }
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_COMPANIES_REQUEST });
@@ -635,11 +659,12 @@ export const getCompanies = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:3001/api/v1/backend_master/company_partners`,
+        `${API_BASE_URL}/backend_master/company_partners`,
         {
           params: {
             per_page: params.per_page,
-            page_no: params.page_no
+            page_no: params.page_no,
+            status_id: params.status_id // Include status_id in query params
           },
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -682,7 +707,7 @@ export const createCompany = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:3001/api/v1/backend_master/company_partners/create',
+        `${API_BASE_URL}/backend_master/company_partners/create`,
         data,
         {
           headers: {
@@ -719,7 +744,7 @@ export const updateCompany = (
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `http://localhost:3001/api/v1/backend_master/company_partners/${id}/update`,
+        `${API_BASE_URL}/backend_master/company_partners/${id}/update`,
         data,
         {
           headers: {
@@ -757,7 +782,7 @@ export const getStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown,
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        'http://localhost:3001/api/v1/backend_master/core/lookup_code/list/PARTNER_COMPANY_STATUS',
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/PARTNER_COMPANY_STATUS`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -780,6 +805,278 @@ export const getStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown,
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch status lookup';
       dispatch({
         type: GET_STATUS_LOOKUP_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getCompanyUsers = (
+  params: { page_no: number; per_page: number }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_COMPANY_USERS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/company_partners_users`,
+        {
+          params: {
+            per_page: params.per_page,
+            page_no: params.page_no
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_COMPANY_USERS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch company users');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch company users';
+      dispatch({
+        type: GET_COMPANY_USERS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getBranches = (
+  params: { page_no: number; per_page: number }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_BRANCHES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/company_branches`,
+        {
+          params: {
+            per_page: params.per_page,
+            page_no: params.page_no
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_BRANCHES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch branches');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch branches';
+      dispatch({
+        type: GET_BRANCHES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getCompanyDropdown = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_COMPANY_DROPDOWN_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/company_partners/get_dropdown_list`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_COMPANY_DROPDOWN_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch company list');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch company list';
+      dispatch({
+        type: GET_COMPANY_DROPDOWN_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const createBranch = (
+  data: {
+    name: string;
+    email: string;
+    mobile_number: string;
+    created_by_id: number;
+    default_address: {
+      address: string;
+      state: string;
+      city: string;
+      pincode: string;
+    };
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: CREATE_BRANCH_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/company_branches/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: CREATE_BRANCH_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create branch');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create branch';
+      dispatch({
+        type: CREATE_BRANCH_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const updateBranch = (
+  id: number,
+  data: {
+    name: string;
+    email: string;
+    mobile_number: string;
+    created_by_id: number;
+    default_address: {
+      address: string;
+      state: string;
+      city: string;
+      pincode: string;
+    };
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_BRANCH_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${API_BASE_URL}/backend_master/company_branches/${id}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_BRANCH_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update branch');
+      }
+
+    } catch (error) {
+      console.error('Update Branch Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update branch';
+      dispatch({
+        type: UPDATE_BRANCH_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getBranchById = (
+  id: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_BRANCH_BY_ID_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/company_partners/get/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_BRANCH_BY_ID_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch branch details');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch branch details';
+      dispatch({
+        type: GET_BRANCH_BY_ID_FAILURE,
         payload: errorMessage
       });
       throw error;

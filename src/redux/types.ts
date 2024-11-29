@@ -38,6 +38,18 @@ export const UPDATE_COMPANY_FAILURE = 'UPDATE_COMPANY_FAILURE';
 export const GET_STATUS_LOOKUP_REQUEST = 'GET_STATUS_LOOKUP_REQUEST';
 export const GET_STATUS_LOOKUP_SUCCESS = 'GET_STATUS_LOOKUP_SUCCESS';
 export const GET_STATUS_LOOKUP_FAILURE = 'GET_STATUS_LOOKUP_FAILURE';
+export const GET_COMPANY_USERS_REQUEST = 'GET_COMPANY_USERS_REQUEST';
+export const GET_COMPANY_USERS_SUCCESS = 'GET_COMPANY_USERS_SUCCESS';
+export const GET_COMPANY_USERS_FAILURE = 'GET_COMPANY_USERS_FAILURE';
+export const GET_BRANCHES_REQUEST = 'GET_BRANCHES_REQUEST';
+export const GET_BRANCHES_SUCCESS = 'GET_BRANCHES_SUCCESS';
+export const GET_BRANCHES_FAILURE = 'GET_BRANCHES_FAILURE';
+export const GET_COMPANY_DROPDOWN_REQUEST = 'GET_COMPANY_DROPDOWN_REQUEST';
+export const GET_COMPANY_DROPDOWN_SUCCESS = 'GET_COMPANY_DROPDOWN_SUCCESS';
+export const GET_COMPANY_DROPDOWN_FAILURE = 'GET_COMPANY_DROPDOWN_FAILURE';
+export const CREATE_BRANCH_REQUEST = 'CREATE_BRANCH_REQUEST';
+export const CREATE_BRANCH_SUCCESS = 'CREATE_BRANCH_SUCCESS';
+export const CREATE_BRANCH_FAILURE = 'CREATE_BRANCH_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -90,6 +102,23 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: any[];
+  };
+  companyUsers: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: any;
+  };
+  branches: {
+    loading: boolean;
+    error: string | null;
+    data: Branch[];
+    meta: any;
+  };
+  companyDropdown: {
+    loading: boolean;
+    error: string | null;
+    data: CompanyDropdownItem[];
   };
 }
 
@@ -298,6 +327,65 @@ interface GetStatusLookupFailureAction {
   payload: string;
 }
 
+interface GetCompanyUsersRequestAction {
+  type: typeof GET_COMPANY_USERS_REQUEST;
+}
+
+interface GetCompanyUsersSuccessAction {
+  type: typeof GET_COMPANY_USERS_SUCCESS;
+  payload: any[];
+}
+
+interface GetCompanyUsersFailureAction {
+  type: typeof GET_COMPANY_USERS_FAILURE;
+  payload: string;
+}
+
+interface GetBranchesRequestAction {
+  type: typeof GET_BRANCHES_REQUEST;
+}
+
+interface GetBranchesSuccessAction {
+  type: typeof GET_BRANCHES_SUCCESS;
+  payload: {
+    data: Branch[];
+    meta: any;
+  };
+}
+
+interface GetBranchesFailureAction {
+  type: typeof GET_BRANCHES_FAILURE;
+  payload: string;
+}
+
+interface GetCompanyDropdownRequestAction {
+  type: typeof GET_COMPANY_DROPDOWN_REQUEST;
+}
+
+interface GetCompanyDropdownSuccessAction {
+  type: typeof GET_COMPANY_DROPDOWN_SUCCESS;
+  payload: CompanyDropdownItem[];
+}
+
+interface GetCompanyDropdownFailureAction {
+  type: typeof GET_COMPANY_DROPDOWN_FAILURE;
+  payload: string;
+}
+
+interface CreateBranchRequestAction {
+  type: typeof CREATE_BRANCH_REQUEST;
+}
+
+interface CreateBranchSuccessAction {
+  type: typeof CREATE_BRANCH_SUCCESS;
+  payload: any;
+}
+
+interface CreateBranchFailureAction {
+  type: typeof CREATE_BRANCH_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -340,7 +428,19 @@ export type AuthActionTypes =
   | UpdateCompanyFailureAction
   | GetStatusLookupRequestAction
   | GetStatusLookupSuccessAction
-  | GetStatusLookupFailureAction; 
+  | GetStatusLookupFailureAction
+  | GetCompanyUsersRequestAction
+  | GetCompanyUsersSuccessAction
+  | GetCompanyUsersFailureAction
+  | GetBranchesRequestAction
+  | GetBranchesSuccessAction
+  | GetBranchesFailureAction
+  | GetCompanyDropdownRequestAction
+  | GetCompanyDropdownSuccessAction
+  | GetCompanyDropdownFailureAction
+  | CreateBranchRequestAction
+  | CreateBranchSuccessAction
+  | CreateBranchFailureAction; 
 
 export interface FileUploadPayload {
   data: string;      // base64 string without prefix
@@ -407,4 +507,38 @@ interface Company {
   }>;
   branches_counts: number;
   users_counts: number;
+} 
+
+interface Branch {
+  id: number;
+  name: string;
+  email: string;
+  mobile_number: string;
+  default_address: {
+    city: string;
+    state: string;
+    address: string;
+    pincode: string;
+  };
+  is_active: boolean;
+  createdAt: string;
+  status: {
+    id: number;
+    lookup_code: string;
+    display_name: string;
+  };
+  parent: {
+    id: number;
+    name: string;
+  };
+  partner_counts: number;
+} 
+
+interface CompanyDropdownItem {
+  id: number;
+  name: string;
+  email: string;
+  mobile_number: string;
+  is_active: boolean;
+  createdAt: string;
 } 

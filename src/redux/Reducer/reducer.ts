@@ -23,7 +23,13 @@ import {
   GET_SELLER_DASHBOARD_COUNTS_REQUEST, 
   GET_SELLER_DASHBOARD_COUNTS_SUCCESS, 
   GET_SELLER_DASHBOARD_COUNTS_FAILURE, 
-  GET_USER_SUCCESS 
+  GET_USER_SUCCESS, 
+  GET_COMPANIES_REQUEST, 
+  GET_COMPANIES_SUCCESS, 
+  GET_COMPANIES_FAILURE, 
+  UPDATE_COMPANY_REQUEST, 
+  UPDATE_COMPANY_SUCCESS, 
+  UPDATE_COMPANY_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -74,6 +80,12 @@ const initialState: AuthState = {
       total_products: 0,
       total_orders: 0
     }
+  },
+  companies: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
   }
 };
 
@@ -295,6 +307,52 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: null,
           data: action.payload.data
         }
+      };
+    case GET_COMPANIES_REQUEST:
+      return {
+        ...state,
+        companies: {
+          ...state.companies,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_COMPANIES_SUCCESS:
+      return {
+        ...state,
+        companies: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_COMPANIES_FAILURE:
+      return {
+        ...state,
+        companies: {
+          ...state.companies,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case UPDATE_COMPANY_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case UPDATE_COMPANY_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null
+      };
+    case UPDATE_COMPANY_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
       };
     default:
       return state;

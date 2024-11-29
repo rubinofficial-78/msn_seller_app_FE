@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { createCompany } from '../redux/Action/action';
 import AddForm from './AddForm';
 import { ArrowLeft } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful';
+import toast from 'react-hot-toast';
+import { AppDispatch } from '../redux/store';
 
 interface CompanyFormData {
   companyName: string;
@@ -30,17 +35,136 @@ interface CompanyFormData {
 }
 
 const CreateCompany: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<CompanyFormData>({} as CompanyFormData);
   const [headerColor, setHeaderColor] = useState("#000000");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (key: string, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    // Implement save logic
-    console.log('Form data:', formData);
+  const validateForm = (): boolean => {
+    const requiredFields = [
+      'companyName',
+      'whiteLabeledUrl',
+      'mobileNumber',
+      'email',
+      'address',
+      'state',
+      'city',
+      'pincode',
+      'contactPersonName',
+      'contactPersonNumber',
+      'contactPersonEmail',
+      'gstNo',
+      'panNo',
+      'bankAccountNumber',
+      'bankName',
+      'ifscNo',
+      'accountHolderName',
+      'minActivationCharges',
+      'maxActivationCharges'
+    ];
+
+    const missingFields = requiredFields.filter(field => !formData[field as keyof CompanyFormData]);
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return false;
+    }
+
+    // Validate mobile number
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(formData.mobileNumber)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return false;
+    }
+
+    // Validate GST number
+    const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    if (!gstRegex.test(formData.gstNo)) {
+      toast.error('Please enter a valid GST number');
+      return false;
+    }
+
+    // Validate PAN number
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panRegex.test(formData.panNo)) {
+      toast.error('Please enter a valid PAN number');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      
+      if (!validateForm()) {
+        setLoading(false);
+        return;
+      }
+      
+      const payload = {
+        name: formData.companyName,
+        email: formData.email,
+        mobile_number: formData.mobileNumber,
+        company_images: formData.headerLogo ? [formData.headerLogo] : [],
+        contact_person_name: formData.contactPersonName,
+        contact_person_email: formData.contactPersonEmail,
+        contact_person_mobile: formData.contactPersonNumber,
+        website: formData.website,
+        address: formData.address,
+        state: formData.state,
+        city: formData.city,
+        pincode: formData.pincode,
+        gst_number: formData.gstNo,
+        pan_number: formData.panNo,
+        bank_account_number: formData.bankAccountNumber,
+        bank_account_holder_name: formData.accountHolderName,
+        bank_name: formData.bankName,
+        ifsc_code: formData.ifscNo,
+        header_color: headerColor,
+        url: formData.whiteLabeledUrl,
+        aadhar_number: formData.contactPersonAadhar,
+        header_style: {
+          logo: formData.headerLogo,
+          background_color: headerColor
+        },
+        seller_activation_min_charges: formData.minActivationCharges,
+        seller_activation_max_charges: formData.maxActivationCharges
+      };
+
+      const response = await dispatch(createCompany(payload));
+      
+      if (response?.meta?.status) {
+      toast.success('Company created successfully!');
+      
+      setTimeout(() => {
+          navigate('/dashboard/companies', {
+            state: { refresh: true }
+          });
+      }, 1000);
+      } else {
+        toast.error(response?.meta?.message || 'Failed to create company');
+      }
+
+    } catch (error) {
+      toast.error('Failed to create company: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const ColorPickerField = () => {
@@ -324,40 +448,45 @@ const CreateCompany: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full">
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-xl font-semibold">Create Company Partners</h1>
-      </div>
+    <>
+      {/* Add the Toaster component */}
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full">
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-xl font-semibold">Create Company Partners</h1>
+        </div>
 
-      {/* Form Sections */}
-      <div className="space-y-8">
-        {formFields.map((section, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-medium mb-2">{section.title}</h2>
-            <p className="text-sm text-gray-500 mb-6">{section.description}</p>
-            <AddForm
-              data={section.fields}
-              handleInputonChange={handleInputChange}
-              handleImageLink={(value) => handleInputChange('headerLogo', value)}
-            />
-          </div>
-        ))}
-      </div>
+        {/* Form Sections */}
+        <div className="space-y-8">
+          {formFields.map((section, index) => (
+            <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-lg font-medium mb-2">{section.title}</h2>
+              <p className="text-sm text-gray-500 mb-6">{section.description}</p>
+              <AddForm
+                data={section.fields}
+                handleInputonChange={handleInputChange}
+                handleImageLink={(value) => handleInputChange('headerLogo', value)}
+              />
+            </div>
+          ))}
+        </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          SAVE
-        </button>
+        {/* Update Save Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+              ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {loading ? 'SAVING...' : 'SAVE'}
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

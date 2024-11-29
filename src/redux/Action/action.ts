@@ -40,7 +40,19 @@ import {
   UPDATE_BANK_DETAILS_FAILURE,
   GET_SELLER_DASHBOARD_COUNTS_REQUEST,
   GET_SELLER_DASHBOARD_COUNTS_SUCCESS,
-  GET_SELLER_DASHBOARD_COUNTS_FAILURE
+  GET_SELLER_DASHBOARD_COUNTS_FAILURE,
+  GET_COMPANIES_REQUEST,
+  GET_COMPANIES_SUCCESS,
+  GET_COMPANIES_FAILURE,
+  CREATE_COMPANY_REQUEST,
+  CREATE_COMPANY_SUCCESS,
+  CREATE_COMPANY_FAILURE,
+  UPDATE_COMPANY_REQUEST,
+  UPDATE_COMPANY_SUCCESS,
+  UPDATE_COMPANY_FAILURE,
+  GET_STATUS_LOOKUP_REQUEST,
+  GET_STATUS_LOOKUP_SUCCESS,
+  GET_STATUS_LOOKUP_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -607,6 +619,167 @@ export const getSellerDashboardCounts = (): ThunkAction<Promise<any>, RootState,
                           
       dispatch({
         type: GET_SELLER_DASHBOARD_COUNTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getCompanies = (
+  params: { page_no: number; per_page: number }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_COMPANIES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `http://localhost:3001/api/v1/backend_master/company_partners`,
+        {
+          params: {
+            per_page: params.per_page,
+            page_no: params.page_no
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_COMPANIES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch companies');
+      }
+
+      return response.data;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch companies';
+      dispatch({
+        type: GET_COMPANIES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const createCompany = (
+  data: any
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: CREATE_COMPANY_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        'http://localhost:3001/api/v1/backend_master/company_partners/create',
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      dispatch({
+        type: CREATE_COMPANY_SUCCESS,
+        payload: response.data
+      });
+
+      return response.data;
+
+    } catch (error) {
+      dispatch({
+        type: CREATE_COMPANY_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to create company'
+      });
+      throw error;
+    }
+  };
+};
+
+export const updateCompany = (
+  id: number,
+  data: any
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_COMPANY_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `http://localhost:3001/api/v1/backend_master/company_partners/${id}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_COMPANY_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update company');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update company';
+      dispatch({
+        type: UPDATE_COMPANY_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_STATUS_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        'http://localhost:3001/api/v1/backend_master/core/lookup_code/list/PARTNER_COMPANY_STATUS',
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_STATUS_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch status lookup');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch status lookup';
+      dispatch({
+        type: GET_STATUS_LOOKUP_FAILURE,
         payload: errorMessage
       });
       throw error;

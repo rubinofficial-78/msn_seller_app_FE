@@ -29,6 +29,15 @@ export const FILE_UPLOAD_FAILURE = 'FILE_UPLOAD_FAILURE';
 export const GET_SELLER_DASHBOARD_COUNTS_REQUEST = 'GET_SELLER_DASHBOARD_COUNTS_REQUEST';
 export const GET_SELLER_DASHBOARD_COUNTS_SUCCESS = 'GET_SELLER_DASHBOARD_COUNTS_SUCCESS';
 export const GET_SELLER_DASHBOARD_COUNTS_FAILURE = 'GET_SELLER_DASHBOARD_COUNTS_FAILURE';
+export const GET_COMPANIES_REQUEST = 'GET_COMPANIES_REQUEST';
+export const GET_COMPANIES_SUCCESS = 'GET_COMPANIES_SUCCESS';
+export const GET_COMPANIES_FAILURE = 'GET_COMPANIES_FAILURE';
+export const UPDATE_COMPANY_REQUEST = 'UPDATE_COMPANY_REQUEST';
+export const UPDATE_COMPANY_SUCCESS = 'UPDATE_COMPANY_SUCCESS';
+export const UPDATE_COMPANY_FAILURE = 'UPDATE_COMPANY_FAILURE';
+export const GET_STATUS_LOOKUP_REQUEST = 'GET_STATUS_LOOKUP_REQUEST';
+export const GET_STATUS_LOOKUP_SUCCESS = 'GET_STATUS_LOOKUP_SUCCESS';
+export const GET_STATUS_LOOKUP_FAILURE = 'GET_STATUS_LOOKUP_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -71,6 +80,17 @@ export interface AuthState {
     data: FileUploadResponse | null;
   };
   sellerDashboard: SellerDashboardState;
+  companies: {
+    loading: boolean;
+    error: string | null;
+    data: Company[];
+    meta: any;
+  };
+  statusLookup: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+  };
 }
 
 export interface RootState {
@@ -236,6 +256,48 @@ interface GetSellerDashboardCountsFailureAction {
   payload: string;
 }
 
+interface GetCompaniesRequestAction {
+  type: typeof GET_COMPANIES_REQUEST;
+}
+
+interface GetCompaniesSuccessAction {
+  type: typeof GET_COMPANIES_SUCCESS;
+  payload: Company[];
+}
+
+interface GetCompaniesFailureAction {
+  type: typeof GET_COMPANIES_FAILURE;
+  payload: string;
+}
+
+interface UpdateCompanyRequestAction {
+  type: typeof UPDATE_COMPANY_REQUEST;
+}
+
+interface UpdateCompanySuccessAction {
+  type: typeof UPDATE_COMPANY_SUCCESS;
+  payload: any;
+}
+
+interface UpdateCompanyFailureAction {
+  type: typeof UPDATE_COMPANY_FAILURE;
+  payload: string;
+}
+
+interface GetStatusLookupRequestAction {
+  type: typeof GET_STATUS_LOOKUP_REQUEST;
+}
+
+interface GetStatusLookupSuccessAction {
+  type: typeof GET_STATUS_LOOKUP_SUCCESS;
+  payload: any[];
+}
+
+interface GetStatusLookupFailureAction {
+  type: typeof GET_STATUS_LOOKUP_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -269,7 +331,16 @@ export type AuthActionTypes =
   | FileUploadFailureAction
   | GetSellerDashboardCountsRequestAction
   | GetSellerDashboardCountsSuccessAction
-  | GetSellerDashboardCountsFailureAction; 
+  | GetSellerDashboardCountsFailureAction
+  | GetCompaniesRequestAction
+  | GetCompaniesSuccessAction
+  | GetCompaniesFailureAction
+  | UpdateCompanyRequestAction
+  | UpdateCompanySuccessAction
+  | UpdateCompanyFailureAction
+  | GetStatusLookupRequestAction
+  | GetStatusLookupSuccessAction
+  | GetStatusLookupFailureAction; 
 
 export interface FileUploadPayload {
   data: string;      // base64 string without prefix
@@ -312,4 +383,28 @@ interface UserDetailsState {
   loading: boolean;
   error: string | null;
   data: UserDetailsResponse | null;
+} 
+
+interface Company {
+  id: number;
+  first_name: string;
+  last_name: string;
+  name: string;
+  email: string;
+  mobile_number: string;
+  images: string[];
+  is_active: boolean;
+  createdAt: string;
+  status: {
+    lookup_code: string;
+    display_name: string;
+  };
+  partner_company: Array<{
+    id: number;
+    url: string;
+    website: string;
+    address: string;
+  }>;
+  branches_counts: number;
+  users_counts: number;
 } 

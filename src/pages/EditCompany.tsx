@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../redux/store';
+import { updateCompany } from '../redux/Action/action';
+import toast from 'react-hot-toast';
 
 const EditCompany: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     // Basic Details
@@ -34,10 +40,57 @@ const EditCompany: React.FC = () => {
     secondaryColor: '#60A5FA'
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
-    navigate(-1);
+    
+    try {
+      setLoading(true);
+
+      const payload = {
+        name: formData.companyName,
+        email: formData.email,
+        mobile_number: formData.mobileNumber,
+        company_images: formData.logoUrl ? [formData.logoUrl] : [],
+        contact_person_name: formData.contactPersonName,
+        contact_person_email: formData.contactPersonEmail,
+        contact_person_mobile: formData.contactPersonPhone,
+        website: formData.website,
+        address: formData.address,
+        state: formData.state,
+        city: formData.city || '',
+        pincode: formData.pincode || '',
+        gst_number: formData.gstNumber || '',
+        pan_number: formData.panNumber || '',
+        bank_account_number: formData.accountNumber,
+        bank_account_holder_name: formData.accountHolderName || '',
+        bank_name: formData.bankName,
+        ifsc_code: formData.ifscCode,
+        header_color: formData.primaryColor,
+        url: formData.whiteLabeledUrl,
+        header_style: {
+          logo: formData.logoUrl,
+          background_color: formData.primaryColor
+        },
+        seller_activation_min_charges: formData.minActivationCharges || "50",
+        seller_activation_max_charges: formData.maxActivationCharges || "70"
+      };
+
+      const response = await dispatch(updateCompany(Number(id), payload));
+      
+      if (response?.meta?.status) {
+        toast.success('Company updated successfully!');
+        setTimeout(() => {
+          navigate('/dashboard/companies');
+        }, 1000);
+      } else {
+        toast.error(response?.meta?.message || 'Failed to update company');
+      }
+
+    } catch (error) {
+      toast.error('Failed to update company: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -346,9 +399,11 @@ const EditCompany: React.FC = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={loading}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors
+              ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Save Changes
+            {loading ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </form>

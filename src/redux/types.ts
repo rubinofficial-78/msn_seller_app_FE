@@ -128,6 +128,17 @@ export interface AuthState {
     error: string | null;
     data: any[];
   };
+  partners: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: any;
+  };
+  branchDropdown: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+  };
 }
 
 export interface RootState {

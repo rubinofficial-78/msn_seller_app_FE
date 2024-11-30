@@ -73,7 +73,13 @@ import {
   GET_BRANCH_BY_ID_FAILURE,
   GET_BRANCH_STATUS_LOOKUP_REQUEST,
   GET_BRANCH_STATUS_LOOKUP_SUCCESS,
-  GET_BRANCH_STATUS_LOOKUP_FAILURE
+  GET_BRANCH_STATUS_LOOKUP_FAILURE,
+  GET_PARTNERS_REQUEST,
+  GET_PARTNERS_SUCCESS,
+  GET_PARTNERS_FAILURE,
+  GET_BRANCH_DROPDOWN_REQUEST,
+  GET_BRANCH_DROPDOWN_SUCCESS,
+  GET_BRANCH_DROPDOWN_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1133,4 +1139,251 @@ export const getBranchStatusLookup = (): ThunkAction<Promise<any>, RootState, un
       throw error;
     }
   };
-}; 
+};
+
+export const getPartners = (
+  params: { 
+    page_no: number; 
+    per_page: number;
+    id?: number;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PARTNERS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams({
+        per_page: params.per_page.toString(),
+        page_no: params.page_no.toString(),
+        ...(params.id ? { id: params.id.toString() } : {})
+      });
+
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details?${queryParams}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PARTNERS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch partners');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch partners';
+      dispatch({
+        type: GET_PARTNERS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getBranchDropdown = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_BRANCH_DROPDOWN_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/company_branches/get_dropdown_list`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_BRANCH_DROPDOWN_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch branch list');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch branch list';
+      dispatch({
+        type: GET_BRANCH_DROPDOWN_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const createPartnerBasic = (data: any): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create partner basics');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const createPartnerBanking = (data: any): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/affiliate_partners_banking_details/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create partner banking details');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const createPartnerAffiliate = (data: any[]): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/affiliate_partners_affiliate_setting/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create affiliate settings');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const getAffiliateUrl = (userId: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/get_affiliate_url/${userId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Affiliate URL API Raw Response:', response.data);
+
+      if (response.data?.meta?.status) {
+        console.log('Affiliate URL Data:', response.data.data);
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch affiliate URL');
+      }
+    } catch (error) {
+      console.error('Affiliate URL API Error:', error);
+      throw error;
+    }
+  };
+};
+
+export const getPartnerById = (id: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/get/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch partner details');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const updatePartner = (id: number, data: any): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/${id}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update partner');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};

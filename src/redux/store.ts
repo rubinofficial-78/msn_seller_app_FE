@@ -1,5 +1,6 @@
-import { createStore, applyMiddleware, combineReducers, AnyAction } from 'redux';
+import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { thunk, ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from 'redux';
 import authReducer from './Reducer/reducer';
 import { RootState } from './types';
 

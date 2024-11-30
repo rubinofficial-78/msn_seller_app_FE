@@ -44,7 +44,13 @@ import {
   UPDATE_BRANCH_FAILURE, 
   GET_BRANCH_STATUS_LOOKUP_REQUEST, 
   GET_BRANCH_STATUS_LOOKUP_SUCCESS, 
-  GET_BRANCH_STATUS_LOOKUP_FAILURE 
+  GET_BRANCH_STATUS_LOOKUP_FAILURE, 
+  GET_PARTNERS_REQUEST, 
+  GET_PARTNERS_SUCCESS, 
+  GET_PARTNERS_FAILURE, 
+  GET_BRANCH_DROPDOWN_REQUEST, 
+  GET_BRANCH_DROPDOWN_SUCCESS, 
+  GET_BRANCH_DROPDOWN_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -120,6 +126,17 @@ const initialState: AuthState = {
     data: []
   },
   branchStatusLookup: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  partners: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  branchDropdown: {
     loading: false,
     error: null,
     data: []
@@ -515,6 +532,61 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         branchStatusLookup: {
           ...state.branchStatusLookup,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PARTNERS_REQUEST:
+      return {
+        ...state,
+        partners: {
+          ...state.partners,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PARTNERS_SUCCESS:
+      return {
+        ...state,
+        partners: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_PARTNERS_FAILURE:
+      return {
+        ...state,
+        partners: {
+          ...state.partners,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_BRANCH_DROPDOWN_REQUEST:
+      return {
+        ...state,
+        branchDropdown: {
+          ...state.branchDropdown,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_BRANCH_DROPDOWN_SUCCESS:
+      return {
+        ...state,
+        branchDropdown: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_BRANCH_DROPDOWN_FAILURE:
+      return {
+        ...state,
+        branchDropdown: {
+          ...state.branchDropdown,
           loading: false,
           error: action.payload
         }

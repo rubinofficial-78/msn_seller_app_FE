@@ -50,7 +50,13 @@ import {
   GET_PARTNERS_FAILURE, 
   GET_BRANCH_DROPDOWN_REQUEST, 
   GET_BRANCH_DROPDOWN_SUCCESS, 
-  GET_BRANCH_DROPDOWN_FAILURE 
+  GET_BRANCH_DROPDOWN_FAILURE, 
+  GET_PARTNER_STATUS_LOOKUP_REQUEST, 
+  GET_PARTNER_STATUS_LOOKUP_SUCCESS, 
+  GET_PARTNER_STATUS_LOOKUP_FAILURE, 
+  GET_PARTNER_COUNTS_REQUEST, 
+  GET_PARTNER_COUNTS_SUCCESS, 
+  GET_PARTNER_COUNTS_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -140,6 +146,16 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: []
+  },
+  partnerStatusLookup: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  partnerCounts: {
+    loading: false,
+    error: null,
+    data: null
   }
 };
 
@@ -587,6 +603,60 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         branchDropdown: {
           ...state.branchDropdown,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PARTNER_STATUS_LOOKUP_REQUEST:
+      return {
+        ...state,
+        partnerStatusLookup: {
+          ...state.partnerStatusLookup,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PARTNER_STATUS_LOOKUP_SUCCESS:
+      return {
+        ...state,
+        partnerStatusLookup: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PARTNER_STATUS_LOOKUP_FAILURE:
+      return {
+        ...state,
+        partnerStatusLookup: {
+          ...state.partnerStatusLookup,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PARTNER_COUNTS_REQUEST:
+      return {
+        ...state,
+        partnerCounts: {
+          ...state.partnerCounts,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PARTNER_COUNTS_SUCCESS:
+      return {
+        ...state,
+        partnerCounts: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PARTNER_COUNTS_FAILURE:
+      return {
+        ...state,
+        partnerCounts: {
+          ...state.partnerCounts,
           loading: false,
           error: action.payload
         }

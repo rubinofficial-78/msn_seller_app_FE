@@ -51,10 +51,10 @@ import AccessManagement from "../pages/settings/AccessManagement";
 import CreateRole from "../pages/settings/CreateRole";
 import CreateUser from "../pages/settings/CreateUser";
 import CreateTicket from "../pages/support/CreateTicket";
-import NotificationSettings from '../pages/settings/NotificationSettings';
-import MapSettings from '../pages/settings/MapSettings';
-import ViewPartner from '../pages/partners/ViewPartner';
-import EditPartner from '../pages/partners/EditPartner';
+import NotificationSettings from "../pages/settings/NotificationSettings";
+import MapSettings from "../pages/settings/MapSettings";
+import ViewPartner from "../pages/partners/ViewPartner";
+import EditPartner from "../pages/partners/EditPartner";
 
 export const routes: RouteObject[] = [
   {
@@ -177,12 +177,12 @@ export const routes: RouteObject[] = [
           },
           {
             path: "view/:id",
-            element: <ViewPartner />
+            element: <ViewPartner />,
           },
           {
             path: "edit/:id",
-            element: <EditPartner />
-          }
+            element: <EditPartner />,
+          },
         ],
       },
       {
@@ -334,44 +334,44 @@ export const routes: RouteObject[] = [
       },
       {
         path: "/dashboard/settings/access-management",
-        element: <AccessManagement />
+        element: <AccessManagement />,
       },
       {
         path: "/dashboard/settings/access-management/create-role",
-        element: <CreateRole />
+        element: <CreateRole />,
       },
       {
         path: "/dashboard/settings/access-management/edit-role/:roleName",
-        element: <CreateRole />
+        element: <CreateRole />,
       },
       {
         path: "/dashboard/settings/access-management/create-user",
-        element: <CreateUser />
+        element: <CreateUser />,
       },
       {
         path: "/dashboard/settings/access-management/edit-user/:userName",
-        element: <CreateUser />
+        element: <CreateUser />,
       },
       {
         path: "/dashboard/support/create",
-        element: <CreateTicket />
+        element: <CreateTicket />,
       },
       {
         path: "/dashboard/settings/email-sms",
-        element: <NotificationSettings />
+        element: <NotificationSettings />,
       },
       {
         path: "/dashboard/seller-settings/email-sms",
-        element: <NotificationSettings />
+        element: <NotificationSettings />,
       },
       {
         path: "/dashboard/settings/maps",
-        element: <MapSettings />
+        element: <MapSettings />,
       },
       {
         path: "/dashboard/seller-settings/maps",
-        element: <MapSettings />
-      }
+        element: <MapSettings />,
+      },
     ],
   },
 ];

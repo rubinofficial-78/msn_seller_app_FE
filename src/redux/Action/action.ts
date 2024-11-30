@@ -79,7 +79,13 @@ import {
   GET_PARTNERS_FAILURE,
   GET_BRANCH_DROPDOWN_REQUEST,
   GET_BRANCH_DROPDOWN_SUCCESS,
-  GET_BRANCH_DROPDOWN_FAILURE
+  GET_BRANCH_DROPDOWN_FAILURE,
+  GET_PARTNER_STATUS_LOOKUP_REQUEST,
+  GET_PARTNER_STATUS_LOOKUP_SUCCESS,
+  GET_PARTNER_STATUS_LOOKUP_FAILURE,
+  GET_PARTNER_COUNTS_REQUEST,
+  GET_PARTNER_COUNTS_SUCCESS,
+  GET_PARTNER_COUNTS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1145,7 +1151,9 @@ export const getPartners = (
   params: { 
     page_no: number; 
     per_page: number;
-    id?: number;
+    company_id?: number;
+    branch_id?: number;
+    status_id?: number;
   }
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
@@ -1153,14 +1161,25 @@ export const getPartners = (
 
     try {
       const token = localStorage.getItem('token');
-      const queryParams = new URLSearchParams({
+      
+      // Create base query parameters
+      const queryParams = {
         per_page: params.per_page.toString(),
-        page_no: params.page_no.toString(),
-        ...(params.id ? { id: params.id.toString() } : {})
-      });
+        page_no: params.page_no.toString()
+      };
+
+      // Add optional parameters only if they are defined
+      if (params.company_id) queryParams['company_id'] = params.company_id.toString();
+      if (params.branch_id) queryParams['branch_id'] = params.branch_id.toString();
+      if (params.status_id) queryParams['status_id'] = params.status_id.toString();
+
+      // Convert to URLSearchParams
+      const searchParams = new URLSearchParams(queryParams);
+
+      console.log('API Request URL:', `${API_BASE_URL}/backend_master/affiliate_partners_basic_details?${searchParams.toString()}`);
 
       const response = await axios.get(
-        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details?${queryParams}`,
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details?${searchParams.toString()}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1383,6 +1402,80 @@ export const updatePartner = (id: number, data: any): ThunkAction<Promise<any>, 
         throw new Error(response.data?.meta?.message || 'Failed to update partner');
       }
     } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const getPartnerStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PARTNER_STATUS_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/AFFILIATE_PARTNER_STATUS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PARTNER_STATUS_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch partner status lookup');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch partner status lookup';
+      dispatch({
+        type: GET_PARTNER_STATUS_LOOKUP_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getPartnerCounts = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PARTNER_COUNTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/count`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PARTNER_COUNTS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch partner counts');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch partner counts';
+      dispatch({
+        type: GET_PARTNER_COUNTS_FAILURE,
+        payload: errorMessage
+      });
       throw error;
     }
   };

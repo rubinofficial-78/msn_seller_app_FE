@@ -53,6 +53,12 @@ export const CREATE_BRANCH_FAILURE = 'CREATE_BRANCH_FAILURE';
 export const GET_BRANCH_STATUS_LOOKUP_REQUEST = 'GET_BRANCH_STATUS_LOOKUP_REQUEST';
 export const GET_BRANCH_STATUS_LOOKUP_SUCCESS = 'GET_BRANCH_STATUS_LOOKUP_SUCCESS';
 export const GET_BRANCH_STATUS_LOOKUP_FAILURE = 'GET_BRANCH_STATUS_LOOKUP_FAILURE';
+export const GET_PARTNER_STATUS_LOOKUP_REQUEST = 'GET_PARTNER_STATUS_LOOKUP_REQUEST';
+export const GET_PARTNER_STATUS_LOOKUP_SUCCESS = 'GET_PARTNER_STATUS_LOOKUP_SUCCESS';
+export const GET_PARTNER_STATUS_LOOKUP_FAILURE = 'GET_PARTNER_STATUS_LOOKUP_FAILURE';
+export const GET_PARTNER_COUNTS_REQUEST = 'GET_PARTNER_COUNTS_REQUEST';
+export const GET_PARTNER_COUNTS_SUCCESS = 'GET_PARTNER_COUNTS_SUCCESS';
+export const GET_PARTNER_COUNTS_FAILURE = 'GET_PARTNER_COUNTS_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -138,6 +144,16 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: any[];
+  };
+  partnerStatusLookup: {
+    loading: boolean;
+    error: string | null;
+    data: PartnerStatusLookup[];
+  };
+  partnerCounts: {
+    loading: boolean;
+    error: string | null;
+    data: PartnerCounts | null;
   };
 }
 
@@ -419,6 +435,39 @@ interface GetBranchStatusLookupFailureAction {
   payload: string;
 }
 
+interface GetPartnerStatusLookupRequestAction {
+  type: typeof GET_PARTNER_STATUS_LOOKUP_REQUEST;
+}
+
+interface GetPartnerStatusLookupSuccessAction {
+  type: typeof GET_PARTNER_STATUS_LOOKUP_SUCCESS;
+  payload: Array<{
+    id: number;
+    display_name: string;
+    lookup_code: string;
+    is_active: boolean;
+  }>;
+}
+
+interface GetPartnerStatusLookupFailureAction {
+  type: typeof GET_PARTNER_STATUS_LOOKUP_FAILURE;
+  payload: string;
+}
+
+interface GetPartnerCountsRequestAction {
+  type: typeof GET_PARTNER_COUNTS_REQUEST;
+}
+
+interface GetPartnerCountsSuccessAction {
+  type: typeof GET_PARTNER_COUNTS_SUCCESS;
+  payload: PartnerCounts;
+}
+
+interface GetPartnerCountsFailureAction {
+  type: typeof GET_PARTNER_COUNTS_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -476,7 +525,13 @@ export type AuthActionTypes =
   | CreateBranchFailureAction
   | GetBranchStatusLookupRequestAction
   | GetBranchStatusLookupSuccessAction
-  | GetBranchStatusLookupFailureAction; 
+  | GetBranchStatusLookupFailureAction
+  | GetPartnerStatusLookupRequestAction
+  | GetPartnerStatusLookupSuccessAction
+  | GetPartnerStatusLookupFailureAction
+  | GetPartnerCountsRequestAction
+  | GetPartnerCountsSuccessAction
+  | GetPartnerCountsFailureAction; 
 
 export interface FileUploadPayload {
   data: string;      // base64 string without prefix
@@ -577,4 +632,20 @@ interface CompanyDropdownItem {
   mobile_number: string;
   is_active: boolean;
   createdAt: string;
+} 
+
+interface PartnerStatusLookup {
+  id: number;
+  display_name: string;
+  lookup_code: string;
+  is_active: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+} 
+
+interface PartnerCounts {
+  Total: number;
+  Pending: number;
+  Approved: number;
+  Rejected: number;
 } 

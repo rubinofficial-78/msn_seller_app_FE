@@ -39,19 +39,26 @@ const ViewSeller = () => {
 
   const handleStatusUpdate = async () => {
     if (updating) return;
-    
+
     setUpdating(true);
     try {
       const currentStatus = sellerData?.activation_status;
-      const newStatusId = currentStatus === 'APPROVED' ? 97 : 96; // 97 for REJECTED, 96 for APPROVED
-      
-      const response = await dispatch(updateSellerStatus(Number(id), newStatusId));
+      const newStatusId = currentStatus === "APPROVED" ? 97 : 96;
+
+      const response = await dispatch(
+        updateSellerStatus(Number(id), newStatusId)
+      );
       if (response?.meta?.status) {
-        setSellerData({ 
-          ...sellerData, 
-          activation_status: currentStatus === 'APPROVED' ? 'REJECTED' : 'APPROVED' 
+        setSellerData({
+          ...sellerData,
+          activation_status:
+            currentStatus === "APPROVED" ? "REJECTED" : "APPROVED",
         });
-        toast.success(`Seller ${currentStatus === 'APPROVED' ? 'rejected' : 'approved'} successfully`);
+        toast.success(
+          `Seller ${
+            currentStatus === "APPROVED" ? "rejected" : "approved"
+          } successfully`
+        );
       } else {
         toast.error("Failed to update seller status");
       }
@@ -71,14 +78,16 @@ const ViewSeller = () => {
 
   const getStatusButton = () => {
     const currentStatus = sellerData?.activation_status;
-    
-    if (currentStatus === 'APPROVED') {
+
+    if (currentStatus === "APPROVED") {
       return (
         <button
           onClick={handleStatusUpdate}
           disabled={updating}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
-            updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+            updating
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700"
           }`}
         >
           <X className="h-5 w-5" />
@@ -86,13 +95,15 @@ const ViewSeller = () => {
         </button>
       );
     }
-    
+
     return (
       <button
         onClick={handleStatusUpdate}
         disabled={updating}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
-          updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+          updating
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
         }`}
       >
         <Check className="h-5 w-5" />
@@ -114,28 +125,82 @@ const ViewSeller = () => {
     {
       title: "Store Information",
       fields: [
-        { label: "Store Name", value: sellerData?.store_details?.[0]?.name || "--" },
-        { label: "Website", value: sellerData?.store_details?.[0]?.website || "--" },
+        {
+          label: "Store Name",
+          value: sellerData?.store_details?.[0]?.name || "--",
+        },
+        {
+          label: "Website",
+          value: sellerData?.store_details?.[0]?.website || "--",
+        },
         { label: "Phone Number", value: sellerData?.mobile_number || "--" },
         { label: "Email Address", value: sellerData?.email || "--" },
-        { label: "Seller Activation Min Charges", value: sellerData?.activation_min_charges || "--" },
-        { label: "Seller Activation Max Charges", value: sellerData?.activation_max_charges || "--" },
-        { label: "Seller Activation Charges", value: sellerData?.activation_charges || "--" },
-        { label: "Seller Activation Status", value: sellerData?.activation_status || "--" },
-        { label: "Seller Onboarding Date", value: formatDate(sellerData?.onboarding_date) },
-        { label: "Seller Activation Date", value: formatDate(sellerData?.activation_date) },
-        { label: "Seller Approval Date", value: formatDate(sellerData?.approval_date) },
-        { label: "Seller Activation Remarks", value: sellerData?.activation_remarks || "--" },
-        { label: "Store Description", value: sellerData?.store_details?.[0]?.description || "--" },
-        { label: "Address", value: sellerData?.store_details?.[0]?.address || "Chennai" },
-        { label: "City", value: sellerData?.store_details?.[0]?.city || "chennai" },
-        { label: "State", value: sellerData?.store_details?.[0]?.state || "tamilnadu" },
-        { label: "Postal code", value: sellerData?.store_details?.[0]?.postal_code || "600773" },
-        { label: "Fulfillment Type", value: sellerData?.fulfillment_type || "--" },
+        {
+          label: "Seller Activation Min Charges",
+          value: sellerData?.activation_min_charges || "--",
+        },
+        {
+          label: "Seller Activation Max Charges",
+          value: sellerData?.activation_max_charges || "--",
+        },
+        {
+          label: "Seller Activation Charges",
+          value: sellerData?.activation_charges || "--",
+        },
+        {
+          label: "Seller Activation Status",
+          value: sellerData?.activation_status || "--",
+        },
+        {
+          label: "Seller Onboarding Date",
+          value: formatDate(sellerData?.onboarding_date),
+        },
+        {
+          label: "Seller Activation Date",
+          value: formatDate(sellerData?.activation_date),
+        },
+        {
+          label: "Seller Approval Date",
+          value: formatDate(sellerData?.approval_date),
+        },
+        {
+          label: "Seller Activation Remarks",
+          value: sellerData?.activation_remarks || "--",
+        },
+        {
+          label: "Store Description",
+          value: sellerData?.store_details?.[0]?.description || "--",
+        },
+        {
+          label: "Address",
+          value: sellerData?.store_details?.[0]?.address || "Chennai",
+        },
+        {
+          label: "City",
+          value: sellerData?.store_details?.[0]?.city || "chennai",
+        },
+        {
+          label: "State",
+          value: sellerData?.store_details?.[0]?.state || "tamilnadu",
+        },
+        {
+          label: "Postal code",
+          value: sellerData?.store_details?.[0]?.postal_code || "600773",
+        },
+        {
+          label: "Fulfillment Type",
+          value: sellerData?.fulfillment_type || "--",
+        },
         { label: "FSSAI Number", value: sellerData?.fssai_number || "--" },
-        { label: "Store Logo", value: sellerData?.store_details?.[0]?.logo || "--" },
-        { label: "Store banner", value: sellerData?.store_details?.[0]?.banner || "--" }
-      ]
+        {
+          label: "Store Logo",
+          value: sellerData?.store_details?.[0]?.logo || "--",
+        },
+        {
+          label: "Store banner",
+          value: sellerData?.store_details?.[0]?.banner || "--",
+        },
+      ],
     },
     {
       title: "Contact Details",
@@ -251,9 +316,7 @@ const ViewSeller = () => {
           </button>
           <h1 className="text-2xl font-semibold">View Seller Details</h1>
         </div>
-        <div className="flex items-center gap-2">
-          {getStatusButton()}
-        </div>
+        <div className="flex items-center gap-2">{getStatusButton()}</div>
       </div>
 
       <div className="space-y-8">

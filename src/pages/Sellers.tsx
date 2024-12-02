@@ -7,6 +7,9 @@ import {
   getSellers,
   getSellerCounts,
   getSellerStatusLookup,
+  getPartnerDropdown,
+  getCompanyDropdown,
+  getBranchDropdown,
 } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
@@ -165,11 +168,17 @@ const Sellers = () => {
   const [activeTab, setActiveTab] = useState("All Sellers");
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
   const [statusLookup, setStatusLookup] = useState<any[]>([]);
+  const [companyOptions, setCompanyOptions] = useState<any[]>([]);
+  const [branchOptions, setBranchOptions] = useState<any[]>([]);
+  const [partnerOptions, setPartnerOptions] = useState<any[]>([]);
   const [params, setParams] = useState({
     page_no: 1,
     per_page: 10,
     status_id: null as number | null,
-    search: "", // Add search parameter
+    search: "",
+    company_id: null as number | null,
+    branch_id: null as number | null,
+    partner_id: null as number | null,
   });
 
   // Fetch sellers with updated params
@@ -177,9 +186,40 @@ const Sellers = () => {
     const queryParams = {
       ...params,
       status_id: params.status_id || undefined,
+      company_id: params.company_id || undefined,
+      branch_id: params.branch_id || undefined,
+      partner_id: params.partner_id || undefined,
     };
     dispatch(getSellers(queryParams));
-  }, [dispatch, params]); // This will trigger whenever params changes
+  }, [dispatch, params]);
+
+  // Fetch dropdown data on mount
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const [companyResponse, branchResponse, partnerResponse] =
+          await Promise.all([
+            dispatch(getCompanyDropdown()),
+            dispatch(getBranchDropdown()),
+            dispatch(getPartnerDropdown()),
+          ]);
+
+        if (companyResponse?.data) {
+          setCompanyOptions(companyResponse.data);
+        }
+        if (branchResponse?.data) {
+          setBranchOptions(branchResponse.data);
+        }
+        if (partnerResponse?.data) {
+          setPartnerOptions(partnerResponse.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dropdown data:", error);
+      }
+    };
+
+    fetchDropdownData();
+  }, [dispatch]);
 
   // Fetch status lookup on mount
   useEffect(() => {
@@ -275,6 +315,36 @@ const Sellers = () => {
     }));
   };
 
+  const handleCompanyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const companyId = event.target.value ? Number(event.target.value) : null;
+    setParams((prev) => ({
+      ...prev,
+      company_id: companyId,
+      branch_id: null, // Reset dependent filters
+      partner_id: null,
+      page_no: 1,
+    }));
+  };
+
+  const handleBranchChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const branchId = event.target.value ? Number(event.target.value) : null;
+    setParams((prev) => ({
+      ...prev,
+      branch_id: branchId,
+      partner_id: null, // Reset dependent filter
+      page_no: 1,
+    }));
+  };
+
+  const handlePartnerChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const partnerId = event.target.value ? Number(event.target.value) : null;
+    setParams((prev) => ({
+      ...prev,
+      partner_id: partnerId,
+      page_no: 1,
+    }));
+  };
+
   const renderContent = () => {
     if (viewMode === "grid") {
       return (
@@ -316,9 +386,9 @@ const Sellers = () => {
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline">
               <span className="text-2xl font-bold text-blue-700">
-                {(sellerCounts?.Pending || 0) + 
-                 (sellerCounts?.Approved || 0) + 
-                 (sellerCounts?.Rejected || 0)}
+                {(sellerCounts?.Pending || 0) +
+                  (sellerCounts?.Approved || 0) +
+                  (sellerCounts?.Rejected || 0)}
               </span>
               <span className="text-sm text-gray-500 ml-2">total sellers</span>
             </div>
@@ -403,19 +473,27 @@ const Sellers = () => {
               >
                 <span className="whitespace-nowrap">{tab.label}</span>
                 {tab.label !== "All Sellers" && (
-                  <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                    tab.label === "Approved" ? "bg-green-100 text-green-800" :
-                    tab.label === "Pending" ? "bg-yellow-100 text-yellow-800" :
-                    "bg-red-100 text-red-800"
-                  }`}>
-                    {tab.label === "Approved" ? sellerCounts?.Approved || 0 :
-                     tab.label === "Pending" ? sellerCounts?.Pending || 0 :
-                     sellerCounts?.Rejected || 0}
+                  <span
+                    className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                      tab.label === "Approved"
+                        ? "bg-green-100 text-green-800"
+                        : tab.label === "Pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {tab.label === "Approved"
+                      ? sellerCounts?.Approved || 0
+                      : tab.label === "Pending"
+                      ? sellerCounts?.Pending || 0
+                      : sellerCounts?.Rejected || 0}
                   </span>
                 )}
                 {tab.label === "All Sellers" && (
                   <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
-                    {(sellerCounts?.Pending || 0) + (sellerCounts?.Approved || 0) + (sellerCounts?.Rejected || 0)}
+                    {(sellerCounts?.Pending || 0) +
+                      (sellerCounts?.Approved || 0) +
+                      (sellerCounts?.Rejected || 0)}
                   </span>
                 )}
               </button>
@@ -424,7 +502,7 @@ const Sellers = () => {
         </div>
 
         {/* Search and Actions */}
-        <div className="flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex flex-wrap mt-3 mb-3 gap-4 items-center justify-between">
           <div className="flex flex-wrap gap-4 flex-1">
             <div className="relative flex-1 max-w-xs">
               <Search
@@ -439,6 +517,57 @@ const Sellers = () => {
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
+            <div className="flex flex-wrap gap-4 mb-6"></div>
+
+            <select
+              value={params.company_id || ""}
+              onChange={handleCompanyChange}
+              className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select Company</option>
+              {companyOptions.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={params.branch_id || ""}
+              onChange={handleBranchChange}
+              className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select Branch</option>
+              {branchOptions
+                .filter(
+                  (branch) =>
+                    !params.company_id ||
+                    branch.company_id === params.company_id
+                )
+                .map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+            </select>
+            <select
+              value={params.branch_id || ""}
+              onChange={handlePartnerChange}
+              className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select partner</option>
+              {branchOptions
+                .filter(
+                  (branch) =>
+                    !params.company_id ||
+                    branch.company_id === params.company_id
+                )
+                .map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+            </select>
           </div>
 
           <div className="flex items-center gap-2">

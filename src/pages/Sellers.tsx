@@ -1,176 +1,300 @@
-import React, { useState, useEffect, useRef } from 'react';
-import DataTable from '../components/DataTable';
-import { ListIcon, GridIcon } from '../components/Icons';
-import { useNavigate } from 'react-router-dom';
-import { List, LayoutGrid, Eye, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
-import '../styles/table.css';
-import CustomTable from '../components/CustomTable';
+import React, { useState, useEffect, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { Search, Eye, Edit, Plus, LayoutGrid, Table } from "lucide-react";
+import CustomTable from "../components/CustomTable";
+import { getSellers, getSellerCounts, getSellerStatusLookup } from "../redux/Action/action";
+import { RootState } from "../redux/types";
+import { AppDispatch } from "../redux/store";
+import SellerGrid from "../components/SellerGrid";
 
-interface Seller {
-  sellerName: string;
-  storeName: string;
-  contactInfo: {
-    email: string;
-    phone: string;
-  };
-  address: string;
-  gstNo: string;
-  productCount: number;
-  ondcLiveDate: string;
-  onboardingDate: string;
-  activationDate: string;
-  approvalDate: string;
-  catalogStatus: 'Active' | 'Inactive';
-  companyStatus: 'Active' | 'Inactive';
-  storeStatus: 'Live' | 'Inactive';
-  partnerName: string;
-  branchName: string;
-  companyName: string;
-  status: 'PENDING' | 'REJECTED' | 'APPROVED';
-}
-
-const columns: { header: string; accessor: keyof Seller | string }[] = [
-  { header: 'Seller Name', accessor: 'sellerName' },
-  { header: 'Store Name', accessor: 'storeName' },
-  { header: 'Contact Information', accessor: 'contactInfo' },
-  { header: 'Address', accessor: 'address' },
-  { header: 'GST No', accessor: 'gstNo' },
-  { header: 'Product Counts', accessor: 'productCount' },
-  { header: 'ONDC Live Date', accessor: 'ondcLiveDate' },
-  { header: 'Seller Onboarding Date', accessor: 'onboardingDate' },
-  { header: 'Seller Activation Date', accessor: 'activationDate' },
-  { header: 'Seller Approval Date', accessor: 'approvalDate' },
-  { header: 'Catalog Status', accessor: 'catalogStatus' },
-  { header: 'Company Status', accessor: 'companyStatus' },
-  { header: 'Store Status (ONDC)', accessor: 'storeStatus' },
-  { header: 'Partner Name', accessor: 'partnerName' },
-  { header: 'Branch Name', accessor: 'branchName' },
-  { header: 'Company Name', accessor: 'companyName' },
-  { header: 'Action', accessor: 'action' },
-];
-
-const sampleData: Seller[] = [
+const columns = [
   {
-    sellerName: 'Test Seller',
-    storeName: 'Test Store',
-    contactInfo: {
-      email: 'test@example.com',
-      phone: '1234567890'
-    },
-    address: 'Test Address',
-    gstNo: 'GST123456',
-    productCount: 10,
-    ondcLiveDate: '2024-03-15',
-    onboardingDate: '2024-03-01',
-    activationDate: '2024-03-10',
-    approvalDate: '2024-03-05',
-    catalogStatus: 'Active',
-    companyStatus: 'Active',
-    storeStatus: 'Live',
-    partnerName: 'Test Partner',
-    branchName: 'Test Branch',
-    companyName: 'Test Company',
-    status: 'APPROVED'
+    id: 'name',
+    key: 'name',
+    label: 'Seller Name',
+    minWidth: 150,
   },
-  // Add more sample entries as needed
+  {
+    id: 'storeName',
+    key: 'store_details[0].name',
+    label: 'Store Name',
+    minWidth: 150,
+  },
+  {
+    id: 'contactInfo',
+    key: ['email', 'mobile_number'],
+    label: 'Contact Information',
+    minWidth: 200,
+    join: true,
+    join_type: "multiline",
+  },
+  {
+    id: 'address',
+    key: 'default_address',
+    label: 'Address',
+    minWidth: 200,
+    format: (address: any) => 
+      address ? `${address.address_line_1}, ${address.city}, ${address.state}, ${address.pin_code}` : '-',
+  },
+  {
+    id: 'gstin',
+    key: 'gstin',
+    label: 'GST No',
+    minWidth: 150,
+  },
+  {
+    id: 'productCounts',
+    key: 'product_counts',
+    label: 'Product Counts',
+    minWidth: 120,
+    type: 'number',
+  },
+  {
+    id: 'ondc_live_date',
+    key: 'ondc_live_date',
+    label: 'ONDC Live Date',
+    minWidth: 150,
+    format: (date: string) => date ? new Date(date).toLocaleDateString() : '-',
+  },
+  {
+    id: 'createdAt',
+    key: 'createdAt',
+    label: 'Seller Onboarding Date',
+    minWidth: 150,
+    format: (date: string) => new Date(date).toLocaleDateString(),
+  },
+  {
+    id: 'seller_activation_datetime',
+    key: 'seller_activation_datetime',
+    label: 'Seller Activation Date',
+    minWidth: 150,
+    format: (date: string) => date ? new Date(date).toLocaleDateString() : '-',
+  },
+  {
+    id: 'seller_approval_date',
+    key: 'status.createdAt',
+    label: 'Seller Approval Date',
+    minWidth: 150,
+    format: (date: string) => date ? new Date(date).toLocaleDateString() : '-',
+  },
+  {
+    id: 'catalog_status',
+    key: 'store_details[0].catalog_status',
+    label: 'Catalog Status',
+    minWidth: 150,
+    format: (status: string) => status || 'Not Available',
+  },
+  {
+    id: 'company_status',
+    key: 'company_payment_status',
+    label: 'Company Status',
+    minWidth: 150,
+  },
+  {
+    id: 'store_status',
+    key: 'status.display_name',
+    label: 'Store Status (ONDC)',
+    minWidth: 150,
+    format: (status: string) => status || 'Not Available',
+    cellRenderer: (status: string) => (
+      <span className={`px-2 py-1 rounded-full text-sm ${
+        status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+        status === 'PENDING' ? 'bg-gray-100 text-gray-800' :
+        status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+        'bg-gray-100 text-gray-800'
+      }`}>
+        {status || 'Not Available'}
+      </span>
+    ),
+  },
+  {
+    id: 'partnerName',
+    key: 'parent.name',
+    label: 'Partner Name',
+    minWidth: 150,
+  },
+  {
+    id: 'branchName',
+    key: 'parent.parent.name',
+    label: 'Branch Name',
+    minWidth: 150,
+  },
+  {
+    id: 'companyName',
+    key: 'parent.parent.parent.name',
+    label: 'Company Name',
+    minWidth: 150,
+  },
+  {
+    id: 'actions',
+    key: 'actions',
+    label: 'Actions',
+    minWidth: 100,
+    type: 'actions',
+    actions: ['view', 'edit'],
+  },
 ];
 
-function Sellers() {
-  const navigate = useNavigate();
-  const [viewType, setViewType] = useState<'list' | 'grid'>('list');
-  const [activeTab, setActiveTab] = useState('all');
-  const [showLeftScroll, setShowLeftScroll] = useState(false);
-  const [showRightScroll, setShowRightScroll] = useState(true);
-  const tableRef = useRef<HTMLDivElement>(null);
+const tabs: { label: string }[] = [
+  { label: "All Sellers" },
+  { label: "Approved" },
+  { label: "Pending" },
+  { label: "Rejected" }
+];
 
-  // Add scroll detection
+const Sellers = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  
+  const { data: sellers, loading, meta } = useSelector((state: RootState) => state.data.sellers);
+  const { data: sellerCounts } = useSelector((state: RootState) => state.data.sellerCounts);
+
+  const [activeTab, setActiveTab] = useState("All Sellers");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  const [statusLookup, setStatusLookup] = useState<any[]>([]);
+  const [params, setParams] = useState({
+    page_no: 1,
+    per_page: 10,
+    status_id: null as number | null,
+    search: '' // Add search parameter
+  });
+
+  // Fetch sellers with updated params
   useEffect(() => {
-    const handleScroll = () => {
-      if (tableRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = tableRef.current;
-        setShowLeftScroll(scrollLeft > 0);
-        setShowRightScroll(scrollLeft < scrollWidth - clientWidth);
+    const queryParams = {
+      ...params,
+      status_id: params.status_id || undefined
+    };
+    dispatch(getSellers(queryParams));
+  }, [dispatch, params]); // This will trigger whenever params changes
+
+  // Fetch status lookup on mount
+  useEffect(() => {
+    const fetchStatusLookup = async () => {
+      try {
+        const response = await dispatch(getSellerStatusLookup());
+        if (response?.data) {
+          setStatusLookup(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch seller status lookup:", error);
       }
     };
 
-    const currentRef = tableRef.current;
-    currentRef?.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+    fetchStatusLookup();
+    dispatch(getSellerCounts());
+  }, [dispatch]); // Only run once on mount
 
-    return () => currentRef?.removeEventListener('scroll', handleScroll);
-  }, []);
+  const handleParamsChange = (newParams: { page?: number; per_page?: number }) => {
+    setParams(prev => ({
+      ...prev,
+      page_no: newParams.page || prev.page_no,
+      per_page: newParams.per_page || prev.per_page,
+    }));
+  };
 
-  const tabs = [
-    { id: 'all', label: 'All Sellers' },
-    { id: 'active', label: 'Active Sellers' },
-    { id: 'inactive', label: 'Inactive Sellers' }
-  ];
+  const handleRowClick = (row: any) => {
+    navigate(`view/${row.id}`);
+  };
 
-  // Mock data - replace with API call
-  const sellersData = [
-    {
-      id: 1,
-      sellerName: 'Test Seller',
-      storeName: 'Test Store',
-      contactInformation: {
-        email: 'seller@test.com',
-        phone: '9876543210'
-      },
-      address: '45, MG Road, Koramangala, Bengaluru - Karnataka 560001',
-      gstNo: '29GGGGG1314R9Z7',
-      productCounts: 150,
-      ondcLiveDate: '23-09-2024, 04:30 pm',
-      sellerOnboardingDate: '23-09-2024, 04:30 pm',
-      sellerActivationDate: '24-09-2024, 01:33 pm',
-      sellerApprovalDate: '24-09-2024, 01:33 pm',
-      catalogStatus: 'APPROVED',
-      companyStatus: 'ACTIVE',
-      storeStatus: 'APPROVED',
-      partnerName: 'Test Partner',
-      branchName: 'Test Branch',
-      companyName: 'Test Company'
+  const handleActionClick = (action: string, row: any) => {
+    if (action === 'view') {
+      navigate(`view/${row.id}`);
+    } else if (action === 'edit') {
+      navigate(`edit/${row.id}`);
     }
-  ];
+  };
 
-  const columns = [
-    { id: 'sellerName', key: 'sellerName', label: 'Seller Name', minWidth: 150 },
-    { id: 'storeName', key: 'storeName', label: 'Store Name', minWidth: 150 },
-    { 
-      id: 'contactInfo', 
-      key: ['contactInformation.email', 'contactInformation.phone'], 
-      label: 'Contact Information',
-      join: true,
-      minWidth: 200 
-    },
-    { id: 'address', key: 'address', label: 'Address', minWidth: 250 },
-    { id: 'gstNo', key: 'gstNo', label: 'GST No', minWidth: 150 },
-    { id: 'productCount', key: 'productCounts', label: 'Product Counts', minWidth: 130 },
-    { id: 'ondcLiveDate', key: 'ondcLiveDate', label: 'ONDC Live Date', minWidth: 180 },
-    { id: 'onboardingDate', key: 'sellerOnboardingDate', label: 'Seller Onboarding Date', minWidth: 180 },
-    { id: 'activationDate', key: 'sellerActivationDate', label: 'Seller Activation Date', minWidth: 180 },
-    { id: 'approvalDate', key: 'sellerApprovalDate', label: 'Seller Approval Date', minWidth: 180 },
-    { id: 'catalogStatus', key: 'catalogStatus', label: 'Catalog Status', type: 'status', minWidth: 130 },
-    { id: 'companyStatus', key: 'companyStatus', label: 'Company Status', type: 'status', minWidth: 130 },
-    { id: 'storeStatus', key: 'storeStatus', label: 'Store Status (ONDC)', type: 'status', minWidth: 150 },
-    { id: 'partnerName', key: 'partnerName', label: 'Partner Name', minWidth: 150 },
-    { id: 'branchName', key: 'branchName', label: 'Branch Name', minWidth: 150 },
-    { id: 'companyName', key: 'companyName', label: 'Company Name', minWidth: 150 }
-  ];
+  const handleView = (id: number) => {
+    navigate(`view/${id}`);
+  };
+
+  const handleEdit = (id: number) => {
+    navigate(`edit/${id}`);
+  };
+
+  // Handle search
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = event.target.value;
+    setParams(prev => ({
+      ...prev,
+      search: searchValue,
+      page_no: 1 // Reset to first page when searching
+    }));
+  };
+
+  // Handle tab change with status filtering
+  const handleTabChange = (tabLabel: string) => {
+    setActiveTab(tabLabel);
+    let statusId = null;
+
+    switch (tabLabel) {
+      case "Pending":
+        const pendingStatus = statusLookup.find(s => s.lookup_code === "PENDING");
+        statusId = pendingStatus?.id || null; // Should be 95
+        break;
+      case "Approved":
+        const approvedStatus = statusLookup.find(s => s.lookup_code === "APPROVED");
+        statusId = approvedStatus?.id || null; // Should be 96
+        break;
+      case "Rejected":
+        const rejectedStatus = statusLookup.find(s => s.lookup_code === "REJECTED");
+        statusId = rejectedStatus?.id || null; // Should be 97
+        break;
+      default:
+        statusId = null;
+    }
+
+    // Update params which will trigger the useEffect to fetch sellers
+    setParams(prev => ({
+      ...prev,
+      status_id: statusId,
+      page_no: 1
+    }));
+  };
+
+  const renderContent = () => {
+    if (viewMode === 'grid') {
+      return (
+        <SellerGrid
+          data={sellers || []}
+          onView={handleView}
+          onEdit={handleEdit}
+        />
+      );
+    }
+
+    return (
+      <CustomTable
+        headCells={columns}
+        data={sellers || []}
+        meta_data={meta?.pagination}
+        setParams={handleParamsChange}
+        pagination={true}
+        onRowClick={handleRowClick}
+        onActionClick={handleActionClick}
+      />
+    );
+  };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header with Tabs */}
+    <div className="space-y-4">
+      {/* Tabs */}
       <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map(tab => (
+        <nav className="-mb-px flex flex-wrap gap-4">
+          {tabs.map((tab) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              key={tab.label}
+              onClick={() => handleTabChange(tab.label)}
+              className={`
+                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                ${
+                  activeTab === tab.label
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }
+              `}
             >
               {tab.label}
             </button>
@@ -178,63 +302,84 @@ function Sellers() {
         </nav>
       </div>
 
-      {/* Search and Actions Bar */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search by Seller Name"
-            className="pl-10 pr-4 py-2 border rounded-lg w-64"
-          />
+      {/* Stats */}
+      <div className="flex justify-end gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-gray-600">Total Sellers</span>
+          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+            {(sellerCounts?.Pending || 0) + (sellerCounts?.Approved || 0) + (sellerCounts?.Rejected || 0)}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-600">Approved</span>
+          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+            {sellerCounts?.Approved || 0}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-600">Pending</span>
+          <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+            {sellerCounts?.Pending || 0}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-600">Rejected</span>
+          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+            {sellerCounts?.Rejected || 0}
+          </span>
+        </div>
+      </div>
+
+      {/* Search and Actions */}
+      <div className="flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex flex-wrap gap-4 flex-1">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              value={params.search}
+              onChange={handleSearch}
+              placeholder="Search by Seller Name"
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setViewType('list')}
-            className={`p-2 rounded ${viewType === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}
-          >
-            <List size={20} />
-          </button>
-          <button
-            onClick={() => setViewType('grid')}
-            className={`p-2 rounded ${viewType === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}
+            onClick={() => setViewMode("grid")}
+            className={`p-2 rounded ${viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-600"}`}
+            title="Grid view"
           >
             <LayoutGrid size={20} />
           </button>
           <button
-            onClick={() => navigate('/dashboard/sellers/add')}
-            className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            onClick={() => setViewMode("table")}
+            className={`p-2 rounded ${viewMode === "table" ? "bg-blue-100 text-blue-600" : "text-gray-600"}`}
+            title="Table view"
           >
-            + ADD
+            <Table size={20} />
+          </button>
+          <button
+            onClick={() => navigate('add')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus size={20} />
+            <span>ADD</span>
           </button>
         </div>
       </div>
 
-      {/* Table Container */}
-      {viewType === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 overflow-y-auto">
-          {sellersData.map((seller, index) => (
-            <div key={index} className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-medium">{seller.sellerName}</h3>
-              <p className="text-sm text-gray-600">{seller.storeName}</p>
-              <div className="mt-2 text-sm">
-                <p>{seller.contactInformation.email}</p>
-                <p>{seller.contactInformation.phone}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex-1 mt-4 table-wrapper">
-          <CustomTable 
-            headCells={columns}
-            data={sellersData}
-            pagination={true}
-          />
-        </div>
-      )}
+      {/* Content */}
+      <div className="bg-white rounded-lg shadow">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">Loading...</div>
+        ) : (
+          renderContent()
+        )}
+      </div>
     </div>
   );
-}
+};
 
 export default Sellers;

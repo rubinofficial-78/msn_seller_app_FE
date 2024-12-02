@@ -59,6 +59,9 @@ export const GET_PARTNER_STATUS_LOOKUP_FAILURE = 'GET_PARTNER_STATUS_LOOKUP_FAIL
 export const GET_PARTNER_COUNTS_REQUEST = 'GET_PARTNER_COUNTS_REQUEST';
 export const GET_PARTNER_COUNTS_SUCCESS = 'GET_PARTNER_COUNTS_SUCCESS';
 export const GET_PARTNER_COUNTS_FAILURE = 'GET_PARTNER_COUNTS_FAILURE';
+export const GET_SELLERS_REQUEST = 'GET_SELLERS_REQUEST';
+export const GET_SELLERS_SUCCESS = 'GET_SELLERS_SUCCESS';
+export const GET_SELLERS_FAILURE = 'GET_SELLERS_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -155,6 +158,12 @@ export interface AuthState {
     error: string | null;
     data: PartnerCounts | null;
   };
+  sellers: {
+    loading: boolean,
+    error: string | null,
+    data: [],
+    meta: any
+  },
 }
 
 export interface RootState {
@@ -468,6 +477,20 @@ interface GetPartnerCountsFailureAction {
   payload: string;
 }
 
+interface GetSellersRequestAction {
+  type: typeof GET_SELLERS_REQUEST;
+}
+
+interface GetSellersSuccessAction {
+  type: typeof GET_SELLERS_SUCCESS;
+  payload: any;
+}
+
+interface GetSellersFailureAction {
+  type: typeof GET_SELLERS_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -531,7 +554,10 @@ export type AuthActionTypes =
   | GetPartnerStatusLookupFailureAction
   | GetPartnerCountsRequestAction
   | GetPartnerCountsSuccessAction
-  | GetPartnerCountsFailureAction; 
+  | GetPartnerCountsFailureAction
+  | GetSellersRequestAction
+  | GetSellersSuccessAction
+  | GetSellersFailureAction; 
 
 export interface FileUploadPayload {
   data: string;      // base64 string without prefix

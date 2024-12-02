@@ -85,7 +85,13 @@ import {
   GET_PARTNER_STATUS_LOOKUP_FAILURE,
   GET_PARTNER_COUNTS_REQUEST,
   GET_PARTNER_COUNTS_SUCCESS,
-  GET_PARTNER_COUNTS_FAILURE
+  GET_PARTNER_COUNTS_FAILURE,
+  GET_SELLERS_REQUEST,
+  GET_SELLERS_SUCCESS,
+  GET_SELLERS_FAILURE,
+  GET_SELLER_STATUS_LOOKUP_REQUEST,
+  GET_SELLER_STATUS_LOOKUP_SUCCESS,
+  GET_SELLER_STATUS_LOOKUP_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1474,6 +1480,96 @@ export const getPartnerCounts = (): ThunkAction<Promise<any>, RootState, unknown
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch partner counts';
       dispatch({
         type: GET_PARTNER_COUNTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getSellers = (
+  params: { 
+    search: string;
+    status_id: number;
+    page_no: number; 
+    per_page: number;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_SELLERS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/seller`,
+        {
+          params: {
+            search: params.search,
+            status_id: params.status_id,
+            per_page: params.per_page,
+            page_no: params.page_no
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_SELLERS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch sellers');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch sellers';
+      dispatch({
+        type: GET_SELLERS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getSellerStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_SELLER_STATUS_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/SELLER_STATUS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_SELLER_STATUS_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch seller status lookup');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch seller status lookup';
+      dispatch({
+        type: GET_SELLER_STATUS_LOOKUP_FAILURE,
         payload: errorMessage
       });
       throw error;

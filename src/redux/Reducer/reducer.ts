@@ -56,7 +56,10 @@ import {
   GET_PARTNER_STATUS_LOOKUP_FAILURE, 
   GET_PARTNER_COUNTS_REQUEST, 
   GET_PARTNER_COUNTS_SUCCESS, 
-  GET_PARTNER_COUNTS_FAILURE 
+  GET_PARTNER_COUNTS_FAILURE, 
+  GET_SELLERS_REQUEST, 
+  GET_SELLERS_SUCCESS, 
+  GET_SELLERS_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -156,6 +159,12 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  sellers: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
   }
 };
 
@@ -657,6 +666,34 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         partnerCounts: {
           ...state.partnerCounts,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_SELLERS_REQUEST:
+      return {
+        ...state,
+        sellers: {
+          ...state.sellers,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_SELLERS_SUCCESS:
+      return {
+        ...state,
+        sellers: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_SELLERS_FAILURE:
+      return {
+        ...state,
+        sellers: {
+          ...state.sellers,
           loading: false,
           error: action.payload
         }

@@ -71,7 +71,10 @@ import {
   UPDATE_SELLER_DETAILS_FAILURE, 
   GET_PARTNER_DROPDOWN_REQUEST, 
   GET_PARTNER_DROPDOWN_SUCCESS, 
-  GET_PARTNER_DROPDOWN_FAILURE 
+  GET_PARTNER_DROPDOWN_FAILURE, 
+  GET_PRODUCTS_REQUEST, 
+  GET_PRODUCTS_SUCCESS, 
+  GET_PRODUCTS_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -187,6 +190,12 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  products: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
   }
 };
 
@@ -806,6 +815,34 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         partnerDropdown: {
           ...state.partnerDropdown,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PRODUCTS_REQUEST:
+      return {
+        ...state,
+        products: {
+          ...state.products,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCTS_SUCCESS:
+      return {
+        ...state,
+        products: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_PRODUCTS_FAILURE:
+      return {
+        ...state,
+        products: {
+          ...state.products,
           loading: false,
           error: action.payload
         }

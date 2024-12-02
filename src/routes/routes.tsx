@@ -57,6 +57,7 @@ import ViewPartner from "../pages/partners/ViewPartner";
 import EditPartner from "../pages/partners/EditPartner";
 import ViewSeller from "../pages/ViewSeller";
 import EditSeller from "../pages/EditSeller";
+import CreatePricingRule from "../pages/products/CreatePricingRule";
 
 export const routes: RouteObject[] = [
   {
@@ -200,19 +201,11 @@ export const routes: RouteObject[] = [
           },
           {
             path: "add-product",
-            element: (
-              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
-                <AddProduct />
-              </ProtectedRoute>
-            ),
+            element: <AddProduct />,
           },
           {
             path: "bulk-upload",
-            element: (
-              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
-                <BulkUpload />
-              </ProtectedRoute>
-            ),
+            element: <BulkUpload />,
           },
           {
             path: "add-group",
@@ -225,6 +218,14 @@ export const routes: RouteObject[] = [
           {
             path: "add-menu",
             element: <AddMenu />,
+          },
+          {
+            path: "create-offer",
+            element: <CreateOffer />,
+          },
+          {
+            path: "create-pricing-rule",
+            element: <CreatePricingRule />,
           },
         ],
       },

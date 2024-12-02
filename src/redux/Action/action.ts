@@ -106,7 +106,10 @@ import {
   GET_PARTNER_DROPDOWN_FAILURE,
   UPDATE_SELLER_STATUS_REQUEST,
   UPDATE_SELLER_STATUS_SUCCESS,
-  UPDATE_SELLER_STATUS_FAILURE
+  UPDATE_SELLER_STATUS_FAILURE,
+  GET_PRODUCTS_REQUEST,
+  GET_PRODUCTS_SUCCESS,
+  GET_PRODUCTS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1805,6 +1808,53 @@ export const updateSellerStatus = (
       dispatch({
         type: UPDATE_SELLER_STATUS_FAILURE,
         payload: error instanceof Error ? error.message : 'Failed to update seller status'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getProducts = (
+  params: { 
+    status?: string;
+    page_no: number;
+    per_page: number;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/products`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCTS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch products');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch products';
+      dispatch({
+        type: GET_PRODUCTS_FAILURE,
+        payload: errorMessage
       });
       throw error;
     }

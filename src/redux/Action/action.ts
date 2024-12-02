@@ -91,7 +91,22 @@ import {
   GET_SELLERS_FAILURE,
   GET_SELLER_STATUS_LOOKUP_REQUEST,
   GET_SELLER_STATUS_LOOKUP_SUCCESS,
-  GET_SELLER_STATUS_LOOKUP_FAILURE
+  GET_SELLER_STATUS_LOOKUP_FAILURE,
+  SELLER_REGISTER_REQUEST,
+  SELLER_REGISTER_SUCCESS,
+  SELLER_REGISTER_FAILURE,
+  UPDATE_SELLER_DETAILS_REQUEST,
+  UPDATE_SELLER_DETAILS_SUCCESS,
+  UPDATE_SELLER_DETAILS_FAILURE,
+  GET_SELLER_BY_ID_REQUEST,
+  GET_SELLER_BY_ID_SUCCESS,
+  GET_SELLER_BY_ID_FAILURE,
+  GET_PARTNER_DROPDOWN_REQUEST,
+  GET_PARTNER_DROPDOWN_SUCCESS,
+  GET_PARTNER_DROPDOWN_FAILURE,
+  UPDATE_SELLER_STATUS_REQUEST,
+  UPDATE_SELLER_STATUS_SUCCESS,
+  UPDATE_SELLER_STATUS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -309,7 +324,7 @@ export const getLookupCodes = (
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get<LookupCodeResponse>(
+      const response = await axios.get(
         `${API_BASE_URL}/backend_master/core/lookup_code/list/${type}`,
         {
           headers: {
@@ -319,17 +334,23 @@ export const getLookupCodes = (
         }
       );
 
-      dispatch({
-        type: GET_LOOKUP_CODES_SUCCESS,
-        payload: response.data.data
-      });
-
-      return response.data;
-
-    } catch (error) {
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_LOOKUP_CODES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch lookup codes');
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.meta?.message || 
+                          error?.message || 
+                          'Failed to fetch lookup codes';
+      
       dispatch({
         type: GET_LOOKUP_CODES_FAILURE,
-        payload: error instanceof Error ? error.message : 'Failed to fetch lookup codes'
+        payload: errorMessage
       });
       throw error;
     }
@@ -470,27 +491,32 @@ export const uploadFile = (
   };
 };
 
+interface BusinessSettingsPayload {
+  business_type_id: number;
+  gstin: string;
+  signature: string;
+  section_key: string;
+}
+
+interface BusinessSettingsResponse {
+  meta: {
+    status: boolean;
+    message: string;
+  };
+  data: any;
+}
+
 export const updateBusinessSettings = (
-  userId: number,
-  data: {
-    business_type_id: number;
-    gstin: string;
-    signature: string;
-    section_key: string;
-  }
-): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  id: number,
+  data: BusinessSettingsPayload
+): ThunkAction<Promise<BusinessSettingsResponse>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: UPDATE_BUSINESS_SETTINGS_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
-
       const response = await axios.post(
-        `${API_BASE_URL}/backend_master/auth/business_settings/${userId}/update`,
+        `${API_BASE_URL}/backend_master/auth/business_settings/${id}/update`,
         data,
         {
           headers: {
@@ -500,43 +526,25 @@ export const updateBusinessSettings = (
         }
       );
 
-      // Log response for debugging
-      console.log('API Response:', response.data);
-
       if (response.data?.meta?.status) {
         dispatch({
           type: UPDATE_BUSINESS_SETTINGS_SUCCESS,
           payload: response.data
         });
-        return {
-          payload: response.data,
-          type: UPDATE_BUSINESS_SETTINGS_SUCCESS
-        };
+        return response.data;
       } else {
-        const error = new Error(response.data?.meta?.message || 'Failed to update business settings');
-        throw error;
+        throw new Error(response.data?.meta?.message || 'Failed to update business settings');
       }
-
     } catch (error: any) {
       const errorMessage = error?.response?.data?.meta?.message || 
                           error?.message || 
                           'Failed to update business settings';
-                          
+      
       dispatch({
         type: UPDATE_BUSINESS_SETTINGS_FAILURE,
         payload: errorMessage
       });
-
-      // Return error result for proper error handling in component
-      return {
-        payload: {
-          meta: {
-            status: false,
-            message: errorMessage
-          }
-        },
-        type: UPDATE_BUSINESS_SETTINGS_FAILURE
-      };
+      throw error;
     }
   };
 };
@@ -1571,6 +1579,232 @@ export const getSellerStatusLookup = (): ThunkAction<Promise<any>, RootState, un
       dispatch({
         type: GET_SELLER_STATUS_LOOKUP_FAILURE,
         payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const sellerRegister = (data: {
+  name: string;
+  email: string;
+  mobile_number: string;
+  core_user_id: number;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: SELLER_REGISTER_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/auth/seller_registration`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: SELLER_REGISTER_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to register seller');
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.meta?.message || 
+                          error?.message || 
+                          'Failed to register seller';
+      
+      dispatch({
+        type: SELLER_REGISTER_FAILURE,
+        payload: errorMessage
+      });
+      
+      // Return the error response for proper error handling in the component
+      return error?.response?.data || { 
+        meta: { 
+          status: false, 
+          message: errorMessage 
+        } 
+      };
+    }
+  };
+};
+
+export const updateSellerDetails = (
+  id: number,
+  data: {
+    name: string;
+    store_contact_number: string;
+    store_email: string;
+    default_address: {
+      address_line_1: string;
+      state: string;
+      city: string;
+      pin_code: string;
+    };
+    website: string;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_SELLER_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/auth/store_details/${id}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_SELLER_DETAILS_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update seller details');
+      }
+    } catch (error: any) {
+      dispatch({
+        type: UPDATE_SELLER_DETAILS_FAILURE,
+        payload: error?.response?.data?.meta?.message || error?.message || 'Failed to update seller details'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getSellerById = (
+  id: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_SELLER_BY_ID_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/seller/get/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_SELLER_BY_ID_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch seller details');
+      }
+
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.meta?.message || 
+                          error?.message || 
+                          'Failed to fetch seller details';
+                          
+      dispatch({
+        type: GET_SELLER_BY_ID_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getPartnerDropdown = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PARTNER_DROPDOWN_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/get_partner_list`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PARTNER_DROPDOWN_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch partner dropdown');
+      }
+
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.meta?.message || 
+                          error?.message || 
+                          'Failed to fetch partner dropdown';
+      
+      dispatch({
+        type: GET_PARTNER_DROPDOWN_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const updateSellerStatus = (
+  sellerId: number,
+  statusId: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_SELLER_STATUS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/seller/${sellerId}/update_status`,
+        { status_id: statusId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      dispatch({
+        type: UPDATE_SELLER_STATUS_SUCCESS,
+        payload: response.data
+      });
+
+      return response.data;
+
+    } catch (error) {
+      dispatch({
+        type: UPDATE_SELLER_STATUS_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to update seller status'
       });
       throw error;
     }

@@ -208,7 +208,23 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
       return <FileUpload field={field} />;
 
     case "radio":
-      return <CustomRadioGroup field={field} />;
+      return (
+        <div className="space-y-2">
+          {field.options.map((option: any, index: number) => (
+            <label key={index} className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name={field.key}
+                value={option.value}
+                checked={field.value === option.value}
+                onChange={() => field.onChange(option.value)}
+                className="form-radio h-4 w-4 text-blue-600"
+              />
+              <span className="text-gray-700">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      );
 
     default:
       return null;

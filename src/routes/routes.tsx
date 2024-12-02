@@ -36,7 +36,7 @@ import EditBranch from "../pages/EditBranch";
 import ViewCompany from "../pages/ViewCompany";
 import EditCompany from "../pages/EditCompany";
 import CreatePartner from "../components/CreatePartner";
-import AddSeller from "../components/AddSeller";
+import AddSeller from "../pages/AddSeller";
 import SellerOnboarding from "../components/SellerOnboarding";
 import AddProduct from "../pages/AddProduct";
 import BulkUpload from "../pages/BulkUpload";
@@ -55,6 +55,8 @@ import NotificationSettings from "../pages/settings/NotificationSettings";
 import MapSettings from "../pages/settings/MapSettings";
 import ViewPartner from "../pages/partners/ViewPartner";
 import EditPartner from "../pages/partners/EditPartner";
+import ViewSeller from "../pages/ViewSeller";
+import EditSeller from "../pages/EditSeller";
 
 export const routes: RouteObject[] = [
   {
@@ -244,6 +246,14 @@ export const routes: RouteObject[] = [
           {
             path: "onboarding",
             element: <SellerOnboarding />,
+          },
+          {
+            path: "view/:id",
+            element: <ViewSeller />,
+          },
+          {
+            path: "edit/:id",
+            element: <EditSeller />,
           },
         ],
       },

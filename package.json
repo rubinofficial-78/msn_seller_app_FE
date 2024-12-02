@@ -23,6 +23,7 @@
     "@types/redux": "^3.6.0",
     "@types/redux-thunk": "^2.1.0",
     "axios": "^1.7.8",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.344.0",

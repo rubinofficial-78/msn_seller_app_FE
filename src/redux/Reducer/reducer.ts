@@ -59,7 +59,19 @@ import {
   GET_PARTNER_COUNTS_FAILURE, 
   GET_SELLERS_REQUEST, 
   GET_SELLERS_SUCCESS, 
-  GET_SELLERS_FAILURE 
+  GET_SELLERS_FAILURE, 
+  GET_SELLER_BY_ID_REQUEST, 
+  GET_SELLER_BY_ID_SUCCESS, 
+  GET_SELLER_BY_ID_FAILURE, 
+  SELLER_REGISTER_REQUEST, 
+  SELLER_REGISTER_SUCCESS, 
+  SELLER_REGISTER_FAILURE, 
+  UPDATE_SELLER_DETAILS_REQUEST, 
+  UPDATE_SELLER_DETAILS_SUCCESS, 
+  UPDATE_SELLER_DETAILS_FAILURE, 
+  GET_PARTNER_DROPDOWN_REQUEST, 
+  GET_PARTNER_DROPDOWN_SUCCESS, 
+  GET_PARTNER_DROPDOWN_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -165,6 +177,16 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: null
+  },
+  sellerDetails: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  partnerDropdown: {
+    loading: false,
+    error: null,
+    data: null
   }
 };
 
@@ -694,6 +716,96 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         sellers: {
           ...state.sellers,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_SELLER_BY_ID_REQUEST:
+      return {
+        ...state,
+        sellerDetails: {
+          ...state.sellerDetails,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_SELLER_BY_ID_SUCCESS:
+      return {
+        ...state,
+        sellerDetails: {
+          loading: false,
+          error: null,
+          data: action.payload.data
+        }
+      };
+    case GET_SELLER_BY_ID_FAILURE:
+      return {
+        ...state,
+        sellerDetails: {
+          ...state.sellerDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case SELLER_REGISTER_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case SELLER_REGISTER_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null
+      };
+    case SELLER_REGISTER_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+    case UPDATE_SELLER_DETAILS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case UPDATE_SELLER_DETAILS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null
+      };
+    case UPDATE_SELLER_DETAILS_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+    case GET_PARTNER_DROPDOWN_REQUEST:
+      return {
+        ...state,
+        partnerDropdown: {
+          ...state.partnerDropdown,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PARTNER_DROPDOWN_SUCCESS:
+      return {
+        ...state,
+        partnerDropdown: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PARTNER_DROPDOWN_FAILURE:
+      return {
+        ...state,
+        partnerDropdown: {
+          ...state.partnerDropdown,
           loading: false,
           error: action.payload
         }

@@ -62,6 +62,12 @@ export const GET_PARTNER_COUNTS_FAILURE = 'GET_PARTNER_COUNTS_FAILURE';
 export const GET_SELLERS_REQUEST = 'GET_SELLERS_REQUEST';
 export const GET_SELLERS_SUCCESS = 'GET_SELLERS_SUCCESS';
 export const GET_SELLERS_FAILURE = 'GET_SELLERS_FAILURE';
+export const GET_SELLER_BY_ID_REQUEST = 'GET_SELLER_BY_ID_REQUEST';
+export const GET_SELLER_BY_ID_SUCCESS = 'GET_SELLER_BY_ID_SUCCESS';
+export const GET_SELLER_BY_ID_FAILURE = 'GET_SELLER_BY_ID_FAILURE';
+export const GET_PARTNER_DROPDOWN_REQUEST = 'GET_PARTNER_DROPDOWN_REQUEST';
+export const GET_PARTNER_DROPDOWN_SUCCESS = 'GET_PARTNER_DROPDOWN_SUCCESS';
+export const GET_PARTNER_DROPDOWN_FAILURE = 'GET_PARTNER_DROPDOWN_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -164,6 +170,16 @@ export interface AuthState {
     data: [],
     meta: any
   },
+  sellerDetails: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
+  };
+  partnerDropdown: {
+    loading: boolean;
+    error: string | null;
+    data: Partner[] | null;
+  };
 }
 
 export interface RootState {
@@ -491,6 +507,73 @@ interface GetSellersFailureAction {
   payload: string;
 }
 
+interface GetSellerByIdRequestAction {
+  type: typeof GET_SELLER_BY_ID_REQUEST;
+}
+
+interface GetSellerByIdSuccessAction {
+  type: typeof GET_SELLER_BY_ID_SUCCESS;
+  payload: any;
+}
+
+interface GetSellerByIdFailureAction {
+  type: typeof GET_SELLER_BY_ID_FAILURE;
+  payload: string;
+}
+interface SellerRegisterRequestAction {
+  type: typeof SELLER_REGISTER_REQUEST;
+}
+
+interface SellerRegisterSuccessAction {
+  type: typeof SELLER_REGISTER_SUCCESS;
+  payload: any;
+}
+
+interface SellerRegisterFailureAction {
+  type: typeof SELLER_REGISTER_FAILURE;
+  payload: string;
+}
+
+interface UpdateSellerDetailsRequestAction {
+  type: typeof UPDATE_SELLER_DETAILS_REQUEST;
+}
+
+interface UpdateSellerDetailsSuccessAction {
+  type: typeof UPDATE_SELLER_DETAILS_SUCCESS;
+  payload: any;
+}
+
+interface UpdateSellerDetailsFailureAction {
+  type: typeof UPDATE_SELLER_DETAILS_FAILURE;
+  payload: string;
+}
+
+interface GetPartnerDropdownRequestAction {
+  type: typeof GET_PARTNER_DROPDOWN_REQUEST;
+}
+
+interface GetPartnerDropdownSuccessAction {
+  type: typeof GET_PARTNER_DROPDOWN_SUCCESS;
+  payload: any;
+}
+
+interface GetPartnerDropdownFailureAction {
+  type: typeof GET_PARTNER_DROPDOWN_FAILURE;
+  payload: string;
+}
+interface GetPartnerDropdownRequestAction {
+  type: typeof GET_PARTNER_DROPDOWN_REQUEST;
+}
+
+interface GetPartnerDropdownSuccessAction {
+  type: typeof GET_PARTNER_DROPDOWN_SUCCESS;
+  payload: any;
+}
+
+interface GetPartnerDropdownFailureAction {
+  type: typeof GET_PARTNER_DROPDOWN_FAILURE;
+  payload: string;
+}
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -557,7 +640,20 @@ export type AuthActionTypes =
   | GetPartnerCountsFailureAction
   | GetSellersRequestAction
   | GetSellersSuccessAction
-  | GetSellersFailureAction; 
+  | GetSellersFailureAction
+  | GetSellerByIdRequestAction
+  | GetSellerByIdSuccessAction
+  | GetSellerByIdFailureAction
+  | SellerRegisterRequestAction
+  | SellerRegisterSuccessAction
+  | SellerRegisterFailureAction
+  | UpdateSellerDetailsRequestAction
+  | UpdateSellerDetailsSuccessAction
+  | UpdateSellerDetailsFailureAction
+  | GetPartnerDropdownRequestAction
+  | GetPartnerDropdownSuccessAction
+  | GetPartnerDropdownFailureAction;
+
 
 export interface FileUploadPayload {
   data: string;      // base64 string without prefix
@@ -675,3 +771,101 @@ interface PartnerCounts {
   Approved: number;
   Rejected: number;
 } 
+
+interface Partner {
+  id: number;
+  first_name: string;
+  last_name: string | null;
+  name: string;
+  email: string;
+  mobile_number: string;
+  is_active: boolean;
+  core_user_user_in_role: Array<{
+    role_id: number;
+    role_user_in_role: {
+      name: string;
+      role_role_assign_module: Array<{
+        module_master: {
+          name: string;
+        };
+      }>;
+    };
+  }>;
+  createdAt: string;
+} 
+
+interface SellerRegistrationResponse {
+  meta: {
+    status: boolean;
+    message: string;
+  };
+  data: {
+    ID: number;
+    first_name: string | null;
+    last_name: string | null;
+    name: string;
+    company_id: number;
+    created_by_id: number;
+    email: string;
+    mobile_number: string;
+    code: string;
+    provider_id: string;
+    store_id: number;
+    email_server_settings_id: number;
+    store_active: boolean;
+    bank_id: number;
+    business_id: number;
+    roles: string[];
+    parent_company_id: number | null;
+    is_created_by_admin: boolean;
+    seller_activation_charges: number | null;
+    seller_activation_status: string | null;
+    status: string;
+    isn_details: any | null;
+  };
+}
+
+// Update the action creator return type
+export const sellerRegister = (data: {
+  name: string;
+  email: string;
+  mobile_number: string;
+  core_user_id: number;
+}): ThunkAction<Promise<SellerRegistrationResponse>, RootState, unknown, AuthActionTypes> => {
+  // ... rest of the code remains the same
+};
+
+// Add or update these interfaces
+interface LookupCode {
+  id: number;
+  lookup_code: string;
+  display_name: string;
+  is_active: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface AuthState {
+  // ... other state properties ...
+  lookupCodes: {
+    loading: boolean;
+    error: string | null;
+    data: LookupCode[] | null;
+  };
+}
+
+// Add these types if not already present
+interface BusinessSettingsPayload {
+  business_type_id: number;
+  gstin: string;
+  signature: string;
+  section_key: string;
+}
+
+interface BusinessSettingsResponse {
+  meta: {
+    status: boolean;
+    message: string;
+  };
+  data: any;
+}

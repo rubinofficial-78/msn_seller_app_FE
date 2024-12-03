@@ -77,7 +77,10 @@ import {
   ACTIVATE_SELLER_FAILURE, 
   GET_PRODUCTS_REQUEST, 
   GET_PRODUCTS_SUCCESS, 
-  GET_PRODUCTS_FAILURE 
+  GET_PRODUCTS_FAILURE, 
+  GET_SALES_ORDERS_COUNT_REQUEST, 
+  GET_SALES_ORDERS_COUNT_SUCCESS, 
+  GET_SALES_ORDERS_COUNT_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -199,6 +202,18 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: null
+  },
+  salesOrdersCount: {
+    loading: false,
+    error: null,
+    data: {
+      total_orders: 0,
+      accepted: 0,
+      in_progress: 0,
+      completed: 0,
+      cancelled: 0,
+      created: 0
+    }
   }
 };
 
@@ -864,6 +879,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         products: {
           ...state.products,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_SALES_ORDERS_COUNT_REQUEST:
+      return {
+        ...state,
+        salesOrdersCount: {
+          ...state.salesOrdersCount,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_SALES_ORDERS_COUNT_SUCCESS:
+      return {
+        ...state,
+        salesOrdersCount: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_SALES_ORDERS_COUNT_FAILURE:
+      return {
+        ...state,
+        salesOrdersCount: {
+          ...state.salesOrdersCount,
           loading: false,
           error: action.payload
         }

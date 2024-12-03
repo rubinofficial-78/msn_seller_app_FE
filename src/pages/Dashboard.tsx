@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Users, ShoppingCart, Store, Package, CheckCircle, Clock, XCircle, RotateCcw, DollarSign, TrendingUp } from 'lucide-react';
-import { getDashboardCounts, getSellerCounts, getAffiliatePartnerCounts } from '../redux/Action/action';
+import { Users, ShoppingCart, Store, Package, CheckCircle, Clock, XCircle, RotateCcw, IndianRupee, TrendingUp } from 'lucide-react';
+import { getDashboardCounts, getSellerCounts, getAffiliatePartnerCounts, getSalesOrdersCount } from '../redux/Action/action';
 import { RootState } from '../redux/types';
 import { AppDispatch } from '../redux/store';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -102,11 +102,13 @@ const Dashboard = () => {
   const { data: dashboardData, loading: dashboardLoading } = useSelector((state: RootState) => state.data.dashboardCounts);
   const { data: sellerCounts, loading: sellerLoading } = useSelector((state: RootState) => state.data.sellerCounts);
   const { data: affiliatePartnerCounts, loading: affiliateLoading } = useSelector((state: RootState) => state.data.affiliatePartnerCounts);
+  const { data: salesOrdersCount, loading: salesOrdersLoading } = useSelector((state: RootState) => state.data.salesOrdersCount);
 
   useEffect(() => {
     dispatch(getDashboardCounts());
     dispatch(getSellerCounts());
     dispatch(getAffiliatePartnerCounts());
+    dispatch(getSalesOrdersCount());
   }, [dispatch]);
 
   return (
@@ -123,8 +125,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
-          value={`$${dashboardData?.total_revenue._sum.order_amount || 0}`}
-          icon={DollarSign}
+          value={`₹${dashboardData?.total_revenue?._sum?.order_amount?.toLocaleString('en-IN') || 0}`}
+          icon={IndianRupee}
           gradient="from-emerald-50 to-teal-100"
         />
         
@@ -151,20 +153,20 @@ const Dashboard = () => {
         
         <StatCard
           title="Total Orders"
-          value={dashboardData?.total_sales_orders.toString() || "0"}
+          value={salesOrdersCount?.total_orders.toString() || "0"}
           icon={ShoppingCart}
           gradient="from-violet-50 to-purple-100"
           subStats={[
             {
               icon: <CheckCircle className="text-green-600" size={16} />,
-              label: "Fulfilled Orders",
-              value: "775",
+              label: "Completed Orders",
+              value: salesOrdersCount?.completed.toString() || "0",
               trend: 8
             },
             {
               icon: <XCircle className="text-red-600" size={16} />,
               label: "Cancelled Orders",
-              value: "466",
+              value: salesOrdersCount?.cancelled.toString() || "0",
               trend: -3
             }
           ]}

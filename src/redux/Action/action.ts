@@ -142,7 +142,10 @@ import {
   GET_PAYMENT_MODE_LOOKUP_FAILURE,
   GET_ONDC_DETAILS_REQUEST,
   GET_ONDC_DETAILS_SUCCESS,
-  GET_ONDC_DETAILS_FAILURE
+  GET_ONDC_DETAILS_FAILURE,
+  BULK_UPDATE_ONDC_DETAILS_REQUEST,
+  BULK_UPDATE_ONDC_DETAILS_SUCCESS,
+  BULK_UPDATE_ONDC_DETAILS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -2303,6 +2306,46 @@ export const getOndcDetails = (
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch ONDC details';
       dispatch({
         type: GET_ONDC_DETAILS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const bulkUpdateOndcDetails = (
+  data: Array<{ id: number; value: any }>
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: BULK_UPDATE_ONDC_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/catalog/product_category_attribute_value/bulk_update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: BULK_UPDATE_ONDC_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update ONDC details');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update ONDC details';
+      dispatch({
+        type: BULK_UPDATE_ONDC_DETAILS_FAILURE,
         payload: errorMessage
       });
       throw error;

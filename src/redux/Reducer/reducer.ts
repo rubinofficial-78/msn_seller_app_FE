@@ -105,6 +105,9 @@ import {
   GET_ONDC_DETAILS_REQUEST, 
   GET_ONDC_DETAILS_SUCCESS, 
   GET_ONDC_DETAILS_FAILURE,
+  BULK_UPDATE_ONDC_DETAILS_REQUEST,
+  BULK_UPDATE_ONDC_DETAILS_SUCCESS,
+  BULK_UPDATE_ONDC_DETAILS_FAILURE,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -272,6 +275,11 @@ const initialState: AuthState = {
     data: null
   },
   ondcDetails: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  ondcBulkUpdate: {
     loading: false,
     error: null,
     data: null
@@ -1183,6 +1191,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         ondcDetails: {
           ...state.ondcDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case BULK_UPDATE_ONDC_DETAILS_REQUEST:
+      return {
+        ...state,
+        ondcBulkUpdate: {
+          ...state.ondcBulkUpdate,
+          loading: true,
+          error: null
+        }
+      };
+    case BULK_UPDATE_ONDC_DETAILS_SUCCESS:
+      return {
+        ...state,
+        ondcBulkUpdate: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case BULK_UPDATE_ONDC_DETAILS_FAILURE:
+      return {
+        ...state,
+        ondcBulkUpdate: {
+          ...state.ondcBulkUpdate,
           loading: false,
           error: action.payload
         }

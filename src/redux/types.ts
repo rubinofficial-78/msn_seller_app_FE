@@ -80,6 +80,9 @@ export const GET_HSN_CODES_FAILURE = 'GET_HSN_CODES_FAILURE';
 export const GET_UOM_LOOKUP_REQUEST = 'GET_UOM_LOOKUP_REQUEST';
 export const GET_UOM_LOOKUP_SUCCESS = 'GET_UOM_LOOKUP_SUCCESS';
 export const GET_UOM_LOOKUP_FAILURE = 'GET_UOM_LOOKUP_FAILURE';
+export const BULK_UPDATE_ONDC_DETAILS_REQUEST = 'BULK_UPDATE_ONDC_DETAILS_REQUEST';
+export const BULK_UPDATE_ONDC_DETAILS_SUCCESS = 'BULK_UPDATE_ONDC_DETAILS_SUCCESS';
+export const BULK_UPDATE_ONDC_DETAILS_FAILURE = 'BULK_UPDATE_ONDC_DETAILS_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -260,6 +263,11 @@ export interface AuthState {
       is_active: boolean;
       company_id: number | null;
     }> | null;
+  };
+  ondcBulkUpdate: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
   };
 }
 
@@ -668,6 +676,21 @@ interface GetOndcDetailsFailureAction {
   type: typeof GET_ONDC_DETAILS_FAILURE;
   payload: string;
 }
+
+interface BulkUpdateOndcDetailsRequestAction {
+  type: typeof BULK_UPDATE_ONDC_DETAILS_REQUEST;
+}
+
+interface BulkUpdateOndcDetailsSuccessAction {
+  type: typeof BULK_UPDATE_ONDC_DETAILS_SUCCESS;
+  payload: any;
+}
+
+interface BulkUpdateOndcDetailsFailureAction {
+  type: typeof BULK_UPDATE_ONDC_DETAILS_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -746,10 +769,13 @@ export type AuthActionTypes =
   | UpdateSellerDetailsFailureAction
   | GetPartnerDropdownRequestAction
   | GetPartnerDropdownSuccessAction
-  | GetPartnerDropdownFailureAction;
+  | GetPartnerDropdownFailureAction
   | GetOndcDetailsRequestAction
   | GetOndcDetailsSuccessAction
   | GetOndcDetailsFailureAction
+  | BulkUpdateOndcDetailsRequestAction
+  | BulkUpdateOndcDetailsSuccessAction
+  | BulkUpdateOndcDetailsFailureAction;
 
 
 export interface FileUploadPayload {

@@ -145,7 +145,13 @@ import {
   GET_ONDC_DETAILS_FAILURE,
   BULK_UPDATE_ONDC_DETAILS_REQUEST,
   BULK_UPDATE_ONDC_DETAILS_SUCCESS,
-  BULK_UPDATE_ONDC_DETAILS_FAILURE
+  BULK_UPDATE_ONDC_DETAILS_FAILURE,
+  DOWNLOAD_TEMPLATE_REQUEST,
+  DOWNLOAD_TEMPLATE_SUCCESS,
+  DOWNLOAD_TEMPLATE_FAILURE,
+  UPLOAD_TEMPLATE_REQUEST,
+  UPLOAD_TEMPLATE_SUCCESS,
+  UPLOAD_TEMPLATE_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1807,10 +1813,8 @@ export const getPartnerDropdown = (): ThunkAction<Promise<any>, RootState, unkno
         throw new Error(response.data?.meta?.message || 'Failed to fetch partner dropdown');
       }
 
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.meta?.message || 
-                          error?.message || 
-                          'Failed to fetch partner dropdown';
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch partner dropdown';
       
       dispatch({
         type: GET_PARTNER_DROPDOWN_FAILURE,
@@ -2347,6 +2351,187 @@ export const bulkUpdateOndcDetails = (
       dispatch({
         type: BULK_UPDATE_ONDC_DETAILS_FAILURE,
         payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getCategories = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_CATEGORIES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/product_category/?parent_category_id=null`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_CATEGORIES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            isSubCategory: false
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch categories');
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      dispatch({
+        type: GET_PRODUCT_CATEGORIES_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch categories'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getSubCategories = (parentId: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_CATEGORIES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/product_category/?parent_category_id=${parentId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_CATEGORIES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            isSubCategory: true
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch subcategories');
+      }
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+      dispatch({
+        type: GET_PRODUCT_CATEGORIES_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch subcategories'
+      });
+      throw error;
+    }
+  };
+};
+
+export const downloadTemplate = (
+  level1_category_id: number,
+  level2_category_id: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: DOWNLOAD_TEMPLATE_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/catalog/products/xlsx/download`,
+        {
+          level1_category_id,
+          level2_category_id
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          responseType: 'arraybuffer'
+        }
+      );
+
+      // Create blob from arraybuffer
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'product_template.xlsx');
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+
+      dispatch({
+        type: DOWNLOAD_TEMPLATE_SUCCESS
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      dispatch({
+        type: DOWNLOAD_TEMPLATE_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to download template'
+      });
+      throw error;
+    }
+  };
+};
+
+export const uploadTemplate = (
+  data: {
+    level1_category_id: number;
+    level2_category_id: number;
+    link: string;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPLOAD_TEMPLATE_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/catalog/products/xlsx/upload`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPLOAD_TEMPLATE_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to upload template');
+      }
+
+    } catch (error) {
+      console.error('Error uploading template:', error);
+      dispatch({
+        type: UPLOAD_TEMPLATE_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to upload template'
       });
       throw error;
     }

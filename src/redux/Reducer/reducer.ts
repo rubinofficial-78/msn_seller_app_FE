@@ -108,6 +108,12 @@ import {
   BULK_UPDATE_ONDC_DETAILS_REQUEST,
   BULK_UPDATE_ONDC_DETAILS_SUCCESS,
   BULK_UPDATE_ONDC_DETAILS_FAILURE,
+  DOWNLOAD_TEMPLATE_REQUEST,
+  DOWNLOAD_TEMPLATE_SUCCESS,
+  DOWNLOAD_TEMPLATE_FAILURE,
+  UPLOAD_TEMPLATE_REQUEST,
+  UPLOAD_TEMPLATE_SUCCESS,
+  UPLOAD_TEMPLATE_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -280,6 +286,15 @@ const initialState: AuthState = {
     data: null
   },
   ondcBulkUpdate: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  templateDownload: {
+    loading: false,
+    error: null
+  },
+  templateUpload: {
     loading: false,
     error: null,
     data: null
@@ -1007,7 +1022,6 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         }
       };
     case GET_PRODUCT_CATEGORIES_REQUEST:
-      console.log('Reducer: Category request');
       return {
         ...state,
         productCategories: {
@@ -1017,22 +1031,16 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         }
       };
     case GET_PRODUCT_CATEGORIES_SUCCESS:
-      console.log('Reducer: Category success', action.payload);
       return {
         ...state,
         productCategories: {
           loading: false,
           error: null,
-          data: action.payload.isSubCategory 
-            ? state.productCategories.data  // Keep main categories
-            : action.payload.data,          // Update main categories
-          subCategories: action.payload.isSubCategory 
-            ? action.payload.data           // Update subcategories
-            : null                          // Reset subcategories
+          data: action.payload.isSubCategory ? state.productCategories.data : action.payload.data,
+          subCategories: action.payload.isSubCategory ? action.payload.data : null
         }
       };
     case GET_PRODUCT_CATEGORIES_FAILURE:
-      console.log('Reducer: Category failure', action.payload);
       return {
         ...state,
         productCategories: {
@@ -1218,6 +1226,57 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         ondcBulkUpdate: {
           ...state.ondcBulkUpdate,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case DOWNLOAD_TEMPLATE_REQUEST:
+      return {
+        ...state,
+        templateDownload: {
+          loading: true,
+          error: null
+        }
+      };
+    case DOWNLOAD_TEMPLATE_SUCCESS:
+      return {
+        ...state,
+        templateDownload: {
+          loading: false,
+          error: null
+        }
+      };
+    case DOWNLOAD_TEMPLATE_FAILURE:
+      return {
+        ...state,
+        templateDownload: {
+          loading: false,
+          error: action.payload
+        }
+      };
+    case UPLOAD_TEMPLATE_REQUEST:
+      return {
+        ...state,
+        templateUpload: {
+          ...state.templateUpload,
+          loading: true,
+          error: null
+        }
+      };
+    case UPLOAD_TEMPLATE_SUCCESS:
+      return {
+        ...state,
+        templateUpload: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case UPLOAD_TEMPLATE_FAILURE:
+      return {
+        ...state,
+        templateUpload: {
+          ...state.templateUpload,
           loading: false,
           error: action.payload
         }

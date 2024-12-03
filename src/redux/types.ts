@@ -83,6 +83,12 @@ export const GET_UOM_LOOKUP_FAILURE = 'GET_UOM_LOOKUP_FAILURE';
 export const BULK_UPDATE_ONDC_DETAILS_REQUEST = 'BULK_UPDATE_ONDC_DETAILS_REQUEST';
 export const BULK_UPDATE_ONDC_DETAILS_SUCCESS = 'BULK_UPDATE_ONDC_DETAILS_SUCCESS';
 export const BULK_UPDATE_ONDC_DETAILS_FAILURE = 'BULK_UPDATE_ONDC_DETAILS_FAILURE';
+export const DOWNLOAD_TEMPLATE_REQUEST = 'DOWNLOAD_TEMPLATE_REQUEST';
+export const DOWNLOAD_TEMPLATE_SUCCESS = 'DOWNLOAD_TEMPLATE_SUCCESS';
+export const DOWNLOAD_TEMPLATE_FAILURE = 'DOWNLOAD_TEMPLATE_FAILURE';
+export const UPLOAD_TEMPLATE_REQUEST = 'UPLOAD_TEMPLATE_REQUEST';
+export const UPLOAD_TEMPLATE_SUCCESS = 'UPLOAD_TEMPLATE_SUCCESS';
+export const UPLOAD_TEMPLATE_FAILURE = 'UPLOAD_TEMPLATE_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -204,6 +210,7 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: Category[] | null;
+    subCategories: Category[] | null;
   };
   hsnCodes: {
     loading: boolean;
@@ -265,6 +272,15 @@ export interface AuthState {
     }> | null;
   };
   ondcBulkUpdate: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
+  };
+  templateDownload: {
+    loading: boolean;
+    error: string | null;
+  };
+  templateUpload: {
     loading: boolean;
     error: string | null;
     data: any | null;
@@ -691,6 +707,33 @@ interface BulkUpdateOndcDetailsFailureAction {
   payload: string;
 }
 
+interface DownloadTemplateRequestAction {
+  type: typeof DOWNLOAD_TEMPLATE_REQUEST;
+}
+
+interface DownloadTemplateSuccessAction {
+  type: typeof DOWNLOAD_TEMPLATE_SUCCESS;
+}
+
+interface DownloadTemplateFailureAction {
+  type: typeof DOWNLOAD_TEMPLATE_FAILURE;
+  payload: string;
+}
+
+interface UploadTemplateRequestAction {
+  type: typeof UPLOAD_TEMPLATE_REQUEST;
+}
+
+interface UploadTemplateSuccessAction {
+  type: typeof UPLOAD_TEMPLATE_SUCCESS;
+  payload: any;
+}
+
+interface UploadTemplateFailureAction {
+  type: typeof UPLOAD_TEMPLATE_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -775,7 +818,13 @@ export type AuthActionTypes =
   | GetOndcDetailsFailureAction
   | BulkUpdateOndcDetailsRequestAction
   | BulkUpdateOndcDetailsSuccessAction
-  | BulkUpdateOndcDetailsFailureAction;
+  | BulkUpdateOndcDetailsFailureAction
+  | DownloadTemplateRequestAction
+  | DownloadTemplateSuccessAction
+  | DownloadTemplateFailureAction
+  | UploadTemplateRequestAction
+  | UploadTemplateSuccessAction
+  | UploadTemplateFailureAction;
 
 
 export interface FileUploadPayload {
@@ -1013,6 +1062,7 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: Category[] | null;
+    subCategories: Category[] | null;
   };
 }
 

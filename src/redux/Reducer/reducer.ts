@@ -78,9 +78,24 @@ import {
   GET_PRODUCTS_REQUEST, 
   GET_PRODUCTS_SUCCESS, 
   GET_PRODUCTS_FAILURE, 
+  GET_PRODUCT_COUNTS_REQUEST, 
+  GET_PRODUCT_COUNTS_SUCCESS, 
+  GET_PRODUCT_COUNTS_FAILURE, 
+  GET_PRODUCT_BY_ID_REQUEST, 
+  GET_PRODUCT_BY_ID_SUCCESS, 
+  GET_PRODUCT_BY_ID_FAILURE, 
+  GET_PRODUCT_CATEGORIES_REQUEST, 
+  GET_PRODUCT_CATEGORIES_SUCCESS, 
+  GET_PRODUCT_CATEGORIES_FAILURE, 
+  GET_HSN_CODES_REQUEST, 
+  GET_HSN_CODES_SUCCESS, 
+  GET_HSN_CODES_FAILURE, 
+  SAVE_BASIC_DETAILS_REQUEST, 
+  SAVE_BASIC_DETAILS_SUCCESS, 
+  SAVE_BASIC_DETAILS_FAILURE,
   GET_SALES_ORDERS_COUNT_REQUEST, 
   GET_SALES_ORDERS_COUNT_SUCCESS, 
-  GET_SALES_ORDERS_COUNT_FAILURE 
+  GET_SALES_ORDERS_COUNT_FAILURE ,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -214,7 +229,29 @@ const initialState: AuthState = {
       cancelled: 0,
       created: 0
     }
-  }
+  },
+  productCounts: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  selectedProduct: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  productCategories: {
+    loading: false,
+    error: null,
+    data: null,
+    subCategories: null
+  },
+  hsnCodes: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  savedProduct: null
 };
 
 const authReducer = (state = initialState, action: AuthActionTypes): AuthState => {
@@ -883,6 +920,141 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
+    case GET_PRODUCT_COUNTS_REQUEST:
+      return {
+        ...state,
+        productCounts: {
+          ...state.productCounts,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCT_COUNTS_SUCCESS:
+      return {
+        ...state,
+        productCounts: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PRODUCT_COUNTS_FAILURE:
+      return {
+        ...state,
+        productCounts: {
+          ...state.productCounts,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PRODUCT_BY_ID_REQUEST:
+      return {
+        ...state,
+        selectedProduct: {
+          ...state.selectedProduct,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCT_BY_ID_SUCCESS:
+      return {
+        ...state,
+        selectedProduct: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PRODUCT_BY_ID_FAILURE:
+      return {
+        ...state,
+        selectedProduct: {
+          ...state.selectedProduct,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PRODUCT_CATEGORIES_REQUEST:
+      console.log('Reducer: Category request');
+      return {
+        ...state,
+        productCategories: {
+          ...state.productCategories,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCT_CATEGORIES_SUCCESS:
+      console.log('Reducer: Category success', action.payload);
+      return {
+        ...state,
+        productCategories: {
+          loading: false,
+          error: null,
+          data: action.payload.isSubCategory 
+            ? state.productCategories.data  // Keep main categories
+            : action.payload.data,          // Update main categories
+          subCategories: action.payload.isSubCategory 
+            ? action.payload.data           // Update subcategories
+            : null                          // Reset subcategories
+        }
+      };
+    case GET_PRODUCT_CATEGORIES_FAILURE:
+      console.log('Reducer: Category failure', action.payload);
+      return {
+        ...state,
+        productCategories: {
+          ...state.productCategories,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_HSN_CODES_REQUEST:
+      return {
+        ...state,
+        hsnCodes: {
+          ...state.hsnCodes,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_HSN_CODES_SUCCESS:
+      return {
+        ...state,
+        hsnCodes: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_HSN_CODES_FAILURE:
+      return {
+        ...state,
+        hsnCodes: {
+          ...state.hsnCodes,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case SAVE_BASIC_DETAILS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case SAVE_BASIC_DETAILS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        savedProduct: action.payload
+      };
+    case SAVE_BASIC_DETAILS_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
     case GET_SALES_ORDERS_COUNT_REQUEST:
       return {
         ...state,
@@ -910,6 +1082,7 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
+      
     default:
       return state;
   }

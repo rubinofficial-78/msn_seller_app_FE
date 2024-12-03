@@ -58,6 +58,7 @@ import EditPartner from "../pages/partners/EditPartner";
 import ViewSeller from "../pages/ViewSeller";
 import EditSeller from "../pages/EditSeller";
 import CreatePricingRule from "../pages/products/CreatePricingRule";
+import ViewProduct from "../pages/products/ViewProduct";
 
 export const routes: RouteObject[] = [
   {
@@ -227,6 +228,10 @@ export const routes: RouteObject[] = [
             path: "create-pricing-rule",
             element: <CreatePricingRule />,
           },
+          {
+            path: "view/:id",
+            element: <ViewProduct />
+          }
         ],
       },
       {

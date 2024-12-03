@@ -68,6 +68,15 @@ export const GET_SELLER_BY_ID_FAILURE = 'GET_SELLER_BY_ID_FAILURE';
 export const GET_PARTNER_DROPDOWN_REQUEST = 'GET_PARTNER_DROPDOWN_REQUEST';
 export const GET_PARTNER_DROPDOWN_SUCCESS = 'GET_PARTNER_DROPDOWN_SUCCESS';
 export const GET_PARTNER_DROPDOWN_FAILURE = 'GET_PARTNER_DROPDOWN_FAILURE';
+export const GET_PRODUCT_BY_ID_REQUEST = 'GET_PRODUCT_BY_ID_REQUEST';
+export const GET_PRODUCT_BY_ID_SUCCESS = 'GET_PRODUCT_BY_ID_SUCCESS';
+export const GET_PRODUCT_BY_ID_FAILURE = 'GET_PRODUCT_BY_ID_FAILURE';
+export const GET_PRODUCT_CATEGORIES_REQUEST = 'GET_PRODUCT_CATEGORIES_REQUEST';
+export const GET_PRODUCT_CATEGORIES_SUCCESS = 'GET_PRODUCT_CATEGORIES_SUCCESS';
+export const GET_PRODUCT_CATEGORIES_FAILURE = 'GET_PRODUCT_CATEGORIES_FAILURE';
+export const GET_HSN_CODES_REQUEST = 'GET_HSN_CODES_REQUEST';
+export const GET_HSN_CODES_SUCCESS = 'GET_HSN_CODES_SUCCESS';
+export const GET_HSN_CODES_FAILURE = 'GET_HSN_CODES_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -179,6 +188,21 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: Partner[] | null;
+  };
+  selectedProduct: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
+  };
+  productCategories: {
+    loading: boolean;
+    error: string | null;
+    data: Category[] | null;
+  };
+  hsnCodes: {
+    loading: boolean;
+    error: string | null;
+    data: HsnCode[] | null;
   };
 }
 
@@ -868,4 +892,47 @@ interface BusinessSettingsResponse {
     message: string;
   };
   data: any;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  category_code: string;
+  parent_category_id: number | null;
+  child_categories: {
+    id: number;
+    name: string;
+    category_code: string;
+    parent_category_id: number;
+  }[];
+  is_active: boolean;
+}
+
+export interface AuthState {
+  // ... other state properties
+  productCategories: {
+    loading: boolean;
+    error: string | null;
+    data: Category[] | null;
+  };
+}
+
+interface HsnCode {
+  id: number;
+  hsn_code: string;
+  description: string;
+  reference_number: string;
+  cgst_rate: number;
+  igst_rate: number;
+  sgst_rate: number;
+  is_active: boolean;
+}
+
+export interface AuthState {
+  // ... other state properties
+  hsnCodes: {
+    loading: boolean;
+    error: string | null;
+    data: HsnCode[] | null;
+  };
 }

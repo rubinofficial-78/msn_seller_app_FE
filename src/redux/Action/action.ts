@@ -109,7 +109,13 @@ import {
   UPDATE_SELLER_STATUS_FAILURE,
   GET_PRODUCTS_REQUEST,
   GET_PRODUCTS_SUCCESS,
-  GET_PRODUCTS_FAILURE
+  GET_PRODUCTS_FAILURE,
+  ACTIVATE_SELLER_REQUEST,
+  ACTIVATE_SELLER_SUCCESS,
+  ACTIVATE_SELLER_FAILURE,
+  UPDATE_SELLER_COMPANY_STATUS_REQUEST,
+  UPDATE_SELLER_COMPANY_STATUS_SUCCESS,
+  UPDATE_SELLER_COMPANY_STATUS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1808,6 +1814,44 @@ export const updateSellerStatus = (
       dispatch({
         type: UPDATE_SELLER_STATUS_FAILURE,
         payload: error instanceof Error ? error.message : 'Failed to update seller status'
+      });
+      throw error;
+    }
+  };
+};
+
+export const activateSeller = (
+  id: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: ACTIVATE_SELLER_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/seller/${id}/update_company_status`,
+        { company_payment_status: "Active" },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: ACTIVATE_SELLER_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to activate seller');
+      }
+    } catch (error: any) {
+      dispatch({
+        type: ACTIVATE_SELLER_FAILURE,
+        payload: error?.response?.data?.meta?.message || error?.message || 'Failed to activate seller'
       });
       throw error;
     }

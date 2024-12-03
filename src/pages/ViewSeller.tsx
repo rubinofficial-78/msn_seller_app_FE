@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../redux/store";
-import { getSellerById, updateSellerStatus } from "../redux/Action/action";
+import { getSellerById, updateSellerStatus, updateSellerDetails, activateSeller } from "../redux/Action/action";
 import { toast } from "react-toastify";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { format } from "date-fns";
+import axios from "axios";
 
 const ViewSeller = () => {
   const { id } = useParams();
@@ -37,27 +38,122 @@ const ViewSeller = () => {
     }
   }, [dispatch, id]);
 
-  const handleStatusUpdate = async () => {
+  const getStatusButton = () => {
+    const companyPaymentStatus = sellerData?.company_payment_status;
+    const currentStatus = sellerData?.status?.lookup_code;
+
+    if (companyPaymentStatus !== "Active") {
+      return (
+        <button
+          onClick={handleActivateSeller}
+          disabled={updating}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
+            updating
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
+        >
+          <Check className="h-5 w-5" />
+          Activate Seller
+        </button>
+      );
+    }
+
+    switch (currentStatus) {
+      case "APPROVED":
+        return (
+          <button
+            onClick={() => handleStatusUpdate(97)}
+            disabled={updating}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
+              updating
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700"
+            }`}
+          >
+            <X className="h-5 w-5" />
+            Reject Seller
+          </button>
+        );
+
+      case "REJECTED":
+        return null;
+
+      case "PENDING":
+        return (
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleStatusUpdate(96)}
+              disabled={updating}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
+                updating
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              <Check className="h-5 w-5" />
+              Approve Seller
+            </button>
+            <button
+              onClick={() => handleStatusUpdate(97)}
+              disabled={updating}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
+                updating
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              <X className="h-5 w-5" />
+              Reject Seller
+            </button>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const handleActivateSeller = async () => {
     if (updating) return;
 
     setUpdating(true);
     try {
-      const currentStatus = sellerData?.activation_status;
-      const newStatusId = currentStatus === "APPROVED" ? 97 : 96;
+      const response = await dispatch(activateSeller(Number(id)));
 
-      const response = await dispatch(
-        updateSellerStatus(Number(id), newStatusId)
-      );
       if (response?.meta?.status) {
         setSellerData({
           ...sellerData,
-          activation_status:
-            currentStatus === "APPROVED" ? "REJECTED" : "APPROVED",
+          company_payment_status: "Active"
+        });
+        toast.success("Seller activated successfully");
+      } else {
+        toast.error("Failed to activate seller");
+      }
+    } catch (error) {
+      console.error("Error activating seller:", error);
+      toast.error("Error activating seller");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleStatusUpdate = async (statusId: number) => {
+    if (updating) return;
+
+    setUpdating(true);
+    try {
+      const response = await dispatch(
+        updateSellerStatus(Number(id), statusId)
+      );
+      
+      if (response?.meta?.status) {
+        setSellerData({
+          ...sellerData,
+          activation_status: statusId === 96 ? "APPROVED" : "REJECTED"
         });
         toast.success(
-          `Seller ${
-            currentStatus === "APPROVED" ? "rejected" : "approved"
-          } successfully`
+          `Seller ${statusId === 96 ? "approved" : "rejected"} successfully`
         );
       } else {
         toast.error("Failed to update seller status");
@@ -75,42 +171,6 @@ const ViewSeller = () => {
       <div className="flex justify-center items-center h-96">Loading...</div>
     );
   }
-
-  const getStatusButton = () => {
-    const currentStatus = sellerData?.activation_status;
-
-    if (currentStatus === "APPROVED") {
-      return (
-        <button
-          onClick={handleStatusUpdate}
-          disabled={updating}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
-            updating
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-red-600 hover:bg-red-700"
-          }`}
-        >
-          <X className="h-5 w-5" />
-          Reject Seller
-        </button>
-      );
-    }
-
-    return (
-      <button
-        onClick={handleStatusUpdate}
-        disabled={updating}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
-          updating
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700"
-        }`}
-      >
-        <Check className="h-5 w-5" />
-        Approve Seller
-      </button>
-    );
-  };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "--";
@@ -206,14 +266,14 @@ const ViewSeller = () => {
       title: "Contact Details",
       subtitle: "Decide which communications you'd like to receive and how.",
       fields: [
-        { label: "Seller Name", value: sellerData?.name || "Nivedha" },
+        { label: "Seller Name", value: sellerData?.name || "--" },
         {
           label: "Phone Number",
-          value: sellerData?.mobile_number || "8976667890",
+          value: sellerData?.mobile_number || "--",
         },
         {
           label: "Email Address",
-          value: sellerData?.email || "teset@gmail.com",
+          value: sellerData?.email || "--",
         },
         {
           label: "Seller Time Slot to Contact",
@@ -232,15 +292,15 @@ const ViewSeller = () => {
       fields: [
         {
           label: "Account number",
-          value: sellerData?.bank_details?.account_number || "1234567890",
+          value: sellerData?.bank_details?.account_number || "--",
         },
         {
           label: "Bank Name",
-          value: sellerData?.bank_details?.bank_name || "SBI",
+          value: sellerData?.bank_details?.bank_name || "--",
         },
         {
           label: "IFSC Code",
-          value: sellerData?.bank_details?.ifsc_code || "TMBL0000020",
+          value: sellerData?.bank_details?.ifsc_code || "--",
         },
         {
           label: "Penny Transfer",
@@ -248,7 +308,7 @@ const ViewSeller = () => {
         },
         {
           label: "Business Entity Name",
-          value: sellerData?.business_details?.entity_name || "ss",
+          value: sellerData?.business_details?.entity_name || "--",
         },
         {
           label: "Cancelled Cheque",

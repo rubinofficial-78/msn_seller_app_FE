@@ -72,6 +72,9 @@ import {
   GET_PARTNER_DROPDOWN_REQUEST, 
   GET_PARTNER_DROPDOWN_SUCCESS, 
   GET_PARTNER_DROPDOWN_FAILURE, 
+  ACTIVATE_SELLER_REQUEST, 
+  ACTIVATE_SELLER_SUCCESS, 
+  ACTIVATE_SELLER_FAILURE, 
   GET_PRODUCTS_REQUEST, 
   GET_PRODUCTS_SUCCESS, 
   GET_PRODUCTS_FAILURE 
@@ -818,6 +821,24 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           loading: false,
           error: action.payload
         }
+      };
+    case ACTIVATE_SELLER_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case ACTIVATE_SELLER_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null
+      };
+    case ACTIVATE_SELLER_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
       };
     case GET_PRODUCTS_REQUEST:
       return {

@@ -8,7 +8,7 @@ import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
 
 interface FormData {
-  [key: string]: any;  // Allow any string key
+  [key: string]: any;
   categoryName: number | null;
   subCategoryName: number | null;
   productTitle: string;
@@ -18,7 +18,7 @@ interface FormData {
   hsnReferenceNumber?: string;
   shortDescription: string;
   productDescription: string;
-  // ... add other fields as needed
+  productImages: string[];
 }
 
 const AddProduct = () => {
@@ -45,7 +45,7 @@ const AddProduct = () => {
     hsnReferenceNumber: '',
     shortDescription: '',
     productDescription: '',
-    // ... initialize other fields
+    productImages: [],
   });
 
   // Fetch categories when component mounts
@@ -93,7 +93,110 @@ const AddProduct = () => {
     fetchHsnCodes();
   }, [dispatch]);
 
-  // Update basicInfoFields to handle loading state and type the options properly
+  // Move function definitions before they're used
+  const handleImageUpload = (id: string, link: string | null, index?: number) => {
+    if (link) {
+      console.log('Before update - productImages:', formData.productImages);
+      setFormData(prev => {
+        const newImages = prev.productImages ? [...prev.productImages, link] : [link];
+        console.log('After update - productImages:', newImages);
+        return {
+          ...prev,
+          productImages: newImages
+        };
+      });
+    }
+  };
+
+  const handleInputChange = async (key: string, value: any) => {
+    console.log('Input changed:', key, value);
+    if (key === "categoryName") {
+      setFormData(prev => ({
+        ...prev,
+        [key]: Number(value),
+        subCategoryName: null // Reset subcategory when category changes
+      }));
+
+      // Fetch subcategories when category is selected
+      if (value) {
+        try {
+          await dispatch(getProductCategories(Number(value)));
+        } catch (error) {
+          console.error('Failed to fetch subcategories:', error);
+        }
+      }
+    } else if (key === "subCategoryName") {
+      setFormData(prev => ({
+        ...prev,
+        [key]: Number(value)
+      }));
+    } else if (key === "hsnCode") {
+      const selectedHsn = hsnCodes?.find(hsn => hsn.hsn_code === value);
+      if (selectedHsn) {
+        setFormData(prev => ({
+          ...prev,
+          [key]: value,
+          hsnDescription: selectedHsn.description,
+          hsnReferenceNumber: selectedHsn.reference_number
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [key]: value,
+          hsnDescription: '',
+          hsnReferenceNumber: ''
+        }));
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [key]: value
+      }));
+    }
+  };
+
+  // Add loading state
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async (section: string) => {
+    try {
+      setIsSaving(true);
+      
+      if (section === "Basic Information") {
+        const basicDetails = {
+          section_key: "BASIC_INFORMATION",
+          name: formData.productTitle,
+          sku_id: formData.skuId,
+          level1_category_id: formData.categoryName!,
+          level2_category_id: formData.subCategoryName!,
+          short_desc: formData.shortDescription,
+          long_desc: formData.productDescription,
+          hsn_reference_number: formData.hsnReferenceNumber || ''
+        };
+
+        await dispatch(saveBasicDetails(basicDetails as any));
+        alert("Basic details saved successfully!");
+      } 
+      else if (section === "Product Images") {
+        const imageDetails = {
+          section_key: "PRODUCT_IMAGE",
+          sku_id: formData.skuId,
+          image_arr: formData.productImages || []
+        };
+
+        console.log('Saving images with payload:', imageDetails); // Debug log
+        await dispatch(saveBasicDetails(imageDetails));
+        alert("Images saved successfully!");
+      }
+    } catch (error) {
+      console.error('Failed to save:', error);
+      alert(`Failed to save ${section.toLowerCase()}. Please try again.`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Then define the fields
   const basicInfoFields = [
     {
       type: "text",
@@ -181,6 +284,9 @@ const AddProduct = () => {
       uploadText: "Upload product images",
       uploadDescription: "PNG, JPG, GIF up to 10MB",
       aspect_ratio: "free",
+      value: formData.productImages || [],
+      handleImageLink: handleImageUpload,
+       
     },
   ];
 
@@ -396,83 +502,6 @@ const AddProduct = () => {
     },
   ];
 
-  // Type-safe input handler
-  const handleInputChange = async (key: string, value: any) => {
-    console.log('Input changed:', key, value);
-    if (key === "categoryName") {
-      setFormData(prev => ({
-        ...prev,
-        [key]: Number(value),
-        subCategoryName: null // Reset subcategory when category changes
-      }));
-
-      // Fetch subcategories when category is selected
-      if (value) {
-        try {
-          await dispatch(getProductCategories(Number(value)));
-        } catch (error) {
-          console.error('Failed to fetch subcategories:', error);
-        }
-      }
-    } else if (key === "subCategoryName") {
-      setFormData(prev => ({
-        ...prev,
-        [key]: Number(value)
-      }));
-    } else if (key === "hsnCode") {
-      const selectedHsn = hsnCodes?.find(hsn => hsn.hsn_code === value);
-      if (selectedHsn) {
-        setFormData(prev => ({
-          ...prev,
-          [key]: value,
-          hsnDescription: selectedHsn.description,
-          hsnReferenceNumber: selectedHsn.reference_number
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [key]: value,
-          hsnDescription: '',
-          hsnReferenceNumber: ''
-        }));
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [key]: value
-      }));
-    }
-  };
-
-  // Add loading state
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = async (section: string) => {
-    try {
-      if (section === "Basic Information") {
-        setIsSaving(true);
-        const basicDetails = {
-          section_key: "BASIC_INFORMATION",
-          name: formData.productTitle,
-          sku_id: formData.skuId,
-          level1_category_id: formData.categoryName!,
-          level2_category_id: formData.subCategoryName!,
-          short_desc: formData.shortDescription,
-          long_desc: formData.productDescription,
-          hsn_reference_number: formData.hsnReferenceNumber  
-        };
-
-        await dispatch(saveBasicDetails(basicDetails));
-        alert("Basic details saved successfully!");
-      }
-    } catch (error) {
-      console.error('Failed to save:', error);
-      alert("Failed to save basic details. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   // Add debug logging
   useEffect(() => {
     console.log("Categories:", categories);
@@ -497,6 +526,31 @@ const AddProduct = () => {
   useEffect(() => {
     console.log('Form Data Updated:', formData);
   }, [formData]);
+
+  // Add this useEffect to track image uploads
+  useEffect(() => {
+    console.log('Product Images:', formData.productImages);
+    console.log('SKU ID:', formData.skuId);
+    console.log('Save button should be enabled:', !(!formData.skuId || !formData.productImages?.length));
+  }, [formData.productImages, formData.skuId]);
+
+  // Add this useEffect to debug button state
+  useEffect(() => {
+    const isDisabled = Boolean(
+      isSaving || 
+      !formData.skuId || 
+      !Array.isArray(formData.productImages) || 
+      formData.productImages.length === 0
+    );
+    
+    console.log('Button state debug:', {
+      isSaving,
+      skuId: formData.skuId,
+      hasImages: Array.isArray(formData.productImages),
+      imagesLength: formData.productImages?.length,
+      isDisabled
+    });
+  }, [isSaving, formData.skuId, formData.productImages]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -545,13 +599,22 @@ const AddProduct = () => {
         <AddForm
           data={productImagesFields}
           handleInputonChange={handleInputChange}
+          handleImageLink={handleImageUpload}
         />
         <div className="flex justify-end mt-6">
           <button
             onClick={() => handleSave("Product Images")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
+              isSaving ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={Boolean(
+              isSaving || 
+              !formData.skuId || 
+              !Array.isArray(formData.productImages) || 
+              formData.productImages.length === 0
+            )}
           >
-            Save Images
+            {isSaving ? 'Saving...' : 'Save Images'}
           </button>
         </div>
       </div>

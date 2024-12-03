@@ -2043,13 +2043,14 @@ export const getHsnCodes = (): ThunkAction<Promise<any>, RootState, unknown, Aut
 
 interface BasicDetailsPayload {
   section_key: string;
-  name: string;
+  name?: string;
   sku_id: string;
-  level1_category_id: number;
-  level2_category_id: number;
-  short_desc: string;
-  long_desc: string;
-  hsn_reference_number: string;
+  level1_category_id?: number;
+  level2_category_id?: number;
+  short_desc?: string;
+  long_desc?: string;
+  hsn_reference_number?: string;
+  image_arr?: string[];
 }
 
 export const saveBasicDetails = (

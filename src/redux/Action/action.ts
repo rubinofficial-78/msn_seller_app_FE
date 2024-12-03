@@ -139,7 +139,10 @@ import {
   GET_UOM_LOOKUP_FAILURE,
   GET_PAYMENT_MODE_LOOKUP_REQUEST,
   GET_PAYMENT_MODE_LOOKUP_SUCCESS,
-  GET_PAYMENT_MODE_LOOKUP_FAILURE
+  GET_PAYMENT_MODE_LOOKUP_FAILURE,
+  GET_ONDC_DETAILS_REQUEST,
+  GET_ONDC_DETAILS_SUCCESS,
+  GET_ONDC_DETAILS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -2258,6 +2261,48 @@ export const getPaymentModeLookup = (): ThunkAction<Promise<any>, RootState, unk
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch payment modes';
       dispatch({
         type: GET_PAYMENT_MODE_LOOKUP_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getOndcDetails = (
+  skuId: string
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ONDC_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/product_category_attribute_value`,
+        {
+          params: {
+            product_sku_id: skuId
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ONDC_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch ONDC details');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch ONDC details';
+      dispatch({
+        type: GET_ONDC_DETAILS_FAILURE,
         payload: errorMessage
       });
       throw error;

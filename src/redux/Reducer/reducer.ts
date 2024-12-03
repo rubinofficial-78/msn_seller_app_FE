@@ -102,6 +102,9 @@ import {
   GET_PAYMENT_MODE_LOOKUP_REQUEST, 
   GET_PAYMENT_MODE_LOOKUP_SUCCESS, 
   GET_PAYMENT_MODE_LOOKUP_FAILURE,
+  GET_ONDC_DETAILS_REQUEST, 
+  GET_ONDC_DETAILS_SUCCESS, 
+  GET_ONDC_DETAILS_FAILURE,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -264,6 +267,11 @@ const initialState: AuthState = {
     data: null
   },
   paymentModeLookup: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  ondcDetails: {
     loading: false,
     error: null,
     data: null
@@ -1148,6 +1156,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         paymentModeLookup: {
           ...state.paymentModeLookup,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ONDC_DETAILS_REQUEST:
+      return {
+        ...state,
+        ondcDetails: {
+          ...state.ondcDetails,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ONDC_DETAILS_SUCCESS:
+      return {
+        ...state,
+        ondcDetails: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ONDC_DETAILS_FAILURE:
+      return {
+        ...state,
+        ondcDetails: {
+          ...state.ondcDetails,
           loading: false,
           error: action.payload
         }

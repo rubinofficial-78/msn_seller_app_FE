@@ -227,6 +227,40 @@ export interface AuthState {
       is_active: boolean;
     }> | null;
   };
+  ondcDetails: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      attribute_id: number;
+      product_id: number;
+      product_sku_id: string;
+      api_version: string;
+      ondc_version: string;
+      ondc_key: string;
+      category_id: {
+        is_disabled: boolean;
+        is_editable: boolean;
+        is_mandatory: boolean;
+        category_code: string;
+      };
+      section_sequence: number;
+      section_name: string;
+      section_key: string;
+      field_sequence: number;
+      field_name: string;
+      field_key: string;
+      placeholder: string;
+      type: string;
+      data_type: string;
+      data_source: string | null;
+      data_source_params: any;
+      allowed_values: any;
+      value: any;
+      is_active: boolean;
+      company_id: number | null;
+    }> | null;
+  };
 }
 
 export interface RootState {
@@ -621,6 +655,19 @@ interface GetPartnerDropdownFailureAction {
   type: typeof GET_PARTNER_DROPDOWN_FAILURE;
   payload: string;
 }
+interface GetOndcDetailsRequestAction {
+  type: typeof GET_ONDC_DETAILS_REQUEST;
+}
+
+interface GetOndcDetailsSuccessAction {
+  type: typeof GET_ONDC_DETAILS_SUCCESS;
+  payload: any;
+}
+
+interface GetOndcDetailsFailureAction {
+  type: typeof GET_ONDC_DETAILS_FAILURE;
+  payload: string;
+}
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -700,6 +747,9 @@ export type AuthActionTypes =
   | GetPartnerDropdownRequestAction
   | GetPartnerDropdownSuccessAction
   | GetPartnerDropdownFailureAction;
+  | GetOndcDetailsRequestAction
+  | GetOndcDetailsSuccessAction
+  | GetOndcDetailsFailureAction
 
 
 export interface FileUploadPayload {

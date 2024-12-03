@@ -1,52 +1,55 @@
 import React from 'react';
 
 interface TailInputProps {
-  disabled?: boolean;
   fieldKey: string;
-  label?: string;
   value: string;
   type?: string;
   placeholder?: string;
-  handleInputonChange?: (key: string, value: any, index?: number) => void;
-  index?: number;
+  required?: boolean;
+  disabled?: boolean;
+  handleInputonChange: (key: string, value: string) => void;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
+  index?: number;
 }
 
 const TailInput: React.FC<TailInputProps> = ({
-  disabled,
   fieldKey,
   value,
   type = 'text',
   placeholder,
+  required,
+  disabled,
   handleInputonChange,
-  index,
   startIcon,
   endIcon,
-  ...props
+  index
 }) => {
   return (
-    <div className="relative w-full">
+    <div className="relative mt-1">
       {startIcon && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           {startIcon}
         </div>
       )}
       <input
-        disabled={disabled}
         type={type}
         value={value}
-        placeholder={placeholder}
-        onChange={(e) => handleInputonChange?.(fieldKey, e.target.value, index)}
-        className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all
-          ${startIcon ? 'pl-10' : ''}
-          ${endIcon ? 'pr-10' : ''}
-          ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}
+        onChange={(e) => handleInputonChange(fieldKey, e.target.value)}
+        className={`
+          block w-full rounded-md border-0 py-2
+          ${startIcon ? 'pl-10' : 'pl-3'}
+          ${endIcon ? 'pr-10' : 'pr-3'}
+          text-gray-900 ring-1 ring-inset ring-gray-300 
+          focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6
+          ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
         `}
-        {...props}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
       />
       {endIcon && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
           {endIcon}
         </div>
       )}

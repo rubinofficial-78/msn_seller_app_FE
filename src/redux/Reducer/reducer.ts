@@ -86,7 +86,10 @@ import {
   GET_PRODUCT_CATEGORIES_FAILURE, 
   GET_HSN_CODES_REQUEST, 
   GET_HSN_CODES_SUCCESS, 
-  GET_HSN_CODES_FAILURE 
+  GET_HSN_CODES_FAILURE, 
+  SAVE_BASIC_DETAILS_REQUEST, 
+  SAVE_BASIC_DETAILS_SUCCESS, 
+  SAVE_BASIC_DETAILS_FAILURE 
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -222,13 +225,15 @@ const initialState: AuthState = {
   productCategories: {
     loading: false,
     error: null,
-    data: null
+    data: null,
+    subCategories: null
   },
   hsnCodes: {
     loading: false,
     error: null,
     data: null
-  }
+  },
+  savedProduct: null
 };
 
 const authReducer = (state = initialState, action: AuthActionTypes): AuthState => {
@@ -950,7 +955,12 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         productCategories: {
           loading: false,
           error: null,
-          data: action.payload
+          data: action.payload.isSubCategory 
+            ? state.productCategories.data  // Keep main categories
+            : action.payload.data,          // Update main categories
+          subCategories: action.payload.isSubCategory 
+            ? action.payload.data           // Update subcategories
+            : null                          // Reset subcategories
         }
       };
     case GET_PRODUCT_CATEGORIES_FAILURE:
@@ -989,6 +999,25 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           loading: false,
           error: action.payload
         }
+      };
+    case SAVE_BASIC_DETAILS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case SAVE_BASIC_DETAILS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        savedProduct: action.payload
+      };
+    case SAVE_BASIC_DETAILS_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
       };
     default:
       return state;

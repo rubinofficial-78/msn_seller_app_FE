@@ -3,18 +3,19 @@ import AddForm from "../components/AddForm";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getProductCategories, getHsnCodes } from "../redux/Action/action";
+import { getProductCategories, getHsnCodes, saveBasicDetails } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
 
 interface FormData {
-  [key: string]: any; // Allow any string key
+  [key: string]: any;  // Allow any string key
   categoryName: number | null;
   subCategoryName: number | null;
   productTitle: string;
   skuId: string;
   hsnCode: string;
   hsnDescription?: string;
+  hsnReferenceNumber?: string;
   shortDescription: string;
   productDescription: string;
   // ... add other fields as needed
@@ -26,6 +27,9 @@ const AddProduct = () => {
   const { data: categories, loading } = useSelector(
     (state: RootState) => state.data.productCategories
   );
+  const { data: subCategories, loading: subCategoriesLoading } = useSelector(
+    (state: RootState) => state.data.productCategories
+  );
   const { data: hsnCodes, loading: hsnLoading } = useSelector(
     (state: RootState) => state.data.hsnCodes
   );
@@ -34,12 +38,13 @@ const AddProduct = () => {
   const [formData, setFormData] = useState<FormData>({
     categoryName: null,
     subCategoryName: null,
-    productTitle: "",
-    skuId: "",
-    hsnCode: "",
-    hsnDescription: "",
-    shortDescription: "",
-    productDescription: "",
+    productTitle: '',
+    skuId: '',
+    hsnCode: '',
+    hsnDescription: '',
+    hsnReferenceNumber: '',
+    shortDescription: '',
+    productDescription: '',
     // ... initialize other fields
   });
 
@@ -62,7 +67,7 @@ const AddProduct = () => {
       try {
         await dispatch(getHsnCodes());
       } catch (error) {
-        console.error("Failed to fetch HSN codes:", error);
+        console.error('Failed to fetch HSN codes:', error);
       }
     };
 
@@ -71,17 +76,17 @@ const AddProduct = () => {
 
   // Add debug logging for HSN codes
   useEffect(() => {
-    console.log("HSN Codes from state:", hsnCodes); // Debug log
+    console.log('HSN Codes from state:', hsnCodes); // Debug log
   }, [hsnCodes]);
 
   // Fetch HSN codes when component mounts
   useEffect(() => {
     const fetchHsnCodes = async () => {
       try {
-        console.log("Fetching HSN codes..."); // Debug log
+        console.log('Fetching HSN codes...'); // Debug log
         await dispatch(getHsnCodes());
       } catch (error) {
-        console.error("Failed to fetch HSN codes:", error);
+        console.error('Failed to fetch HSN codes:', error);
       }
     };
 
@@ -96,6 +101,7 @@ const AddProduct = () => {
       label: "Product Title",
       required: true,
       placeholder: "Product Title",
+      value: formData.productTitle,
     },
     {
       type: "text",
@@ -103,6 +109,7 @@ const AddProduct = () => {
       label: "Sku Id",
       required: true,
       placeholder: "SKU ID",
+      value: formData.skuId,
     },
     {
       type: "select",
@@ -113,10 +120,9 @@ const AddProduct = () => {
       value: formData.categoryName,
       options: loading
         ? []
-        : categories?.map((cat) => ({
+        : categories?.filter(cat => !cat.parent_category_id).map((cat) => ({
             label: cat.name,
-            value: cat.id,
-            child_categories: cat.child_categories,
+            value: cat.id
           })) || [],
     },
     {
@@ -126,15 +132,12 @@ const AddProduct = () => {
       required: true,
       placeholder: "Sub Category name",
       value: formData.subCategoryName,
-      options:
-        formData.categoryName && categories
-          ? categories
-              .find((cat) => cat.id === formData.categoryName)
-              ?.child_categories?.map((sub) => ({
-                label: sub.name,
-                value: sub.id,
-              })) || []
-          : [],
+      options: subCategoriesLoading
+        ? []
+        : subCategories?.filter(cat => cat.parent_category_id === formData.categoryName).map((sub) => ({
+            label: sub.name,
+            value: sub.id,
+          })) || [],
     },
     {
       type: "select",
@@ -143,19 +146,14 @@ const AddProduct = () => {
       required: true,
       placeholder: "Select HSN Code",
       value: formData.hsnCode,
-      options: hsnLoading
-        ? []
-        : (hsnCodes || []).slice(0, 100).map((hsn) => ({
-            label: `${hsn.hsn_code}${
-              hsn.description
-                ? ` - ${hsn.description.substring(0, 50)}${
-                    hsn.description.length > 50 ? "..." : ""
-                  }`
-                : ""
-            }`,
+      options: hsnLoading 
+        ? [] 
+        : (hsnCodes || []).slice(0, 100).map(hsn => ({
+            label: `${hsn.hsn_code}${hsn.description ? ` - ${hsn.description.substring(0, 50)}${hsn.description.length > 50 ? '...' : ''}` : ''}`,
             value: hsn.hsn_code,
-            description: hsn.description || "",
-          })),
+            description: hsn.description || '',
+         
+          }))
     },
     {
       type: "textarea",
@@ -399,47 +397,80 @@ const AddProduct = () => {
   ];
 
   // Type-safe input handler
-  const handleInputChange = (key: string, value: any) => {
-    console.log("Input changed:", key, value);
+  const handleInputChange = async (key: string, value: any) => {
+    console.log('Input changed:', key, value);
     if (key === "categoryName") {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         [key]: Number(value),
-        subCategoryName: null,
+        subCategoryName: null // Reset subcategory when category changes
       }));
+
+      // Fetch subcategories when category is selected
+      if (value) {
+        try {
+          await dispatch(getProductCategories(Number(value)));
+        } catch (error) {
+          console.error('Failed to fetch subcategories:', error);
+        }
+      }
     } else if (key === "subCategoryName") {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        [key]: Number(value),
+        [key]: Number(value)
       }));
     } else if (key === "hsnCode") {
-      const selectedHsn = hsnCodes?.find((hsn) => hsn.hsn_code === value);
-      console.log("Selected HSN:", selectedHsn);
-
+      const selectedHsn = hsnCodes?.find(hsn => hsn.hsn_code === value);
       if (selectedHsn) {
-        setFormData((prev) => ({
+        setFormData(prev => ({
           ...prev,
           [key]: value,
           hsnDescription: selectedHsn.description,
+          hsnReferenceNumber: selectedHsn.reference_number
         }));
       } else {
-        setFormData((prev) => ({
+        setFormData(prev => ({
           ...prev,
           [key]: value,
-          hsnDescription: "",
+          hsnDescription: '',
+          hsnReferenceNumber: ''
         }));
       }
     } else {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        [key]: value,
+        [key]: value
       }));
     }
   };
 
-  const handleSave = (section: string) => {
-    // Add your save logic here
-    console.log(`Saving ${section}...`, formData);
+  // Add loading state
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async (section: string) => {
+    try {
+      if (section === "Basic Information") {
+        setIsSaving(true);
+        const basicDetails = {
+          section_key: "BASIC_INFORMATION",
+          name: formData.productTitle,
+          sku_id: formData.skuId,
+          level1_category_id: formData.categoryName!,
+          level2_category_id: formData.subCategoryName!,
+          short_desc: formData.shortDescription,
+          long_desc: formData.productDescription,
+          hsn_reference_number: formData.hsnReferenceNumber  
+        };
+
+        await dispatch(saveBasicDetails(basicDetails));
+        alert("Basic details saved successfully!");
+      }
+    } catch (error) {
+      console.error('Failed to save:', error);
+      alert("Failed to save basic details. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Add debug logging
@@ -450,18 +481,22 @@ const AddProduct = () => {
 
   // Add this useEffect for debugging
   useEffect(() => {
-    console.log("Form Data:", formData);
-    console.log("HSN Codes:", hsnCodes);
-    console.log("HSN Loading:", hsnLoading);
+    console.log('Form Data:', formData);
+    console.log('HSN Codes:', hsnCodes);
+    console.log('HSN Loading:', hsnLoading);
   }, [formData, hsnCodes, hsnLoading]);
 
   // Add debug logging to track HSN data
   useEffect(() => {
     if (hsnCodes) {
-      console.log("HSN Codes count:", hsnCodes.length);
-      console.log("First HSN Code:", hsnCodes[0]);
+      console.log('HSN Codes count:', hsnCodes.length);
+      console.log('First HSN Code:', hsnCodes[0]);
     }
   }, [hsnCodes]);
+
+  useEffect(() => {
+    console.log('Form Data Updated:', formData);
+  }, [formData]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -490,9 +525,12 @@ const AddProduct = () => {
         <div className="flex justify-end mt-6">
           <button
             onClick={() => handleSave("Basic Information")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
+              isSaving ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={isSaving}
           >
-            Save Basic Information
+            {isSaving ? 'Saving...' : 'Save Basic Information'}
           </button>
         </div>
       </div>

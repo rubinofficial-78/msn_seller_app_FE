@@ -143,16 +143,16 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
     case "email":
       return edit ? (
         <TailInput
-          disabled={field.disabled}
           fieldKey={field.key}
-          label={field.label}
           value={field.value || ""}
           type={field.type}
           placeholder={field.placeholder}
+          required={field.required}
+          disabled={field.disabled}
           handleInputonChange={handlers.handleInputonChange}
-          index={handlers.index}
           startIcon={field.startIcon}
           endIcon={field.endIcon}
+          index={handlers.index}
         />
       ) : (
         field.value ?? "--"

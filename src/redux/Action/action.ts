@@ -121,7 +121,10 @@ import {
   GET_PRODUCT_CATEGORIES_FAILURE,
   GET_HSN_CODES_REQUEST,
   GET_HSN_CODES_SUCCESS,
-  GET_HSN_CODES_FAILURE
+  GET_HSN_CODES_FAILURE,
+  SAVE_BASIC_DETAILS_REQUEST,
+  SAVE_BASIC_DETAILS_SUCCESS,
+  SAVE_BASIC_DETAILS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1953,13 +1956,10 @@ export const getProductCategories = (
   parentCategoryId: number | null = null
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
-    console.log('Fetching categories...');
     dispatch({ type: GET_PRODUCT_CATEGORIES_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
-      console.log('API URL:', `${API_BASE_URL}/backend_master/catalog/product_category/`);
-      
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/catalog/product_category/`,
         {
@@ -1973,12 +1973,13 @@ export const getProductCategories = (
         }
       );
 
-      console.log('API Response:', response.data);
-
       if (response.data?.meta?.status) {
         dispatch({
           type: GET_PRODUCT_CATEGORIES_SUCCESS,
-          payload: response.data.data
+          payload: {
+            data: response.data.data,
+            isSubCategory: !!parentCategoryId
+          }
         });
         return response.data;
       } else {
@@ -1986,7 +1987,6 @@ export const getProductCategories = (
       }
 
     } catch (error) {
-      console.error('Category fetch error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch categories';
       dispatch({
         type: GET_PRODUCT_CATEGORIES_FAILURE,
@@ -2034,6 +2034,57 @@ export const getHsnCodes = (): ThunkAction<Promise<any>, RootState, unknown, Aut
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch HSN codes';
       dispatch({
         type: GET_HSN_CODES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+interface BasicDetailsPayload {
+  section_key: string;
+  name: string;
+  sku_id: string;
+  level1_category_id: number;
+  level2_category_id: number;
+  short_desc: string;
+  long_desc: string;
+  hsn_reference_number: string;
+}
+
+export const saveBasicDetails = (
+  data: BasicDetailsPayload
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: SAVE_BASIC_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/catalog/products/upsert`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: SAVE_BASIC_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to save basic details');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save basic details';
+      dispatch({
+        type: SAVE_BASIC_DETAILS_FAILURE,
         payload: errorMessage
       });
       throw error;

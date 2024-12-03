@@ -152,6 +152,17 @@ import {
   UPLOAD_TEMPLATE_REQUEST,
   UPLOAD_TEMPLATE_SUCCESS,
   UPLOAD_TEMPLATE_FAILURE,
+  GET_OFFERS_REQUEST,
+  GET_OFFERS_SUCCESS,
+  GET_OFFERS_FAILURE,
+  GET_OFFER_TYPES_REQUEST,
+  GET_OFFER_TYPES_SUCCESS,
+  GET_OFFER_TYPES_FAILURE,
+  SAVE_OFFER_BASICS_REQUEST,
+  SAVE_OFFER_BASICS_SUCCESS,
+  SAVE_OFFER_BASICS_FAILURE,
+  GET_LOCATIONS_REQUEST,
+  GET_LOCATIONS_SUCCESS,
   GET_ORDERS_REQUEST,
   GET_ORDERS_SUCCESS,
   GET_ORDERS_FAILURE,
@@ -2697,6 +2708,183 @@ export const uploadTemplate = (
       dispatch({
         type: UPLOAD_TEMPLATE_FAILURE,
         payload: error instanceof Error ? error.message : 'Failed to upload template'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getOffers = (
+  params: { page_no: number; per_page: number }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_OFFERS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Making API request to:', `${API_BASE_URL}/backend_master/catalog/offer`);
+      console.log('With params:', params);
+      console.log('Token:', token);
+
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/offer`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Raw API Response:', response.data);
+
+      if (response.data?.meta?.status) {
+        const payload = {
+          data: response.data.data,
+          meta: response.data.meta.pagination
+        };
+        console.log('Dispatching success with payload:', payload);
+        
+        dispatch({
+          type: GET_OFFERS_SUCCESS,
+          payload
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch offers');
+      }
+    } catch (error) {
+      console.error('Error in getOffers:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch offers';
+      dispatch({
+        type: GET_OFFERS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getOfferTypes = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_OFFER_TYPES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/OFFER_TYPE`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_OFFER_TYPES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch offer types');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch offer types';
+      dispatch({
+        type: GET_OFFER_TYPES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const saveOfferBasics = (
+  data: {
+    section_key: string;
+    name: string;
+    description: string;
+    code: string;
+    max_count: number;
+    offer_type_id: number;
+    start_date: string;
+    end_date: string;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: SAVE_OFFER_BASICS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Making API request with payload:', data);
+
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/catalog/offer/upsert`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('API Response:', response.data);
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: SAVE_OFFER_BASICS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to save offer basics');
+      }
+    } catch (error) {
+      console.error('Error in saveOfferBasics:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save offer basics';
+      dispatch({
+        type: SAVE_OFFER_BASICS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getLocations = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_LOCATIONS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/mdm/location/dropdown`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_LOCATIONS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch locations');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch locations';
+      dispatch({
+        type: GET_LOCATIONS_FAILURE,
+        payload: errorMessage
       });
       throw error;
     }

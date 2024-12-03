@@ -122,7 +122,19 @@ import {
   DOWNLOAD_TEMPLATE_FAILURE,
   UPLOAD_TEMPLATE_REQUEST,
   UPLOAD_TEMPLATE_SUCCESS,
-  UPLOAD_TEMPLATE_FAILURE
+  UPLOAD_TEMPLATE_FAILURE,
+  GET_OFFERS_REQUEST,
+  GET_OFFERS_SUCCESS,
+  GET_OFFERS_FAILURE,
+  GET_OFFER_TYPES_REQUEST,
+  GET_OFFER_TYPES_SUCCESS,
+  GET_OFFER_TYPES_FAILURE,
+  SAVE_OFFER_BASICS_REQUEST,
+  SAVE_OFFER_BASICS_SUCCESS,
+  SAVE_OFFER_BASICS_FAILURE,
+  GET_LOCATIONS_REQUEST,
+  GET_LOCATIONS_SUCCESS,
+  GET_LOCATIONS_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -304,6 +316,23 @@ const initialState: AuthState = {
     error: null
   },
   templateUpload: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  offers: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  offerTypes: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  savedOffer: null,
+  locations: {
     loading: false,
     error: null,
     data: null
@@ -1394,6 +1423,108 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         templateUpload: {
           ...state.templateUpload,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_OFFERS_REQUEST:
+      return {
+        ...state,
+        offers: {
+          ...state.offers,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_OFFERS_SUCCESS:
+      console.log('Reducer handling GET_OFFERS_SUCCESS with payload:', action.payload);
+      return {
+        ...state,
+        offers: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_OFFERS_FAILURE:
+      return {
+        ...state,
+        offers: {
+          ...state.offers,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_OFFER_TYPES_REQUEST:
+      return {
+        ...state,
+        offerTypes: {
+          ...state.offerTypes,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_OFFER_TYPES_SUCCESS:
+      return {
+        ...state,
+        offerTypes: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_OFFER_TYPES_FAILURE:
+      return {
+        ...state,
+        offerTypes: {
+          ...state.offerTypes,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case SAVE_OFFER_BASICS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case SAVE_OFFER_BASICS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null,
+        savedOffer: action.payload
+      };
+    case SAVE_OFFER_BASICS_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+    case GET_LOCATIONS_REQUEST:
+      return {
+        ...state,
+        locations: {
+          ...state.locations,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_LOCATIONS_SUCCESS:
+      return {
+        ...state,
+        locations: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_LOCATIONS_FAILURE:
+      return {
+        ...state,
+        locations: {
+          ...state.locations,
           loading: false,
           error: action.payload
         }

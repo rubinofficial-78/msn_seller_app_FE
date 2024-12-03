@@ -1,49 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, Edit, Plus, Search } from "lucide-react";
 import CustomTable, { Column } from "../../components/CustomTable";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getOffers } from "../../redux/Action/action";
+import { AppDispatch } from "../../redux/store";
+import { RootState } from "../../redux/types";
+import { toast } from "react-hot-toast";
 
 interface Offer {
-  id: string | number;
-  offerName: string;
-  couponCode: string;
-  offerDescription: string;
-  offerType: string;
-  fromDate: string;
-  toDate: string;
-  status: string;
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  offer_type: {
+    display_name: string;
+    // lookup_code: string;
+  };
+  discount_amount: number;
+  discount_percentage: number;
+  is_active: boolean;
 }
-
-const offerData: Offer[] = [
-  {
-    id: 1,
-    offerName: "Summer Special",
-    couponCode: "SUMMER2024",
-    offerDescription: "Get 20% off on all summer items",
-    offerType: "Percentage",
-    fromDate: "2024-03-01",
-    toDate: "2024-05-31",
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    offerName: "Welcome Discount",
-    couponCode: "WELCOME50",
-    offerDescription: "Flat ₹50 off on your first order",
-    offerType: "Fixed Amount",
-    fromDate: "2024-01-01",
-    toDate: "2024-12-31",
-    status: "ACTIVE",
-  },
-];
 
 const Offers = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    data: offers,
+    loading,
+    error,
+    meta,
+  } = useSelector((state: RootState) => {
+    const offersState = state.data.offers;
+    console.log("Current offers state:", offersState);
+    return offersState;
+  });
   const [paginationState, setPaginationState] = useState({
     page_no: 1,
     per_page: 10,
-    total_rows: offerData.length,
   });
+
+  useEffect(() => {
+    console.log("Effect triggered with paginationState:", paginationState);
+    fetchOffers();
+  }, [paginationState]);
+
+  const fetchOffers = async () => {
+    try {
+      console.log("Fetching offers with params:", paginationState);
+      const response = await dispatch(getOffers(paginationState));
+      console.log("Offers API Response:", response);
+    } catch (error) {
+      console.error("Failed to fetch offers:", error);
+      toast.error("Failed to fetch offers");
+    }
+  };
 
   const handleViewOffer = (offer: Offer) => {
     console.log("View offer:", offer);
@@ -53,50 +66,75 @@ const Offers = () => {
     navigate(`/dashboard/products/edit-offer/${offer.id}`);
   };
 
-  const offerTableColumns = [
+  const offerTableColumns: Column[] = [
     {
-      id: "offerName",
-      key: "offerName",
+      id: "name",
+      key: "name",
       label: "Offer Name",
       minWidth: 160,
     },
     {
-      id: "couponCode",
-      key: "couponCode",
+      id: "code",
+      key: "code",
       label: "Coupon Code",
       minWidth: 140,
     },
     {
-      id: "offerDescription",
-      key: "offerDescription",
+      id: "description",
+      key: "description",
       label: "Offer Description",
       minWidth: 200,
     },
     {
       id: "offerType",
-      key: "offerType",
+      key: "offer_type.display_name",
       label: "Offer Type",
       minWidth: 120,
     },
     {
+      id: "value",
+      key: "value",
+      label: "Value",
+      type: "custom",
+      minWidth: 100,
+      // renderCell: (row: Offer) => {
+      //   if (row.offer_type.lookup_code === "Disc_Pct") {
+      //     return <span>{row.discount_percentage}%</span>;
+      //   } else {
+      //     return <span>₹{row.discount_amount}</span>;
+      //   }
+      // },
+    },
+    {
       id: "dateRange",
-      key: ["fromDate", "toDate"],
+      key: ["start_date", "end_date"],
       label: "Valid Period",
       minWidth: 180,
       type: "custom",
       renderCell: (row: Offer) => (
         <span>
-          {new Date(row.fromDate).toLocaleDateString()} -{" "}
-          {new Date(row.toDate).toLocaleDateString()}
+          {new Date(row.start_date).toLocaleDateString()} -{" "}
+          {new Date(row.end_date).toLocaleDateString()}
         </span>
       ),
     },
     {
       id: "status",
-      key: "status",
+      key: "is_active",
       label: "Status",
-      type: "status",
+      type: "custom",
       minWidth: 120,
+      renderCell: (row: Offer) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            row.is_active
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {row.is_active ? "Active" : "Inactive"}
+        </span>
+      ),
     },
     {
       id: "actions",
@@ -123,7 +161,7 @@ const Offers = () => {
         </div>
       ),
     },
-  ] satisfies Column[];
+  ];
 
   const handlePaginationChange = (params: {
     page_no?: number;
@@ -135,6 +173,16 @@ const Offers = () => {
       per_page: params.per_page || prev.per_page,
     }));
   };
+
+  console.log("Rendering with offers:", offers);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div>
@@ -160,14 +208,16 @@ const Offers = () => {
       </div>
       <CustomTable
         headCells={offerTableColumns}
-        data={offerData}
+        data={offers}
         pagination={true}
-        meta_data={{
-          total_rows: offerData.length,
-          page_no: paginationState.page_no,
-          per_page: paginationState.per_page,
-          totalPages: Math.ceil(offerData.length / paginationState.per_page),
-        }}
+        meta_data={
+          meta || {
+            total_rows: 0,
+            page_no: paginationState.page_no,
+            per_page: paginationState.per_page,
+            totalPages: 0,
+          }
+        }
         setParams={handlePaginationChange}
       />
     </div>

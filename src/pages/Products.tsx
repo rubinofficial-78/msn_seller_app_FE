@@ -21,9 +21,10 @@ import ScrollableTabs from "../components/ScrollableTabs";
 import CustomTable, { Column } from "../components/CustomTable";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getProducts, getProductCounts, getProductById } from "../redux/Action/action";
+import { getProducts, getProductCounts, getProductById,saveBasicDetails } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from '../redux/store';
+import { toast } from 'react-hot-toast';
 
 interface Product {
   id: number;
@@ -114,9 +115,30 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
     }
   };
 
-  const handleStatusToggle = (product: Product) => {
-    // Handle status toggle
-    console.log("Toggle status for product:", product);
+  const handleStatusToggle = async (product: Product) => {
+    try {
+      console.log("Toggle status for product:", product);
+      const newStatusId = product.status?.lookup_code === "ACTIVE" ? 34 : 33;
+      
+      const payload = {
+        sku_id: product.sku_id,
+        status_id: newStatusId,
+         
+      };
+
+      console.log('Updating product status with payload:', payload);
+      
+      const response = await dispatch(saveBasicDetails(payload));
+      console.log('Status update response:', response);
+      
+      // Refresh the products list after status update
+      await dispatch(getProducts({ page_no: 1, per_page: 10 }));
+      
+      toast.success("Product status updated successfully");
+    } catch (error) {
+      console.error("Failed to update product status:", error);
+      toast.error("Failed to update product status");
+    }
   };
 
   return (
@@ -228,9 +250,30 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
     }
   };
 
-  const handleStatusToggle = (product: Product) => {
-    // Handle status toggle
+  const handleStatusToggle = async (product: Product) => {
+    try {
     console.log("Toggle status for product:", product);
+      const newStatusId = product.status?.lookup_code === "ACTIVE" ? 34 : 33;
+      
+      const payload = {
+        sku_id: product.sku_id,
+        status_id: newStatusId,
+     
+      };
+
+      console.log('Updating product status with payload:', payload);
+      
+      const response = await dispatch(saveBasicDetails(payload));
+      console.log('Status update response:', response);
+      
+      // Refresh the products list after status update
+      await dispatch(getProducts({ page_no: 1, per_page: 10 }));
+      
+      toast.success("Product status updated successfully");
+    } catch (error) {
+      console.error("Failed to update product status:", error);
+      toast.error("Failed to update product status");
+    }
   };
 
   const columns: Column[] = [

@@ -180,13 +180,14 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
           Data={field.options || []}
           placeholder={field.placeholder || field.label}
           value={field.value}
-          handleSelectonChange={handlers.handleInputonChange}
+          handleSelectonChange={handlers.handleSelectonChange}
           index={handlers.index}
           required={field.required}
           disabled={field.disabled}
+          multiple={field.multiple}
         />
       ) : (
-        field.value?.label ?? "--"
+        field.value ?? "--"
       );
 
     case "image":
@@ -226,6 +227,21 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
             </label>
           ))}
         </div>
+      );
+
+    case "date":
+      return edit ? (
+        <input
+          type="date"
+          value={field.value || ""}
+          onChange={(e) => handlers.handleInputonChange(field.key, e.target.value, handlers.index)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
+          placeholder={field.placeholder}
+          required={field.required}
+          disabled={field.disabled}
+        />
+      ) : (
+        field.value ?? "--"
       );
 
     default:

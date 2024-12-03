@@ -285,6 +285,17 @@ export interface AuthState {
     error: string | null;
     data: any | null;
   };
+  offers: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: {
+      total_rows: number;
+      page_no: number;
+      per_page: number;
+      total_pages: number;
+    } | null;
+  };
 }
 
 export interface RootState {

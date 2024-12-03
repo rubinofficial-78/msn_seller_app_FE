@@ -151,7 +151,16 @@ import {
   DOWNLOAD_TEMPLATE_FAILURE,
   UPLOAD_TEMPLATE_REQUEST,
   UPLOAD_TEMPLATE_SUCCESS,
-  UPLOAD_TEMPLATE_FAILURE
+  UPLOAD_TEMPLATE_FAILURE,
+  GET_ORDERS_REQUEST,
+  GET_ORDERS_SUCCESS,
+  GET_ORDERS_FAILURE,
+  GET_ORDER_STATUS_LOOKUP_SUCCESS,
+  GET_ORDER_STATUS_LOOKUP_REQUEST,
+  GET_ORDER_STATUS_LOOKUP_FAILURE,
+  GET_RETURNS_REQUEST,
+  GET_RETURNS_SUCCESS,
+  GET_RETURNS_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -2200,6 +2209,162 @@ export const getSalesOrdersCount = (): ThunkAction<Promise<any>, RootState, unkn
     }
   };
 };
+
+export const getOrderStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ORDER_STATUS_LOOKUP_REQUEST });
+
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/SALES_ORDER_STATUS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ORDER_STATUS_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      }
+      throw new Error(response.data?.meta?.message || 'Failed to fetch order status lookup');
+
+    } catch (error) {
+      dispatch({
+        type: GET_ORDER_STATUS_LOOKUP_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch order status lookup'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getOrders = (params: { 
+  per_page: number; 
+  page_no: number;
+  search?: string;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ORDERS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/sales_orders`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ORDERS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch orders');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch orders';
+      dispatch({
+        type: GET_ORDERS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getReturns = (params: { 
+  per_page: number; 
+  page_no: number;
+  search?: string;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_RETURNS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/sales_returns`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_RETURNS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch RETURNS');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch RETURNS';
+      dispatch({
+        type: GET_RETURNS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// export const getReturns = (params: any): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+//   return async (dispatch: Dispatch<AuthActionTypes>) => {
+//     try {
+//       const token = localStorage.getItem('token');
+//       dispatch({ type: GET_RETURNS_REQUEST });
+      
+//       const response = await axios.get(`${API_BASE_URL}/backend_master/sales_returns`, {
+//         params: {
+//           params,
+//           headers: {
+//             'Authorization': `Bearer ${token}`,
+//             'Content-Type': 'application/json'
+//           }
+//         }
+//       });
+
+//       dispatch({
+//         type: GET_RETURNS_SUCCESS,
+//         payload: response.data
+//       });
+
+//       return response.data;
+//     } catch (error: any) {
+//       dispatch({
+//         type: GET_RETURNS_FAILURE,
+//         payload: error.message
+//       });
+//       throw error;
+//     }
+//   };
+// };
 
 export const getUomLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {

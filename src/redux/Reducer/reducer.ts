@@ -96,6 +96,15 @@ import {
   GET_SALES_ORDERS_COUNT_REQUEST, 
   GET_SALES_ORDERS_COUNT_SUCCESS, 
   GET_SALES_ORDERS_COUNT_FAILURE ,
+  GET_ORDERS_REQUEST, 
+  GET_ORDERS_SUCCESS, 
+  GET_ORDERS_FAILURE,
+  GET_ORDER_STATUS_LOOKUP_REQUEST,
+  GET_ORDER_STATUS_LOOKUP_SUCCESS,
+  GET_ORDER_STATUS_LOOKUP_FAILURE,
+  GET_RETURNS_REQUEST,
+  GET_RETURNS_SUCCESS,
+  GET_RETURNS_FAILURE,
   GET_UOM_LOOKUP_REQUEST, 
   GET_UOM_LOOKUP_SUCCESS, 
   GET_UOM_LOOKUP_FAILURE,
@@ -298,6 +307,30 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  orders: {
+    data: [],
+    loading: false,
+    error: null,
+    meta: {
+      pagination: {
+        per_page: 10,
+        page_no: 1,
+        total_rows: 0,
+        total_pages: 0
+      }
+    }
+  },
+  orderStatusLookup: {
+    data: [],
+    loading: false,
+    error: null
+  },
+  returns: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
   }
 };
 
@@ -1122,6 +1155,90 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
+    case GET_ORDERS_REQUEST:
+      return {
+        ...state,
+        orders: {
+          ...state.orders,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ORDERS_SUCCESS:
+      return {
+        ...state,
+        orders: {
+          data: action.payload.data,
+          loading: false,
+          error: null,
+          meta: action.payload.meta
+        }
+      };
+    case GET_ORDERS_FAILURE:
+      return {
+        ...state,
+        orders: {
+          ...state.orders,
+          loading: false,
+          error: action.payload
+        }
+      };
+
+      case GET_ORDER_STATUS_LOOKUP_REQUEST:
+        return {
+          ...state,
+          orderStatusLookup: {
+            ...state.orderStatusLookup,
+            loading: true,
+            error: null
+          }
+        };
+      case GET_ORDER_STATUS_LOOKUP_SUCCESS:
+        return {
+          ...state,
+          orderStatusLookup: {
+            data: action.payload,
+            loading: false,
+            error: null
+          }
+        };
+      case GET_ORDER_STATUS_LOOKUP_FAILURE:
+        return {
+          ...state,
+          orderStatusLookup: {
+            ...state.orderStatusLookup,
+            loading: false,
+            error: action.payload
+          }
+        };
+      case GET_RETURNS_REQUEST:
+        return {
+          ...state,
+          returns: {
+            ...state.returns,
+            loading: true,
+            error: null
+          }
+        };
+      case GET_RETURNS_SUCCESS:
+        return {
+          ...state,
+          returns: {
+            loading: false,
+            data: action.payload.data,
+            meta: action.payload.meta,
+            error: null
+          }
+        };
+      case GET_RETURNS_FAILURE:
+        return {
+          ...state,
+          returns: {
+            ...state.returns,
+            loading: false,
+            error: action.payload
+          }
+        };
     case GET_UOM_LOOKUP_REQUEST:
       return {
         ...state,

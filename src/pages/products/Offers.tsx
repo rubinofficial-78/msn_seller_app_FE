@@ -63,7 +63,7 @@ const Offers = () => {
   };
 
   const handleEditOffer = (offer: Offer) => {
-    navigate(`/dashboard/products/edit-offer/${offer.id}`);
+    // navigate(`/dashboard/products/edit-offer/${offer.id}`);
   };
 
   const offerTableColumns: Column[] = [
@@ -143,7 +143,7 @@ const Offers = () => {
       type: "custom",
       minWidth: 100,
       renderCell: (row: Offer) => (
-        <div className="flex items-center gap-2">
+      
           <button
             onClick={() => handleEditOffer(row)}
             className="p-1 text-green-600 hover:text-green-700 rounded-full hover:bg-green-50"
@@ -151,14 +151,8 @@ const Offers = () => {
           >
             <Edit size={16} />
           </button>
-          <button
-            onClick={() => handleViewOffer(row)}
-            className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
-            title="View"
-          >
-            <Eye size={16} />
-          </button>
-        </div>
+          
+     
       ),
     },
   ];

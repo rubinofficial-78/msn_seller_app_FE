@@ -62,15 +62,15 @@ const StatCard = ({
   className = "", 
   gradient = "from-blue-50 to-blue-100"
 }: StatCardProps) => (
-  <div className={`p-6 rounded-xl shadow-sm bg-gradient-to-br ${gradient} border border-white/50 backdrop-blur-sm ${className}`}>
+  <div className={`p-4 sm:p-6 rounded-xl shadow-sm bg-gradient-to-br ${gradient} border border-white/50 backdrop-blur-sm ${className}`}>
     <div className="flex justify-between items-start">
       <div>
-        <p className="text-gray-600 font-medium">{title}</p>
-        <h3 className="text-2xl font-bold mt-2">{value}</h3>
+        <p className="text-gray-600 font-medium text-sm sm:text-base">{title}</p>
+        <h3 className="text-xl sm:text-2xl font-bold mt-2">{value}</h3>
       </div>
       {Icon && (
-        <div className="p-3 rounded-lg bg-white/80 shadow-sm">
-          <Icon className="text-gray-700" size={24} />
+        <div className="p-2 sm:p-3 rounded-lg bg-white/80 shadow-sm">
+          <Icon className="text-gray-700" size={20} />
         </div>
       )}
     </div>
@@ -80,10 +80,10 @@ const StatCard = ({
           <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-white/60">
             <div className="flex items-center space-x-2">
               {stat.icon}
-              <span className="text-sm text-gray-600">{stat.label}</span>
+              <span className="text-xs sm:text-sm text-gray-600">{stat.label}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-semibold">{stat.value}</span>
+              <span className="text-xs sm:text-sm font-semibold">{stat.value}</span>
               {stat.trend && (
                 <span className={`text-xs ${stat.trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {stat.trend > 0 ? '↑' : '↓'} {Math.abs(stat.trend)}%
@@ -112,10 +112,10 @@ const Dashboard = () => {
   }, [dispatch]);
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50/30">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 bg-gray-50/30">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-0">Dashboard Overview</h1>
+        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
           <span className="font-medium">Last Updated:</span>
           <span>{new Date().toLocaleString()}</span>
         </div>
@@ -195,21 +195,21 @@ const Dashboard = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
         {/* Order Statistics */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-gray-800">Order Statistics</h3>
-              <p className="text-sm text-gray-600">Weekly order distribution</p>
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+            <div className="mb-2 sm:mb-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">Order Statistics</h3>
+              <p className="text-xs sm:text-sm text-gray-600">Weekly order distribution</p>
             </div>
-            <select className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-gray-200 text-sm">
               <option>This Week</option>
               <option>Last Week</option>
               <option>Last Month</option>
             </select>
           </div>
-          <div className="h-[300px]">
+          <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -233,19 +233,19 @@ const Dashboard = () => {
         </div>
 
         {/* Revenue Trend */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-gray-800">Revenue Trend</h3>
-              <p className="text-sm text-gray-600">Daily revenue analysis</p>
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+            <div className="mb-2 sm:mb-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-800">Revenue Trend</h3>
+              <p className="text-xs sm:text-sm text-gray-600">Daily revenue analysis</p>
             </div>
-            <select className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-gray-200 text-sm">
               <option>This Week</option>
               <option>Last Week</option>
               <option>Last Month</option>
             </select>
           </div>
-          <div className="h-[300px]">
+          <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueData}>
                 <defs>

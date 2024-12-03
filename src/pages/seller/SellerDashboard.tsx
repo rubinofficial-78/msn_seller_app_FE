@@ -60,22 +60,22 @@ const SellerDashboard = () => {
   }, [dispatch]);
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-3 sm:p-4 space-y-4 sm:space-y-6">
       {/* Welcome Section */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        <div className="flex justify-between items-start">
+      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
               {isAdmin ? "Seller Admin Dashboard" : "Seller Dashboard"}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               {isAdmin 
                 ? "Manage your sellers and monitor platform performance"
                 : "Fill-up your important data and get started with ONDC"}
             </p>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            <Settings size={20} />
+          <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base">
+            <Settings size={18} />
             <span>SETTINGS</span>
           </button>
         </div>
@@ -87,7 +87,7 @@ const SellerDashboard = () => {
       ) : error ? (
         <div className="text-center text-red-600 py-4">{error}</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             title="Total Revenue"
             value="₹0"
@@ -116,17 +116,17 @@ const SellerDashboard = () => {
       )}
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Category Sales Matrix */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold">Category wise sales matrix</h2>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-0">Category wise sales matrix</h2>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
               <span>Month-November</span>
               <span className="text-xs text-gray-400">Selected Month</span>
             </div>
           </div>
-          <div className="h-[300px]">
+          <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -150,15 +150,15 @@ const SellerDashboard = () => {
         </div>
 
         {/* Sales Orders Matrix */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold">Sales Orders matrix</h2>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-0">Sales Orders matrix</h2>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
               <span>Month-November</span>
               <span className="text-xs text-gray-400">Selected Month</span>
             </div>
           </div>
-          <div className="h-[300px]">
+          <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={orderData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -182,14 +182,14 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, bgColor }) => (
-  <div className="bg-white p-6 rounded-lg shadow-sm">
-    <div className="flex items-center gap-4">
-      <div className={`p-3 rounded-lg ${bgColor}`}>
+  <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className={`p-2 sm:p-3 rounded-lg ${bgColor}`}>
         {icon}
       </div>
       <div>
-        <p className="text-sm text-gray-600">{title}</p>
-        <p className="text-2xl font-semibold">{value}</p>
+        <p className="text-xs sm:text-sm text-gray-600">{title}</p>
+        <p className="text-lg sm:text-2xl font-semibold">{value}</p>
       </div>
     </div>
   </div>

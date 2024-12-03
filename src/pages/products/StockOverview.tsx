@@ -1,53 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, Edit, Plus, Search } from "lucide-react";
 import CustomTable from "../../components/CustomTable";
 import { useNavigate } from "react-router-dom";
 import { Column } from "../../components/CustomTable";
+import { useDispatch, useSelector } from "react-redux";
+import { getInventoryStatusLookup, getInventory } from "../../redux/Action/action";
+import { AppDispatch } from "../../redux/store";
+import { RootState } from "../../redux/types";
 
 interface Stock {
-  id: string | number;
-  productName: string;
-  skuId: string;
-  locationName: string;
-  quantityInHand: number;
-  alertQuantity: number;
-  status: string;
-  lastUpdated: string;
-  image: string;
+  id: number;
+  product: {
+    name: string;
+    image_arr: string[];
+  };
+  product_sku_id: string;
+  location: {
+    name: string;
+  };
+  on_hand_quantity: number;
+  alert_quantity: number;
+  status: {
+    display_name: string;
+    lookup_code: string;
+  };
+  createdAt: string;
 }
-
-const stockData: Stock[] = [
-  {
-    id: 1,
-    productName: "Premium T-Shirt",
-    skuId: "SHRTM28",
-    locationName: "Bangalore Warehouse",
-    quantityInHand: 1,
-    alertQuantity: 5,
-    status: "Critical",
-    lastUpdated: "2024-03-15T10:30:00",
-    image: "/placeholder-image.jpg",
-  },
-  {
-    id: 2,
-    productName: "Gray T-shirt",
-    skuId: "7O08KC",
-    locationName: "MS warehouse",
-    quantityInHand: 1,
-    alertQuantity: 10,
-    status: "Critical",
-    lastUpdated: "2024-03-14T15:45:00",
-    image: "/placeholder-image.jpg",
-  },
-];
 
 const StockOverview = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const inventoryStatusLookup = useSelector((state: RootState) => state.data.inventoryStatusLookup?.data || []);
+  const inventory = useSelector((state: RootState) => state.data.inventory?.data || []);
+  const inventoryMeta = useSelector((state: RootState) => state.data.inventory?.meta);
+  
   const [paginationState, setPaginationState] = useState({
     page_no: 1,
     per_page: 10,
-    total_rows: stockData.length,
+    total_rows: 0,
   });
+  
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+
+  useEffect(() => {
+    dispatch(getInventoryStatusLookup());
+    dispatch(getInventory({ 
+      page_no: paginationState.page_no, 
+      per_page: paginationState.per_page 
+    }));
+  }, [dispatch, paginationState.page_no, paginationState.per_page]);
 
   const handleUpdateStock = (stock: Stock) => {
     console.log("Update stock:", stock);
@@ -63,14 +64,14 @@ const StockOverview = () => {
       renderCell: (row: Stock) => (
         <div className="flex items-center gap-3">
           <img
-            src={row.image}
-            alt={row.productName}
+            src={row.product.image_arr[0] || "/placeholder-image.jpg"}
+            alt={row.product.name}
             className="w-12 h-12 rounded-lg object-cover"
           />
           <div>
-            <p className="font-medium">{row.productName}</p>
+            <p className="font-medium">{row.product.name}</p>
             <p className="text-sm text-gray-500">
-              {new Date(row.lastUpdated).toLocaleString()}
+              {new Date(row.createdAt).toLocaleString()}
             </p>
           </div>
         </div>
@@ -81,6 +82,7 @@ const StockOverview = () => {
       key: "skuId",
       label: "SKU Id",
       minWidth: 140,
+      renderCell: (row: Stock) => row.product_sku_id,
     },
     {
       id: "locationName",
@@ -90,7 +92,7 @@ const StockOverview = () => {
       type: "custom",
       renderCell: (row: Stock) => (
         <div className="flex items-center gap-1">
-          {row.locationName}
+          {row.location.name}
           <span className="text-blue-500 cursor-help" title="Location Info">
             ⓘ
           </span>
@@ -103,6 +105,7 @@ const StockOverview = () => {
       label: "Quantity in hand",
       minWidth: 140,
       type: "number",
+      renderCell: (row: Stock) => row.on_hand_quantity,
     },
     {
       id: "alertQuantity",
@@ -110,6 +113,7 @@ const StockOverview = () => {
       label: "Alert Quantity",
       minWidth: 140,
       type: "number",
+      renderCell: (row: Stock) => row.alert_quantity,
     },
     {
       id: "status",
@@ -119,7 +123,7 @@ const StockOverview = () => {
       type: "custom",
       renderCell: (row: Stock) => (
         <span className="px-2 py-1 text-sm rounded-full bg-red-100 text-red-600">
-          {row.status}
+          {row.status.display_name}
         </span>
       ),
     },
@@ -155,8 +159,8 @@ const StockOverview = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <div className="relative flex-1 max-w-xs">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative w-64">
           <Search
             className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
             size={16}
@@ -167,31 +171,29 @@ const StockOverview = () => {
             className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => navigate("/dashboard/products/stock-report")}
-            className="px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            Download Report
-          </button>
-          <button
-            onClick={() => navigate("/dashboard/products/bulk-stock-update")}
-            className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            <Plus size={16} />
-            <span>BULK UPDATE</span>
-          </button>
-        </div>
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="w-48 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
+        >
+          <option value="">All Status</option>
+          {inventoryStatusLookup.map((status) => (
+            <option key={status.id} value={status.lookup_code}>
+              {status.display_name}
+            </option>
+          ))}
+        </select>
+        <div className="flex-1"></div>
       </div>
       <CustomTable
         headCells={stockTableColumns}
-        data={stockData}
+        data={inventory}
         pagination={true}
         meta_data={{
-          total_rows: stockData.length,
+          total_rows: inventoryMeta?.total_rows || 0,
           page_no: paginationState.page_no,
           per_page: paginationState.per_page,
-          totalPages: Math.ceil(stockData.length / paginationState.per_page),
+          totalPages: inventoryMeta?.total_pages || 0,
         }}
         setParams={handlePaginationChange}
       />

@@ -296,6 +296,30 @@ export interface AuthState {
       total_pages: number;
     } | null;
   };
+  inventoryStatusLookup: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+      createdAt: string;
+      updatedAt: string | null;
+    }> | null;
+  };
+  inventory: {
+  loading: boolean;
+  error: string | null;
+    data: any[];
+    meta: {
+      total_rows: number;
+      page_no: number;
+      per_page: number;
+      total_pages: number;
+  } | null;
+  };
+   
 }
 
 export interface RootState {

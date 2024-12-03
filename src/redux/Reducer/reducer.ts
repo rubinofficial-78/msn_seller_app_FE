@@ -134,7 +134,10 @@ import {
   SAVE_OFFER_BASICS_FAILURE,
   GET_LOCATIONS_REQUEST,
   GET_LOCATIONS_SUCCESS,
-  GET_LOCATIONS_FAILURE
+  GET_LOCATIONS_FAILURE,
+  GET_INVENTORY_STATUS_LOOKUP_REQUEST,
+  GET_INVENTORY_STATUS_LOOKUP_SUCCESS,
+  GET_INVENTORY_STATUS_LOOKUP_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -360,6 +363,11 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: null
+  },
+  inventoryStatusLookup: {
+    loading: false,
+    error: null,
+    data: null
   }
 };
 
@@ -1525,6 +1533,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         locations: {
           ...state.locations,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_INVENTORY_STATUS_LOOKUP_REQUEST:
+      return {
+        ...state,
+        inventoryStatusLookup: {
+          ...state.inventoryStatusLookup,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_INVENTORY_STATUS_LOOKUP_SUCCESS:
+      return {
+        ...state,
+        inventoryStatusLookup: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_INVENTORY_STATUS_LOOKUP_FAILURE:
+      return {
+        ...state,
+        inventoryStatusLookup: {
+          ...state.inventoryStatusLookup,
           loading: false,
           error: action.payload
         }

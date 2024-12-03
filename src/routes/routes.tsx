@@ -38,7 +38,6 @@ import EditCompany from "../pages/EditCompany";
 import CreatePartner from "../components/CreatePartner";
 import AddSeller from "../pages/AddSeller";
 import SellerOnboarding from "../components/SellerOnboarding";
-import AddProduct from "../pages/AddProduct";
 import BulkUpload from "../pages/BulkUpload";
 import UiConfig from "../pages/settings/UiConfig";
 import LogisticsDetails from "../pages/LogisticsDetails";
@@ -59,6 +58,7 @@ import ViewSeller from "../pages/ViewSeller";
 import EditSeller from "../pages/EditSeller";
 import CreatePricingRule from "../pages/products/CreatePricingRule";
 import ViewProduct from "../pages/products/ViewProduct";
+import AddProduct from "../pages/AddProduct";
 
 export const routes: RouteObject[] = [
   {

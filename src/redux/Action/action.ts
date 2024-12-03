@@ -172,6 +172,12 @@ import {
   GET_RETURNS_REQUEST,
   GET_RETURNS_SUCCESS,
   GET_RETURNS_FAILURE,
+  GET_INVENTORY_STATUS_LOOKUP_REQUEST,
+  GET_INVENTORY_STATUS_LOOKUP_SUCCESS,
+  GET_INVENTORY_STATUS_LOOKUP_FAILURE,
+  GET_INVENTORY_REQUEST,
+  GET_INVENTORY_SUCCESS,
+  GET_INVENTORY_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -2004,6 +2010,43 @@ export const getProductCounts = (): ThunkAction<Promise<any>, RootState, unknown
   };
 };
 
+export const getMasterCatalogueProductCounts = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_COUNTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/products/count?master_catalog=true`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_COUNTS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch product counts');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch product counts';
+      dispatch({
+        type: GET_PRODUCT_COUNTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
 export const getProductById = (
   id: number
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
@@ -2344,38 +2387,6 @@ export const getReturns = (params: {
     }
   };
 };
-
-// export const getReturns = (params: any): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
-//   return async (dispatch: Dispatch<AuthActionTypes>) => {
-//     try {
-//       const token = localStorage.getItem('token');
-//       dispatch({ type: GET_RETURNS_REQUEST });
-      
-//       const response = await axios.get(`${API_BASE_URL}/backend_master/sales_returns`, {
-//         params: {
-//           params,
-//           headers: {
-//             'Authorization': `Bearer ${token}`,
-//             'Content-Type': 'application/json'
-//           }
-//         }
-//       });
-
-//       dispatch({
-//         type: GET_RETURNS_SUCCESS,
-//         payload: response.data
-//       });
-
-//       return response.data;
-//     } catch (error: any) {
-//       dispatch({
-//         type: GET_RETURNS_FAILURE,
-//         payload: error.message
-//       });
-//       throw error;
-//     }
-//   };
-// };
 
 export const getUomLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
@@ -2884,6 +2895,134 @@ export const getLocations = (): ThunkAction<Promise<any>, RootState, unknown, Au
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch locations';
       dispatch({
         type: GET_LOCATIONS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getMasterCatalogProducts = (
+  params: { page_no: number; per_page: number }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Fetching master catalog products with params:', { ...params, master_catalog: true });
+
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/products`,
+        {
+          params: { ...params, master_catalog: true },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Master catalog products API Response:', response.data);
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCTS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch master catalog products');
+      }
+    } catch (error) {
+      console.error('Error fetching master catalog products:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch master catalog products';
+      dispatch({
+        type: GET_PRODUCTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getInventoryStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_INVENTORY_STATUS_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/INVENTORY_STATUS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_INVENTORY_STATUS_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch inventory status lookup');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch inventory status lookup';
+      dispatch({
+        type: GET_INVENTORY_STATUS_LOOKUP_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getInventory = (params: { 
+  page_no: number; 
+  per_page: number;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_INVENTORY_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/mdm/inventory`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_INVENTORY_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch inventory');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch inventory';
+      dispatch({
+        type: GET_INVENTORY_FAILURE,
         payload: errorMessage
       });
       throw error;

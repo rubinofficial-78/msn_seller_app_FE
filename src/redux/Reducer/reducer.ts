@@ -96,6 +96,12 @@ import {
   GET_SALES_ORDERS_COUNT_REQUEST, 
   GET_SALES_ORDERS_COUNT_SUCCESS, 
   GET_SALES_ORDERS_COUNT_FAILURE ,
+  GET_UOM_LOOKUP_REQUEST, 
+  GET_UOM_LOOKUP_SUCCESS, 
+  GET_UOM_LOOKUP_FAILURE,
+  GET_PAYMENT_MODE_LOOKUP_REQUEST, 
+  GET_PAYMENT_MODE_LOOKUP_SUCCESS, 
+  GET_PAYMENT_MODE_LOOKUP_FAILURE,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -251,7 +257,17 @@ const initialState: AuthState = {
     error: null,
     data: null
   },
-  savedProduct: null
+  savedProduct: null,
+  uomLookup: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  paymentModeLookup: {
+    loading: false,
+    error: null,
+    data: null
+  }
 };
 
 const authReducer = (state = initialState, action: AuthActionTypes): AuthState => {
@@ -1078,6 +1094,60 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         salesOrdersCount: {
           ...state.salesOrdersCount,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_UOM_LOOKUP_REQUEST:
+      return {
+        ...state,
+        uomLookup: {
+          ...state.uomLookup,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_UOM_LOOKUP_SUCCESS:
+      return {
+        ...state,
+        uomLookup: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_UOM_LOOKUP_FAILURE:
+      return {
+        ...state,
+        uomLookup: {
+          ...state.uomLookup,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PAYMENT_MODE_LOOKUP_REQUEST:
+      return {
+        ...state,
+        paymentModeLookup: {
+          ...state.paymentModeLookup,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PAYMENT_MODE_LOOKUP_SUCCESS:
+      return {
+        ...state,
+        paymentModeLookup: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PAYMENT_MODE_LOOKUP_FAILURE:
+      return {
+        ...state,
+        paymentModeLookup: {
+          ...state.paymentModeLookup,
           loading: false,
           error: action.payload
         }

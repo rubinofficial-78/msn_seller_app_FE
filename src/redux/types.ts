@@ -77,6 +77,9 @@ export const GET_PRODUCT_CATEGORIES_FAILURE = 'GET_PRODUCT_CATEGORIES_FAILURE';
 export const GET_HSN_CODES_REQUEST = 'GET_HSN_CODES_REQUEST';
 export const GET_HSN_CODES_SUCCESS = 'GET_HSN_CODES_SUCCESS';
 export const GET_HSN_CODES_FAILURE = 'GET_HSN_CODES_FAILURE';
+export const GET_UOM_LOOKUP_REQUEST = 'GET_UOM_LOOKUP_REQUEST';
+export const GET_UOM_LOOKUP_SUCCESS = 'GET_UOM_LOOKUP_SUCCESS';
+export const GET_UOM_LOOKUP_FAILURE = 'GET_UOM_LOOKUP_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -203,6 +206,26 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: HsnCode[] | null;
+  };
+  uomLookup: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+    }> | null;
+  };
+  paymentModeLookup: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+    }> | null;
   };
 }
 

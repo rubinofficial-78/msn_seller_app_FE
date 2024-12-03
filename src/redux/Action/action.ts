@@ -133,7 +133,13 @@ import {
   UPDATE_SELLER_COMPANY_STATUS_FAILURE,
   GET_SALES_ORDERS_COUNT_REQUEST,
   GET_SALES_ORDERS_COUNT_SUCCESS,
-  GET_SALES_ORDERS_COUNT_FAILURE
+  GET_SALES_ORDERS_COUNT_FAILURE,
+  GET_UOM_LOOKUP_REQUEST,
+  GET_UOM_LOOKUP_SUCCESS,
+  GET_UOM_LOOKUP_FAILURE,
+  GET_PAYMENT_MODE_LOOKUP_REQUEST,
+  GET_PAYMENT_MODE_LOOKUP_SUCCESS,
+  GET_PAYMENT_MODE_LOOKUP_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -1120,6 +1126,11 @@ export const getBranchById = (
 
     try {
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/company_branches/get/${id}`,
         {
@@ -1140,8 +1151,11 @@ export const getBranchById = (
         throw new Error(response.data?.meta?.message || 'Failed to fetch branch details');
       }
 
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch branch details';
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.meta?.message || 
+                          error?.message || 
+                          'Failed to fetch seller details';
+                          
       dispatch({
         type: GET_BRANCH_BY_ID_FAILURE,
         payload: errorMessage
@@ -1740,9 +1754,9 @@ export const getSellerById = (
       if (response.data?.meta?.status) {
         dispatch({
           type: GET_SELLER_BY_ID_SUCCESS,
-          payload: response.data
+          payload: response.data.data
         });
-        return response.data;
+        return response.data.data;
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch seller details');
       }
@@ -2170,6 +2184,80 @@ export const getSalesOrdersCount = (): ThunkAction<Promise<any>, RootState, unkn
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch sales orders count';
       dispatch({
         type: GET_SALES_ORDERS_COUNT_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getUomLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_UOM_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/UOM`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_UOM_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch UOM lookup');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch UOM lookup';
+      dispatch({
+        type: GET_UOM_LOOKUP_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getPaymentModeLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PAYMENT_MODE_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/PAYMENT_TYPE`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PAYMENT_MODE_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch payment modes');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch payment modes';
+      dispatch({
+        type: GET_PAYMENT_MODE_LOOKUP_FAILURE,
         payload: errorMessage
       });
       throw error;

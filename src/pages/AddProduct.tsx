@@ -3,9 +3,10 @@ import AddForm from "../components/AddForm";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getProductCategories, getHsnCodes, saveBasicDetails } from "../redux/Action/action";
+import { getProductCategories, getHsnCodes, saveBasicDetails, getUomLookup, getPaymentModeLookup } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
+import toast from 'react-hot-toast';
 
 interface FormData {
   [key: string]: any;
@@ -19,6 +20,11 @@ interface FormData {
   shortDescription: string;
   productDescription: string;
   productImages: string[];
+  uomType: string;
+  uomValue: string;
+  paymentMode: string;
+  mrp: string;
+  salesPrice: string;
 }
 
 const AddProduct = () => {
@@ -33,6 +39,12 @@ const AddProduct = () => {
   const { data: hsnCodes, loading: hsnLoading } = useSelector(
     (state: RootState) => state.data.hsnCodes
   );
+  const { data: uomTypes, loading: uomLoading } = useSelector(
+    (state: RootState) => state.data.uomLookup
+  );
+  const { data: paymentModes, loading: paymentModesLoading } = useSelector(
+    (state: RootState) => state.data.paymentModeLookup
+  );
 
   // Initialize form data with the new fields
   const [formData, setFormData] = useState<FormData>({
@@ -46,6 +58,11 @@ const AddProduct = () => {
     shortDescription: '',
     productDescription: '',
     productImages: [],
+    uomType: '',
+    uomValue: '',
+    paymentMode: '',
+    mrp: '',
+    salesPrice: '',
   });
 
   // Fetch categories when component mounts
@@ -91,6 +108,16 @@ const AddProduct = () => {
     };
 
     fetchHsnCodes();
+  }, [dispatch]);
+
+  // Fetch UOM types when component mounts
+  useEffect(() => {
+    dispatch(getUomLookup());
+  }, [dispatch]);
+
+  // Fetch payment modes when component mounts
+  useEffect(() => {
+    dispatch(getPaymentModeLookup());
   }, [dispatch]);
 
   // Move function definitions before they're used
@@ -174,8 +201,8 @@ const AddProduct = () => {
           hsn_reference_number: formData.hsnReferenceNumber || ''
         };
 
-        await dispatch(saveBasicDetails(basicDetails as any));
-        alert("Basic details saved successfully!");
+        await dispatch(saveBasicDetails(basicDetails));
+        toast.success("Basic details saved successfully!");
       } 
       else if (section === "Product Images") {
         const imageDetails = {
@@ -184,13 +211,48 @@ const AddProduct = () => {
           image_arr: formData.productImages || []
         };
 
-        console.log('Saving images with payload:', imageDetails); // Debug log
         await dispatch(saveBasicDetails(imageDetails));
-        alert("Images saved successfully!");
+        toast.success("Images saved successfully!");
+      }
+      else if (section === "Unit of Measurement") {
+        const selectedUom = uomTypes?.find(uom => uom.lookup_code === formData.uomType);
+        
+        if (!selectedUom) {
+          throw new Error('Please select a valid UOM type');
+        }
+
+        const measurementDetails = {
+          section_key: "UOM",
+          sku_id: formData.skuId,
+          uom_id: selectedUom.id,
+          uom_value: formData.uomValue
+        };
+
+        await dispatch(saveBasicDetails(measurementDetails));
+        toast.success("Measurements saved successfully!");
+      }
+      else if (section === "Pricing Details") {
+        // Get the selected payment mode's ID
+        const selectedPaymentMode = paymentModes?.find(mode => mode.lookup_code === formData.paymentMode);
+        
+        if (!selectedPaymentMode) {
+          throw new Error('Please select a valid payment mode');
+        }
+
+        const pricingDetails = {
+          section_key: "PRICING_DETAILS",
+          sku_id: formData.skuId,
+          mrp: Number(formData.mrp),
+          sales_price: Number(formData.salesPrice),
+          payment_type_id: selectedPaymentMode.id
+        };
+
+        await dispatch(saveBasicDetails(pricingDetails));
+        toast.success("Pricing details saved successfully!");
       }
     } catch (error) {
       console.error('Failed to save:', error);
-      alert(`Failed to save ${section.toLowerCase()}. Please try again.`);
+      toast.success(`Failed to save ${section.toLowerCase()}. Please try again.`);
     } finally {
       setIsSaving(false);
     }
@@ -297,7 +359,14 @@ const AddProduct = () => {
       label: "Uom Type",
       required: true,
       placeholder: "UOM Type",
-      options: [], // Add your UOM types here
+      value: formData.uomType,
+      options: uomLoading 
+        ? [] 
+        : (uomTypes || []).map(uom => ({
+            label: uom.display_name,
+            value: uom.lookup_code,
+            id: uom.id // Store the ID for later use
+          }))
     },
     {
       type: "text",
@@ -305,6 +374,7 @@ const AddProduct = () => {
       label: "Uom Value",
       required: true,
       placeholder: "UOM Value",
+      value: formData.uomValue
     },
   ];
 
@@ -316,6 +386,7 @@ const AddProduct = () => {
       required: true,
       placeholder: "MRP",
       startIcon: "₹",
+      value: formData.mrp
     },
     {
       type: "text",
@@ -324,13 +395,22 @@ const AddProduct = () => {
       required: true,
       placeholder: "Sales Price",
       startIcon: "₹",
+      value: formData.salesPrice
     },
     {
       type: "select",
       key: "paymentMode",
       label: "Payment Mode",
       required: true,
-      options: [], // Add payment modes here
+      placeholder: "Select Payment Mode",
+      value: formData.paymentMode,
+      options: paymentModesLoading 
+        ? [] 
+        : (paymentModes || []).map(mode => ({
+            label: mode.display_name,
+            value: mode.lookup_code,
+            id: mode.id // Store the ID for later use
+          }))
     },
   ];
 
@@ -629,9 +709,14 @@ const AddProduct = () => {
         <div className="flex justify-end mt-6">
           <button
             onClick={() => handleSave("Unit of Measurement")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
+              isSaving || !formData.skuId || !formData.uomType || !formData.uomValue
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
+            }`}
+            disabled={isSaving || !formData.skuId || !formData.uomType || !formData.uomValue}
           >
-            Save Measurements
+            {isSaving ? 'Saving...' : 'Save Measurements'}
           </button>
         </div>
       </div>
@@ -647,9 +732,14 @@ const AddProduct = () => {
         <div className="flex justify-end mt-6">
           <button
             onClick={() => handleSave("Pricing Details")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
+              isSaving || !formData.skuId || !formData.mrp || !formData.salesPrice || !formData.paymentMode
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
+            }`}
+            disabled={isSaving || !formData.skuId || !formData.mrp || !formData.salesPrice || !formData.paymentMode}
           >
-            Save Pricing
+            {isSaving ? 'Saving...' : 'Save Pricing'}
           </button>
         </div>
       </div>

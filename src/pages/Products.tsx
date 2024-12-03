@@ -21,9 +21,9 @@ import ScrollableTabs from "../components/ScrollableTabs";
 import CustomTable, { Column } from "../components/CustomTable";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getProducts } from "../redux/Action/action";
+import { getProducts, getProductCounts, getProductById } from "../redux/Action/action";
 import { RootState } from "../redux/types";
-import { AppDispatch } from "../redux/store";
+import { AppDispatch } from '../redux/store';
 
 interface Product {
   id: number;
@@ -100,28 +100,132 @@ const tabs = [
   { label: "Offers & Discounts", status: "OFFERS" },
 ];
 
-// Add ProductGrid component
-const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    {data.map((product) => (
-      <div key={product.id} className="bg-white rounded-lg shadow-sm p-4">
-        {/* Product card content */}
-      </div>
-    ))}
-  </div>
-);
+// Update the ProductGrid component
+const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const handleViewProduct = async (product: Product) => {
+    try {
+      await dispatch(getProductById(product.id));
+      navigate(`/dashboard/products/view/${product.id}`);
+    } catch (error) {
+      console.error('Failed to fetch product details:', error);
+    }
+  };
+
+  const handleStatusToggle = (product: Product) => {
+    // Handle status toggle
+    console.log("Toggle status for product:", product);
+  };
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {data.map((product) => (
+        <div key={product.id} className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          {/* Product Image */}
+          <div className="relative aspect-square mb-4">
+            <img
+              src={product.image_arr?.[0] || "/placeholder-product.png"}
+              alt={product.name}
+              className="w-full h-full object-cover rounded-lg"
+            />
+            {/* Action Buttons Overlay */}
+            <div className="absolute top-2 right-2 flex gap-2">
+              <button
+                onClick={() => handleViewProduct(product)}
+                className="p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-50 text-gray-600"
+                title="View"
+              >
+                <Eye size={16} />
+              </button>
+              <button
+                onClick={() => handleStatusToggle(product)}
+                className={`p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-50 
+                  ${product.status?.lookup_code === "ACTIVE" ? "text-green-600" : "text-red-600"}`}
+                title="Toggle Status"
+              >
+                {product.status?.lookup_code === "ACTIVE" ? (
+                  <ToggleRight size={16} />
+                ) : (
+                  <ToggleLeft size={16} />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Product Info */}
+          <div className="space-y-2">
+            <h3 className="font-medium text-gray-900 truncate" title={product.name}>
+              {product.name}
+            </h3>
+            
+            <div className="flex items-center justify-between text-sm">
+              <div className="text-gray-500">SKU: {product.sku_id}</div>
+              <div className="text-gray-500">HSN: {product.hsn?.hsn_code}</div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">
+                Category: {product.level1_category?.name}
+              </div>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                  ${
+                    product.status?.lookup_code === "ACTIVE"
+                      ? "bg-green-50 text-green-700"
+                      : product.status?.lookup_code === "INACTIVE"
+                      ? "bg-red-50 text-red-700"
+                      : "bg-gray-50 text-gray-700"
+                  }`}
+              >
+                {product.status?.display_name}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div>
+                <div className="text-xs text-gray-500">MRP</div>
+                <div className="font-medium">₹{product.mrp}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-500">Selling Price</div>
+                <div className="font-medium">₹{product.sales_price}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <div className="text-gray-500">
+                Variants: {product.variants?.length || 0}
+              </div>
+              <div className="text-gray-500">
+                Stock: {product.inventory_arr?.reduce((sum, inv) => sum + (inv.quantity || 0), 0) || 0}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 // Update the ProductTable component
 const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const productsMetaData = useSelector(
-    (state: RootState) => state.data.products.meta
-  );
+  const productsMetaData = useSelector((state: RootState) => state.data.products.meta);
+  const selectedProduct = useSelector((state: RootState) => state.data.selectedProduct);
 
-  const handleViewProduct = (product: Product) => {
-    // Handle view product
-    console.log("View product:", product);
+  const handleViewProduct = async (product: Product) => {
+    try {
+      await dispatch(getProductById(product.id));
+      // Navigate to view product page or open modal
+      // For example:
+      navigate(`/dashboard/products/view/${product.id}`);
+    } catch (error) {
+      console.error('Failed to fetch product details:', error);
+      // Handle error (show toast notification, etc.)
+    }
   };
 
   const handleStatusToggle = (product: Product) => {
@@ -286,21 +390,17 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       headCells={columns}
       data={data}
       pagination={true}
-      meta_data={
-        productsMetaData || {
-          total_rows: 0,
-          page_no: 1,
-          per_page: 10,
-          totalPages: 0,
-        }
-      }
+      meta_data={productsMetaData || {
+        total_rows: 0,
+        page_no: 1,
+        per_page: 10,
+        totalPages: 0,
+      }}
       setParams={(params) => {
-        dispatch(
-          getProducts({
-            page_no: params.page_no,
-            per_page: params.per_page,
-          })
-        );
+        dispatch(getProducts({ 
+          page_no: params.page_no  , 
+          per_page: params.per_page  
+        }));
       }}
     />
   );
@@ -315,16 +415,32 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const productsData = useSelector((state: RootState) => state.data.products);
+  const productCounts = useSelector((state: RootState) => state.data.productCounts?.data);
+
+  // Fetch products and counts when component mounts
+  useEffect(() => {
+    dispatch(getProducts({ page_no: 1, per_page: 10 }));
+    dispatch(getProductCounts());
+  }, [dispatch]);
+
+  // Update the tabs with counts from API
+  const updatedTabs = tabs.map((tab) => {
+    if (tab.status === "ACTIVE" && productCounts) {
+      return { ...tab, count: productCounts.active };
+    }
+    if (tab.status === "INACTIVE" && productCounts) {
+      return { ...tab, count: productCounts.inactive };
+    }
+    if (tab.status === "DRAFT" && productCounts) {
+      return { ...tab, count: productCounts.draft };
+    }
+    return tab;
+  });
 
   // Get filtered data from Redux store
   const getFilteredData = () => {
     return productsData.data || [];
   };
-
-  // Fetch products when component mounts
-  useEffect(() => {
-    dispatch(getProducts({ page_no: 1, per_page: 10 }));
-  }, [dispatch]);
 
   // Update the renderFiltersAndActions function
   const renderFiltersAndActions = () => {
@@ -394,23 +510,6 @@ const Products = () => {
     return null;
   };
 
-  // Get tab counts and update tabs
-  const getTabCounts = () => {
-    return {
-      ACTIVE: 0,
-      INACTIVE: 0,
-      DRAFT: 0,
-    };
-  };
-
-  const tabCounts = getTabCounts();
-  const updatedTabs = tabs.map((tab) => {
-    if (tab.status && tabCounts.hasOwnProperty(tab.status)) {
-      return { ...tab, count: tabCounts[tab.status as keyof typeof tabCounts] };
-    }
-    return tab;
-  });
-
   const renderContent = () => {
     switch (activeTab) {
       case "My Groups":
@@ -431,7 +530,9 @@ const Products = () => {
             {viewMode === "grid" ? (
               <ProductGrid data={getFilteredData()} />
             ) : (
-              <ProductTable data={getFilteredData()} />
+              <ProductTable 
+                data={getFilteredData()} 
+              />
             )}
           </div>
         );

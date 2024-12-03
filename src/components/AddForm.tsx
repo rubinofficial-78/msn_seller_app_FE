@@ -178,10 +178,12 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
         <TailSelect
           fieldKey={field.key}
           Data={field.options || []}
-          placeholder={field.label}
+          placeholder={field.placeholder || field.label}
           value={field.value}
-          handleSelectonChange={handlers.handleSelectonChange}
+          handleSelectonChange={handlers.handleInputonChange}
           index={handlers.index}
+          required={field.required}
+          disabled={field.disabled}
         />
       ) : (
         field.value?.label ?? "--"

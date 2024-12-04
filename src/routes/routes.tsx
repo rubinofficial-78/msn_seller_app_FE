@@ -59,6 +59,7 @@ import EditSeller from "../pages/EditSeller";
 import CreatePricingRule from "../pages/products/CreatePricingRule";
 import ViewProduct from "../pages/products/ViewProduct";
 import AddProduct from "../pages/AddProduct";
+import AddProductSeller from "../pages/AddProductSeller";
 
 export const routes: RouteObject[] = [
   {
@@ -231,7 +232,11 @@ export const routes: RouteObject[] = [
           {
             path: "view/:id",
             element: <ViewProduct />
-          }
+          },
+          {
+            path: "add-product-seller",
+            element: <AddProductSeller />,
+          },
         ],
       },
       {

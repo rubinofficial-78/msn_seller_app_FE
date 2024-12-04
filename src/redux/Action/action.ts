@@ -163,6 +163,7 @@ import {
   SAVE_OFFER_BASICS_FAILURE,
   GET_LOCATIONS_REQUEST,
   GET_LOCATIONS_SUCCESS,
+  GET_LOCATIONS_FAILURE,
   GET_ORDERS_REQUEST,
   GET_ORDERS_SUCCESS,
   GET_ORDERS_FAILURE,
@@ -178,6 +179,9 @@ import {
   GET_INVENTORY_REQUEST,
   GET_INVENTORY_SUCCESS,
   GET_INVENTORY_FAILURE,
+  UPSERT_INVENTORY_REQUEST,
+  UPSERT_INVENTORY_SUCCESS,
+  UPSERT_INVENTORY_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -3023,6 +3027,51 @@ export const getInventory = (params: {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch inventory';
       dispatch({
         type: GET_INVENTORY_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const upsertInventory = (
+  data: Array<{
+    section_key: string;
+    product_sku_id: string;
+    location_id: number;
+    on_hand_quantity: number;
+    alert_quantity: number;
+  }>
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPSERT_INVENTORY_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/inventory/upsert`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPSERT_INVENTORY_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to upsert inventory');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upsert inventory';
+      dispatch({
+        type: UPSERT_INVENTORY_FAILURE,
         payload: errorMessage
       });
       throw error;

@@ -584,7 +584,7 @@ const MyListing = () => {
 
   const handleManualUpload = () => {
     setShowAddModal(false);
-    navigate("/dashboard/products/add-product");
+    navigate("/dashboard/products/add-product-seller");
   };
 
   const handleBulkUpload = () => {

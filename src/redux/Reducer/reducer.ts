@@ -1516,26 +1516,28 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         locations: {
           ...state.locations,
           loading: true,
-          error: null
-        }
+          error: null,
+        },
       };
+
     case GET_LOCATIONS_SUCCESS:
       return {
         ...state,
         locations: {
+          data: action.payload,
           loading: false,
           error: null,
-          data: action.payload
-        }
+        },
       };
+
     case GET_LOCATIONS_FAILURE:
       return {
         ...state,
         locations: {
           ...state.locations,
           loading: false,
-          error: action.payload
-        }
+          error: action.payload,
+        },
       };
     case GET_INVENTORY_STATUS_LOOKUP_REQUEST:
       return {

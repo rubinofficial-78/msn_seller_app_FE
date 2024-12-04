@@ -1120,3 +1120,20 @@ export interface AuthState {
     data: HsnCode[] | null;
   };
 }
+
+interface BasicDetailsPayload {
+  section_key: string;
+  name?: string;
+  sku_id?: string;
+  level1_category_id?: number;
+  level2_category_id?: number;
+  short_desc?: string;
+  long_desc?: string;
+  hsn_reference_number?: string;
+  image_arr?: string[];
+  // Add inventory fields
+  product_sku_id?: string;
+  location_id?: number;
+  on_hand_quantity?: number;
+  alert_quantity?: number;
+}

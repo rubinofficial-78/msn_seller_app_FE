@@ -55,8 +55,7 @@ import MapSettings from "../pages/settings/MapSettings";
 import ViewPartner from "../pages/partners/ViewPartner";
 import EditPartner from "../pages/partners/EditPartner";
 import ViewSeller from "../pages/ViewSeller";
-import EditSeller from "../pages/EditSeller";
-import CreatePricingRule from "../pages/products/CreatePricingRule";
+import EditSeller from "../pages/EditSeller"; 
 import ViewProduct from "../pages/products/ViewProduct";
 import AddProduct from "../pages/AddProduct";
 import AddProductSeller from "../pages/AddProductSeller";
@@ -224,11 +223,7 @@ export const routes: RouteObject[] = [
           {
             path: "create-offer",
             element: <CreateOffer />,
-          },
-          {
-            path: "create-pricing-rule",
-            element: <CreatePricingRule />,
-          },
+          }, 
           {
             path: "view/:id",
             element: <ViewProduct />
@@ -351,6 +346,10 @@ export const routes: RouteObject[] = [
       },
       {
         path: "/dashboard/products/create-offer",
+        element: <CreateOffer />,
+      },
+      {
+        path: "/dashboard/products/edit-offer/:id",
         element: <CreateOffer />,
       },
       {

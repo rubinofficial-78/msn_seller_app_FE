@@ -58,12 +58,10 @@ const Offers = () => {
     }
   };
 
-  const handleViewOffer = (offer: Offer) => {
-    console.log("View offer:", offer);
-  };
+  
 
   const handleEditOffer = (offer: Offer) => {
-    // navigate(`/dashboard/products/edit-offer/${offer.id}`);
+    navigate(`/dashboard/products/edit-offer/${offer.id}`);
   };
 
   const offerTableColumns: Column[] = [

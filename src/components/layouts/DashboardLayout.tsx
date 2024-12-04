@@ -65,6 +65,25 @@ const DashboardLayout = () => {
     ));
   };
 
+  const handleLogout = () => {
+    try {
+      // Clear all items from localStorage
+      localStorage.clear();
+      
+      // Close the profile menu
+      setIsProfileMenuOpen(false);
+      
+      // Show success message
+      toast.success('Logged out successfully');
+      
+      // Navigate to login page
+      navigate('/login');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast.error('Failed to logout properly');
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
@@ -123,10 +142,7 @@ const DashboardLayout = () => {
                       Settings
                     </button>
                     <button
-                      onClick={() => {
-                        // Add logout logic
-                        navigate('/login');
-                      }}
+                      onClick={handleLogout}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                     >
                       <LogOut size={16} />

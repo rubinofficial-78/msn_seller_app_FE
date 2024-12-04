@@ -70,23 +70,40 @@ const Pricing = () => {
   const handleEditPrice = (product: PricingProduct) => {
     setEditingRow(product.sku_id);
     setEditValues({
-      mrp: product.mrp,
-      sales_price: product.sales_price
+      mrp: Number(product.mrp),
+      sales_price: Number(product.sales_price)
     });
   };
 
   const handleSavePrice = async (product: PricingProduct) => {
     try {
-      await dispatch(saveBasicDetails({
+      if (editValues.mrp < 0 || editValues.sales_price < 0) {
+        toast.error('Price values cannot be negative');
+        return;
+      }
+
+      if (editValues.sales_price > editValues.mrp) {
+        toast.error('Sales price cannot be greater than MRP');
+        return;
+      }
+
+      const payload = {
+        section_key: "PRICING_DETAILS",
         sku_id: product.sku_id,
         mrp: editValues.mrp,
         sales_price: editValues.sales_price,
         payment_type_id: product.payment_type_id
-      }));
+      };
+
+      const response = await dispatch(saveBasicDetails(payload));
       
-      setEditingRow(null);
-      fetchPricing();
-      toast.success('Price updated successfully');
+      if (response?.meta?.status) {
+        setEditingRow(null);
+        fetchPricing();
+        toast.success('Price updated successfully');
+      } else {
+        throw new Error(response?.meta?.message || 'Failed to update price');
+      }
     } catch (error) {
       toast.error('Failed to update price');
       console.error('Error updating price:', error);
@@ -111,14 +128,18 @@ const Pricing = () => {
       key: "mrp",
       label: "MRP",
       minWidth: 100,
+      type: "custom",
       renderCell: (row: PricingProduct) => {
         if (editingRow === row.sku_id) {
           return (
             <input
               type="number"
               value={editValues.mrp}
-              onChange={(e) => setEditValues(prev => ({ ...prev, mrp: Number(e.target.value) }))}
-              className="w-24 px-2 py-1 border border-gray-300 rounded"
+              onChange={(e) => setEditValues(prev => ({ 
+                ...prev, 
+                mrp: Number(e.target.value) 
+              }))}
+              className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           );
         }
@@ -130,14 +151,18 @@ const Pricing = () => {
       key: "sales_price",
       label: "Sales Price",
       minWidth: 100,
+      type: "custom",
       renderCell: (row: PricingProduct) => {
         if (editingRow === row.sku_id) {
           return (
             <input
               type="number"
               value={editValues.sales_price}
-              onChange={(e) => setEditValues(prev => ({ ...prev, sales_price: Number(e.target.value) }))}
-              className="w-24 px-2 py-1 border border-gray-300 rounded"
+              onChange={(e) => setEditValues(prev => ({ 
+                ...prev, 
+                sales_price: Number(e.target.value) 
+              }))}
+              className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           );
         }
@@ -180,13 +205,14 @@ const Pricing = () => {
       key: "actions",
       label: "Actions",
       minWidth: 120,
+      type: "custom",
       renderCell: (row: PricingProduct) => (
         <div className="flex items-center gap-2">
           {editingRow === row.sku_id ? (
-            <>
+            <div className="flex gap-2">
               <button
                 onClick={() => handleSavePrice(row)}
-                className="px-3 py-1 text-sm text-white bg-primary-600 rounded hover:bg-primary-700"
+                className="px-3 py-1 text-sm text-white bg-green-600 rounded hover:bg-green-700"
               >
                 Save
               </button>
@@ -196,27 +222,25 @@ const Pricing = () => {
               >
                 Cancel
               </button>
-            </>
+            </div>
           ) : (
-            <button
-              onClick={() => handleEditPrice(row)}
-              className="px-3 py-1 text-sm text-white bg-primary-600 rounded hover:bg-primary-700"
-            >
-              Change Price
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEditPrice(row)}
+                className="px-3 py-1 text-sm text-white bg-primary-600 rounded hover:bg-primary-700"
+              >
+                Edit Price
+              </button>
+              
+            </div>
           )}
         </div>
       )
     }
   ];
 
-  const handleViewProduct = (product: PricingProduct) => {
-    navigate(`/products/view/${product.id}`);
-  };
-
-  const handleEditProduct = (product: PricingProduct) => {
-    navigate(`/products/edit/${product.id}`);
-  };
+   
+   
 
   const handlePaginationChange = (newParams: { page_no?: number; per_page?: number }) => {
     setParams(prev => ({

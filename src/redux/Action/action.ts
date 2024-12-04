@@ -3089,6 +3089,34 @@ export const upsertInventory = (
   };
 };
 
+export const getOfferById = (
+  id: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/offer/get/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch offer details');
+      }
+    } catch (error) {
+      console.error('Failed to fetch offer details:', error);
+      throw error;
+    }
+  };
+};
+
 export const getPricing = (
   params: { 
     page_no: number; 

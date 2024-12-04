@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, X, Check } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -7,6 +7,7 @@ import {
   saveOfferBasics,
   getLocations,
   getProducts,
+  getOfferById,
 } from "../../redux/Action/action";
 import { AppDispatch } from "../../redux/store";
 import { RootState } from "../../redux/types";
@@ -52,6 +53,8 @@ interface OfferType {
 }
 
 const CreateOffer = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const {
@@ -356,23 +359,18 @@ const CreateOffer = () => {
           : offerFormData.products.map((id) => Number(id)),
       };
 
-      console.log("Saving products with payload:", payload);
-
       const response = await dispatch(saveOfferBasics(payload));
-      console.log("Products save response:", response);
 
       if (response?.meta?.status) {
         setCompletedSections((prev) => ({ ...prev, products: true }));
-        toast.success("Products saved successfully");
-        // Navigate or handle completion
+        toast.success(isEditMode ? "Offer updated successfully" : "Offer created successfully");
+        navigate("/dashboard/products"); // Navigate after successful save
       } else {
         throw new Error(response?.meta?.message || "Failed to save products");
       }
     } catch (error) {
       console.error("Failed to save products:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save products"
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to save products");
     }
   };
 
@@ -754,7 +752,7 @@ const CreateOffer = () => {
                 onClick={handleSaveProducts}
                 className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
               >
-                Create Offer
+                {isEditMode ? "Update Offer" : "Create Offer"}
               </button>
             </div>
           </div>
@@ -803,6 +801,50 @@ const CreateOffer = () => {
     }
   };
 
+  // Add effect to fetch offer details when in edit mode
+  useEffect(() => {
+    if (isEditMode && id) {
+      const fetchOfferDetails = async () => {
+        try {
+          const response = await dispatch(getOfferById(Number(id)));
+          if (response?.data) {
+            const offer = response.data;
+            setOfferFormData({
+              offerTitle: offer.name,
+              offerDescription: offer.description,
+              couponCode: offer.code,
+              maxCount: offer.max_count,
+              offerType: offer.offer_type.lookup_code,
+              startDate: offer.start_date,
+              endDate: offer.end_date,
+              usageMaximumLimit: offer.usage_maximum_limit,
+              currentUsageLimit: offer.current_usage_limit,
+              storeLocations:
+                offer.locations?.map((loc) => loc.id.toString()) || [],
+              products: offer.products?.map((prod) => prod.id.toString()) || [],
+              discount_amount: offer.discount_amount,
+              discount_percentage: offer.discount_percentage,
+              cart_minimum_value: offer.cart_minimum_value,
+              cart_item_count: offer.cart_item_count,
+              offer_item_count: offer.offer_item_count,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch offer details:", error);
+          toast.error("Failed to fetch offer details");
+        }
+      };
+
+      fetchOfferDetails();
+    }
+  }, [isEditMode, id, dispatch]);
+
+  // Update the page title based on mode
+  const pageTitle = isEditMode ? "Edit your offer" : "Create your offer";
+  const pageDescription = isEditMode
+    ? "Update your custom offer details"
+    : "Create your custom offers for your customers";
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -814,12 +856,8 @@ const CreateOffer = () => {
           <ChevronLeft size={20} />
         </button>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Create your offer
-          </h1>
-          <p className="text-sm text-gray-500">
-            Create your custom offers for your customers
-          </p>
+          <h1 className="text-2xl font-semibold text-gray-900">{pageTitle}</h1>
+          <p className="text-sm text-gray-500">{pageDescription}</p>
         </div>
       </div>
 

@@ -78,7 +78,7 @@ export default function VerifyOTP() {
       );
 
       // Clear verification data
-      localStorage.removeItem("pendingLoginEmail");
+       
 
       if (isNewUser) {
         // New users always go to onboarding first

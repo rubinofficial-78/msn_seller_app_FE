@@ -1,191 +1,342 @@
-import React, { useState } from "react";
-import { Eye, Edit, Plus, Search } from "lucide-react";
-import CustomTable, { Column } from "../../components/CustomTable";
+import React, { useState, useEffect } from "react";
+import { Eye, Edit, Plus, Search, ChevronDown } from "lucide-react";
+import CustomTable from "../../components/CustomTable";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getPricing, getProductStatusList, saveBasicDetails } from "../../redux/Action/action";
+import { AppDispatch } from "../../redux/store";
+import { RootState } from "../../redux/types";
+import { toast } from "react-hot-toast";
 
-interface PricingRule {
-  id: string | number;
-  ruleName: string;
-  ruleType: string;
-  discountType: string;
-  discountValue: number;
-  startDate: string;
-  endDate: string;
-  status: string;
-  applicableProducts: number;
+interface PricingProduct {
+  id: number;
+  name: string;
+  sku_id: string;
+  mrp: number;
+  sales_price: number;
+  payment_type_id: number;
+  status: {
+    display_name: string;
+    lookup_code: string;
+  };
 }
-
-const pricingData: PricingRule[] = [
-  {
-    id: 1,
-    ruleName: "Summer Sale",
-    ruleType: "Seasonal",
-    discountType: "Percentage",
-    discountValue: 20,
-    startDate: "2024-04-01",
-    endDate: "2024-06-30",
-    status: "ACTIVE",
-    applicableProducts: 150,
-  },
-  {
-    id: 2,
-    ruleName: "Bulk Purchase",
-    ruleType: "Quantity Based",
-    discountType: "Fixed Amount",
-    discountValue: 500,
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-    status: "ACTIVE",
-    applicableProducts: 75,
-  },
-];
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const [paginationState, setPaginationState] = useState({
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const pricing = useSelector((state: RootState) => state.data.pricing);
+  const productStatusList = useSelector((state: RootState) => state.data.productStatusList);
+
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [params, setParams] = useState({
     page_no: 1,
     per_page: 10,
-    total_rows: pricingData.length,
+    search: "",
+    status: ""
   });
 
-  const handleViewRule = (rule: PricingRule) => {
-    console.log("View pricing rule:", rule);
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState({
+    mrp: 0,
+    sales_price: 0
+  });
+
+  useEffect(() => {
+    fetchPricing();
+  }, [params]);
+
+  useEffect(() => {
+    dispatch(getProductStatusList());
+  }, [dispatch]);
+
+  const fetchPricing = async () => {
+    try {
+      await dispatch(getPricing(params));
+    } catch (error) {
+      console.error("Failed to fetch pricing:", error);
+    }
   };
 
-  const handleEditRule = (rule: PricingRule) => {
-    console.log("Edit pricing rule:", rule);
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
+    setParams(prev => ({
+      ...prev,
+      search: searchValue,
+      page_no: 1
+    }));
   };
 
-  const pricingTableColumns = [
+  const handleEditPrice = (product: PricingProduct) => {
+    setEditingRow(product.sku_id);
+    setEditValues({
+      mrp: product.mrp,
+      sales_price: product.sales_price
+    });
+  };
+
+  const handleSavePrice = async (product: PricingProduct) => {
+    try {
+      await dispatch(saveBasicDetails({
+        sku_id: product.sku_id,
+        mrp: editValues.mrp,
+        sales_price: editValues.sales_price,
+        payment_type_id: product.payment_type_id
+      }));
+      
+      setEditingRow(null);
+      fetchPricing();
+      toast.success('Price updated successfully');
+    } catch (error) {
+      toast.error('Failed to update price');
+      console.error('Error updating price:', error);
+    }
+  };
+
+  const headCells = [
     {
-      id: "ruleName",
-      key: "ruleName",
-      label: "Rule Name",
-      minWidth: 160,
-    },
-    {
-      id: "ruleType",
-      key: "ruleType",
-      label: "Rule Type",
-      minWidth: 140,
-    },
-    {
-      id: "discountType",
-      key: "discountType",
-      label: "Discount Type",
-      minWidth: 140,
-    },
-    {
-      id: "discountValue",
-      key: "discountValue",
-      label: "Discount Value",
-      minWidth: 120,
-      type: "custom",
-      renderCell: (row: PricingRule) => (
-        <span>
-          {row.discountType === "Percentage" ? `${row.discountValue}%` : `₹${row.discountValue}`}
-        </span>
-      ),
-    },
-    {
-      id: "dateRange",
-      key: ["startDate", "endDate"],
-      label: "Valid Period",
+      id: "name",
+      key: "name",
+      label: "Product Name",
       minWidth: 200,
-      type: "custom",
-      renderCell: (row: PricingRule) => (
-        <span>
-          {new Date(row.startDate).toLocaleDateString()} -{" "}
-          {new Date(row.endDate).toLocaleDateString()}
-        </span>
-      ),
     },
     {
-      id: "applicableProducts",
-      key: "applicableProducts",
-      label: "Applicable Products",
-      minWidth: 140,
-      type: "number",
+      id: "sku_id",
+      key: "sku_id",
+      label: "SKU ID",
+      minWidth: 120,
+    },
+    {
+      id: "mrp",
+      key: "mrp",
+      label: "MRP",
+      minWidth: 100,
+      renderCell: (row: PricingProduct) => {
+        if (editingRow === row.sku_id) {
+          return (
+            <input
+              type="number"
+              value={editValues.mrp}
+              onChange={(e) => setEditValues(prev => ({ ...prev, mrp: Number(e.target.value) }))}
+              className="w-24 px-2 py-1 border border-gray-300 rounded"
+            />
+          );
+        }
+        return `₹${row.mrp}`;
+      }
+    },
+    {
+      id: "sales_price",
+      key: "sales_price",
+      label: "Sales Price",
+      minWidth: 100,
+      renderCell: (row: PricingProduct) => {
+        if (editingRow === row.sku_id) {
+          return (
+            <input
+              type="number"
+              value={editValues.sales_price}
+              onChange={(e) => setEditValues(prev => ({ ...prev, sales_price: Number(e.target.value) }))}
+              className="w-24 px-2 py-1 border border-gray-300 rounded"
+            />
+          );
+        }
+        return `₹${row.sales_price}`;
+      }
     },
     {
       id: "status",
-      key: "status",
+      key: "status.display_name",
       label: "Status",
-      type: "status",
       minWidth: 120,
+      renderCell: (row: PricingProduct) => {
+        const statusCode = row.status?.lookup_code || '';
+        const statusDisplay = row.status?.display_name || 'N/A';
+        
+        let statusStyle = '';
+        switch (statusCode.toUpperCase()) {
+          case 'ACTIVE':
+            statusStyle = 'bg-green-100 text-green-800';
+            break;
+          case 'DRAFT':
+            statusStyle = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'INACTIVE':
+            statusStyle = 'bg-gray-100 text-gray-600';
+            break;
+          default:
+            statusStyle = 'bg-gray-100 text-gray-800';
+        }
+
+        return (
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle}`}>
+            {statusDisplay}
+          </span>
+        );
+      }
     },
     {
       id: "actions",
       key: "actions",
       label: "Actions",
-      type: "custom",
-      minWidth: 100,
-      renderCell: (row: PricingRule) => (
+      minWidth: 120,
+      renderCell: (row: PricingProduct) => (
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleEditRule(row)}
-            className="p-1 text-green-600 hover:text-green-700 rounded-full hover:bg-green-50"
-            title="Edit"
-          >
-            <Edit size={16} />
-          </button>
-          <button
-            onClick={() => handleViewRule(row)}
-            className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
-            title="View"
-          >
-            <Eye size={16} />
-          </button>
+          {editingRow === row.sku_id ? (
+            <>
+              <button
+                onClick={() => handleSavePrice(row)}
+                className="px-3 py-1 text-sm text-white bg-primary-600 rounded hover:bg-primary-700"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditingRow(null)}
+                className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => handleEditPrice(row)}
+              className="px-3 py-1 text-sm text-white bg-primary-600 rounded hover:bg-primary-700"
+            >
+              Change Price
+            </button>
+          )}
         </div>
-      ),
-    },
-  ] satisfies Column[];
+      )
+    }
+  ];
 
-  const handlePaginationChange = (params: {
-    page_no?: number;
-    per_page?: number;
-  }) => {
-    setPaginationState((prev) => ({
+  const handleViewProduct = (product: PricingProduct) => {
+    navigate(`/products/view/${product.id}`);
+  };
+
+  const handleEditProduct = (product: PricingProduct) => {
+    navigate(`/products/edit/${product.id}`);
+  };
+
+  const handlePaginationChange = (newParams: { page_no?: number; per_page?: number }) => {
+    setParams(prev => ({
       ...prev,
-      page_no: params.page_no || prev.page_no,
-      per_page: params.per_page || prev.per_page,
+      ...newParams
     }));
   };
 
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <div className="relative flex-1 max-w-xs">
-          <Search
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-            size={16}
-          />
-          <input
-            type="text"
-            placeholder="Search Pricing Rules"
-            className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-primary-500"
-          />
-        </div>
-        <button
-          onClick={() => navigate("/dashboard/products/create-pricing-rule")}
-          className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-        >
-          <Plus size={16} />
-          <span>ADD PRICING RULE</span>
-        </button>
+  if (pricing.loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
-      <CustomTable
-        headCells={pricingTableColumns}
-        data={pricingData}
-        pagination={true}
-        meta_data={{
-          total_rows: pricingData.length,
-          page_no: paginationState.page_no,
-          per_page: paginationState.per_page,
-          totalPages: Math.ceil(pricingData.length / paginationState.per_page),
-        }}
-        setParams={handlePaginationChange}
-      />
+    );
+  }
+
+  if (pricing.error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-red-600">
+          <p>Error loading pricing data:</p>
+          <p>{pricing.error}</p>
+          <button 
+            onClick={fetchPricing}
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative max-w-xs">
+            <Search
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+              size={16}
+            />
+            <input
+              type="text"
+              value={params.search}
+              onChange={handleSearch}
+              placeholder="Search products..."
+              className="pl-8 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50"
+            >
+              <span className="text-sm">
+                {params.status 
+                  ? productStatusList.data?.find(s => s.lookup_code === params.status)?.display_name 
+                  : "Filter by Status"}
+              </span>
+              <ChevronDown size={16} className={`transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isStatusDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setParams(prev => ({ ...prev, status: '', page_no: 1 }));
+                      setIsStatusDropdownOpen(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                  >
+                    All Statuses
+                  </button>
+                  {productStatusList.data?.map((status) => (
+                    <button
+                      key={status.lookup_code}
+                      onClick={() => {
+                        setParams(prev => ({
+                          ...prev,
+                          status: status.lookup_code,
+                          page_no: 1
+                        }));
+                        setIsStatusDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm ${
+                        params.status === status.lookup_code 
+                          ? 'bg-primary-50 text-primary-600' 
+                          : 'hover:bg-gray-100'
+                      }`}
+                    >
+                      {status.display_name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow">
+        <CustomTable
+          headCells={headCells}
+          data={pricing.data || []}
+          pagination={true}
+          meta_data={{
+            total: pricing.meta?.total_rows || 0,
+            per_page: params.per_page,
+            current_page: params.page_no,
+            last_page: pricing.meta?.total_pages || 1,
+            from: ((params.page_no - 1) * params.per_page) + 1,
+            to: Math.min(params.page_no * params.per_page, pricing.meta?.total_rows || 0)
+          }}
+          setParams={handlePaginationChange}
+          loading={pricing.loading}
+        />
+      </div>
     </div>
   );
 };

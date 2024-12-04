@@ -135,10 +135,16 @@ import {
   GET_LOCATIONS_REQUEST,
   GET_LOCATIONS_SUCCESS,
   GET_LOCATIONS_FAILURE,
+  GET_PRICING_REQUEST,
+  GET_PRICING_SUCCESS,
+  GET_PRICING_FAILURE,
+  GET_PRODUCT_STATUS_LIST_REQUEST,
+  GET_PRODUCT_STATUS_LIST_SUCCESS,
+  GET_PRODUCT_STATUS_LIST_FAILURE,
   GET_INVENTORY_STATUS_LOOKUP_REQUEST,
   GET_INVENTORY_STATUS_LOOKUP_SUCCESS,
   GET_INVENTORY_STATUS_LOOKUP_FAILURE,
-  GET_INVENTORY_SUCCESS
+  GET_INVENTORY_SUCCESS,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -375,6 +381,17 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: null
+  },
+  pricing: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  productStatusList: {
+    loading: false,
+    error: null,
+    data: []
   }
 };
 
@@ -1582,6 +1599,61 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: null,
           data: action.payload.data,
           meta: action.payload.meta.pagination
+        }
+      };
+    case GET_PRICING_REQUEST:
+      return {
+        ...state,
+        pricing: {
+          ...state.pricing,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRICING_SUCCESS:
+      return {
+        ...state,
+        pricing: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_PRICING_FAILURE:
+      return {
+        ...state,
+        pricing: {
+          ...state.pricing,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PRODUCT_STATUS_LIST_REQUEST:
+      return {
+        ...state,
+        productStatusList: {
+          ...state.productStatusList,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCT_STATUS_LIST_SUCCESS:
+      return {
+        ...state,
+        productStatusList: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PRODUCT_STATUS_LIST_FAILURE:
+      return {
+        ...state,
+        productStatusList: {
+          ...state.productStatusList,
+          loading: false,
+          error: action.payload
         }
       };
       

@@ -182,6 +182,12 @@ import {
   UPSERT_INVENTORY_REQUEST,
   UPSERT_INVENTORY_SUCCESS,
   UPSERT_INVENTORY_FAILURE,
+  GET_PRICING_REQUEST,
+  GET_PRICING_SUCCESS,
+  GET_PRICING_FAILURE,
+  GET_PRODUCT_STATUS_LIST_REQUEST,
+  GET_PRODUCT_STATUS_LIST_SUCCESS,
+  GET_PRODUCT_STATUS_LIST_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 
@@ -3076,6 +3082,91 @@ export const upsertInventory = (
       const errorMessage = error instanceof Error ? error.message : 'Failed to upsert inventory';
       dispatch({
         type: UPSERT_INVENTORY_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getPricing = (
+  params: { 
+    page_no: number; 
+    per_page: number;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRICING_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/products`,
+        {
+          params: {
+            ...params,
+            pricing: true
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      dispatch({
+        type: GET_PRICING_SUCCESS,
+        payload: {
+          data: response.data.data,
+          meta: response.data.meta.pagination
+        }
+      });
+
+      return response.data;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch pricing data';
+      dispatch({
+        type: GET_PRICING_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getProductStatusList = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_STATUS_LIST_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/product_status`,
+        {
+          params: {
+            per_page: -1
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_STATUS_LIST_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch product status list');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch product status list';
+      dispatch({
+        type: GET_PRODUCT_STATUS_LIST_FAILURE,
         payload: errorMessage
       });
       throw error;

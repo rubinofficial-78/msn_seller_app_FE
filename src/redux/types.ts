@@ -319,7 +319,18 @@ export interface AuthState {
       total_pages: number;
   } | null;
   };
-   
+  pricing: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: any;
+  };
+  productStatusList: {
+    loading: boolean;
+    error: string | null;
+    data: Category[] | null;
+    subCategories: Category[] | null;
+  };
 }
 
 export interface RootState {

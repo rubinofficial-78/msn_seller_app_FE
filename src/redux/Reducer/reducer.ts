@@ -137,7 +137,8 @@ import {
   GET_LOCATIONS_FAILURE,
   GET_INVENTORY_STATUS_LOOKUP_REQUEST,
   GET_INVENTORY_STATUS_LOOKUP_SUCCESS,
-  GET_INVENTORY_STATUS_LOOKUP_FAILURE
+  GET_INVENTORY_STATUS_LOOKUP_FAILURE,
+  GET_INVENTORY_SUCCESS
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -368,6 +369,12 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  inventory: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
   }
 };
 
@@ -1564,6 +1571,17 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           ...state.inventoryStatusLookup,
           loading: false,
           error: action.payload
+        }
+      };
+    case GET_INVENTORY_SUCCESS:
+      console.log('Reducer: GET_INVENTORY_SUCCESS payload:', action.payload);
+      return {
+        ...state,
+        inventory: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta.pagination
         }
       };
       

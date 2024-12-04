@@ -1,30 +1,40 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Edit, Plus, Search } from "lucide-react";
+import { Eye, Edit, Plus, Search, X } from "lucide-react";
 import CustomTable from "../../components/CustomTable";
 import { useNavigate } from "react-router-dom";
 import { Column } from "../../components/CustomTable";
 import { useDispatch, useSelector } from "react-redux";
-import { getInventoryStatusLookup, getInventory } from "../../redux/Action/action";
+import { getInventoryStatusLookup, getInventory,upsertInventory } from "../../redux/Action/action";
 import { AppDispatch } from "../../redux/store";
 import { RootState } from "../../redux/types";
+import { toast } from "react-hot-toast";
 
 interface Stock {
   id: number;
   product: {
+    id: number;
     name: string;
     image_arr: string[];
+    sku_id: string;
   };
   product_sku_id: string;
   location: {
+    id: number;
     name: string;
   };
   on_hand_quantity: number;
   alert_quantity: number;
   status: {
+    id: number;
     display_name: string;
     lookup_code: string;
   };
   createdAt: string;
+}
+
+interface UpdateInventoryForm {
+  alert_quantity: number;
+  on_hand_quantity: number;
 }
 
 const StockOverview = () => {
@@ -41,23 +51,90 @@ const StockOverview = () => {
   });
   
   const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
+  const [updateForm, setUpdateForm] = useState<UpdateInventoryForm>({
+    alert_quantity: 0,
+    on_hand_quantity: 0,
+  });
 
   useEffect(() => {
+    console.log('Current Inventory State:', {
+      inventory,
+      inventoryMeta,
+      inventoryStatusLookup
+    });
+  }, [inventory, inventoryMeta, inventoryStatusLookup]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log('Fetching inventory with params:', {
+          page_no: paginationState.page_no,
+          per_page: paginationState.per_page,
+          status_id: selectedStatus ? Number(selectedStatus) : undefined
+        });
+        
+        const response = await dispatch(getInventory({ 
+          page_no: paginationState.page_no, 
+          per_page: paginationState.per_page,
+          status_id: selectedStatus ? Number(selectedStatus) : undefined
+        }));
+        
+        console.log('Inventory API Response:', response);
+      } catch (error) {
+        console.error('Error fetching inventory:', error);
+      }
+    };
+
+    fetchData();
     dispatch(getInventoryStatusLookup());
-    dispatch(getInventory({ 
-      page_no: paginationState.page_no, 
-      per_page: paginationState.per_page 
-    }));
-  }, [dispatch, paginationState.page_no, paginationState.per_page]);
+  }, [dispatch, paginationState.page_no, paginationState.per_page, selectedStatus]);
 
   const handleUpdateStock = (stock: Stock) => {
-    console.log("Update stock:", stock);
+    setSelectedStock(stock);
+    setUpdateForm({
+      alert_quantity: stock.alert_quantity,
+      on_hand_quantity: stock.on_hand_quantity,
+    });
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleInventoryUpdate = async () => {
+    try {
+      if (!selectedStock) return;
+
+      const payload = [{
+        section_key: "INVENTORY",
+        product_sku_id: selectedStock.product_sku_id,
+        location_id: selectedStock.location.id,
+        on_hand_quantity: Number(updateForm.on_hand_quantity),
+        alert_quantity: Number(updateForm.alert_quantity),
+      }];
+
+      const response = await dispatch(upsertInventory(payload));
+      
+      if (response?.meta?.status) {
+        toast.success("Inventory updated successfully");
+        setIsUpdateModalOpen(false);
+        // Refresh inventory data
+        dispatch(getInventory({ 
+          page_no: paginationState.page_no, 
+          per_page: paginationState.per_page 
+        }));
+      } else {
+        throw new Error(response?.meta?.message || "Failed to update inventory");
+      }
+    } catch (error) {
+      console.error('Failed to update inventory:', error);
+      toast.error("Failed to update inventory");
+    }
   };
 
   const stockTableColumns = [
     {
       id: "productName",
-      key: "productName",
+      key: "product.name",
       label: "Product Name",
       minWidth: 200,
       type: "image_text",
@@ -79,50 +156,53 @@ const StockOverview = () => {
     },
     {
       id: "skuId",
-      key: "skuId",
+      key: "product_sku_id",
       label: "SKU Id",
       minWidth: 140,
-      renderCell: (row: Stock) => row.product_sku_id,
     },
     {
       id: "locationName",
-      key: "locationName",
+      key: "location.name",
       label: "Location Name",
       minWidth: 160,
       type: "custom",
-      renderCell: (row: Stock) => (
-        <div className="flex items-center gap-1">
-          {row.location.name}
-          <span className="text-blue-500 cursor-help" title="Location Info">
-            ⓘ
-          </span>
-        </div>
-      ),
+      // renderCell: (row: Stock) => (
+      //   <div className="flex items-center gap-1">
+      //     {row.location.name}
+      //     <span className="text-blue-500 cursor-help" title="Location Info">
+      //       ⓘ
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       id: "quantityInHand",
-      key: "quantityInHand",
+      key: "on_hand_quantity",
       label: "Quantity in hand",
       minWidth: 140,
       type: "number",
-      renderCell: (row: Stock) => row.on_hand_quantity,
     },
     {
       id: "alertQuantity",
-      key: "alertQuantity",
+      key: "alert_quantity",
       label: "Alert Quantity",
       minWidth: 140,
       type: "number",
-      renderCell: (row: Stock) => row.alert_quantity,
     },
     {
       id: "status",
-      key: "status",
+      key: "status.display_name",
       label: "Status",
       minWidth: 120,
       type: "custom",
       renderCell: (row: Stock) => (
-        <span className="px-2 py-1 text-sm rounded-full bg-red-100 text-red-600">
+        <span 
+          className={`px-2 py-1 text-sm rounded-full ${
+            row.status.lookup_code === "OPTIMIZED" 
+              ? "bg-green-100 text-green-600"
+              : "bg-red-100 text-red-600"
+          }`}
+        >
           {row.status.display_name}
         </span>
       ),
@@ -157,8 +237,96 @@ const StockOverview = () => {
     }));
   };
 
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedStatus(value);
+    
+    // Reset pagination when filter changes
+    setPaginationState(prev => ({
+      ...prev,
+      page_no: 1
+    }));
+  };
+
+  const renderUpdateModal = () => {
+    if (!isUpdateModalOpen || !selectedStock) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Update Inventory</h2>
+            <button 
+              onClick={() => setIsUpdateModalOpen(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product Name
+              </label>
+              <div className="text-gray-900">{selectedStock.product.name}</div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Alert Quantity
+              </label>
+              <input
+                type="number"
+                value={updateForm.alert_quantity}
+                onChange={(e) => setUpdateForm(prev => ({
+                  ...prev,
+                  alert_quantity: Number(e.target.value)
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity in Hand
+              </label>
+              <input
+                type="number"
+                value={updateForm.on_hand_quantity}
+                onChange={(e) => setUpdateForm(prev => ({
+                  ...prev,
+                  on_hand_quantity: Number(e.target.value)
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => setIsUpdateModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleInventoryUpdate}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
+      <div className="mb-4 text-sm text-gray-500">
+        Debug: Inventory Count: {inventory?.length || 0}
+      </div>
       <div className="flex items-center gap-4 mb-4">
         <div className="relative w-64">
           <Search
@@ -173,12 +341,12 @@ const StockOverview = () => {
         </div>
         <select
           value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
+          onChange={handleStatusChange}
           className="w-48 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
         >
           <option value="">All Status</option>
           {inventoryStatusLookup.map((status) => (
-            <option key={status.id} value={status.lookup_code}>
+            <option key={status.id} value={status.id}>
               {status.display_name}
             </option>
           ))}
@@ -190,13 +358,14 @@ const StockOverview = () => {
         data={inventory}
         pagination={true}
         meta_data={{
-          total_rows: inventoryMeta?.total_rows || 0,
+          total_rows: inventoryMeta?.total_rows,
           page_no: paginationState.page_no,
           per_page: paginationState.per_page,
-          totalPages: inventoryMeta?.total_pages || 0,
+          totalPages: inventoryMeta?.total_pages,
         }}
         setParams={handlePaginationChange}
       />
+      {renderUpdateModal()}
     </div>
   );
 };

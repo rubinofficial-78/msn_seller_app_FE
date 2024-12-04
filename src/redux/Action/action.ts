@@ -2999,6 +2999,8 @@ export const getInventory = (params: {
 
     try {
       const token = localStorage.getItem('token');
+      console.log('Making inventory API request with params:', params);
+      
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/mdm/inventory`,
         {
@@ -3010,20 +3012,22 @@ export const getInventory = (params: {
         }
       );
 
+      console.log('Raw API Response:', response.data);
+
       if (response.data?.meta?.status) {
         dispatch({
           type: GET_INVENTORY_SUCCESS,
           payload: {
             data: response.data.data,
-            meta: response.data.meta.pagination
+            meta: response.data.meta
           }
         });
         return response.data;
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch inventory');
       }
-
     } catch (error) {
+      console.error('Inventory API Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch inventory';
       dispatch({
         type: GET_INVENTORY_FAILURE,

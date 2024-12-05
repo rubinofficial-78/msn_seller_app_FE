@@ -237,7 +237,7 @@ function Support() {
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex flex-wrap items-center gap-4">
           <button 
-            onClick={() => navigate('/dashboard/support/create')} 
+            onClick={() => navigate('/dashboard/support/create-ticket')} 
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
           >
             RAISE TICKET

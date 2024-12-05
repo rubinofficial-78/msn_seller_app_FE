@@ -1,41 +1,64 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Users, ShoppingCart, Store, Package, CheckCircle, Clock, XCircle, RotateCcw, IndianRupee, TrendingUp } from 'lucide-react';
-import { getDashboardCounts, getSellerCounts, getAffiliatePartnerCounts, getSalesOrdersCount } from '../redux/Action/action';
-import { RootState } from '../redux/types';
-import { AppDispatch } from '../redux/store';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import GLOBAL_CONSTANTS, { useGlobalConstants } from '../GlobalConstants';
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Users,
+  ShoppingCart,
+  Store,
+  Package,
+  CheckCircle,
+  Clock,
+  XCircle,
+  RotateCcw,
+  IndianRupee,
+  TrendingUp,
+} from "lucide-react";
+import {
+  getDashboardCounts,
+  getSellerCounts,
+  getAffiliatePartnerCounts,
+  getSalesOrdersCount,
+} from "../redux/Action/action";
+import { RootState } from "../redux/types";
+import { AppDispatch } from "../redux/store";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
+import GLOBAL_CONSTANTS, { useGlobalConstants } from "../GlobalConstants";
 // Sample data for the charts
 const chartData = [
   {
     name: 'Week 1',
-    'Fulfilled Orders': 350,
-    'In Progress Orders': 50,
-    'Canceled Orders': 100,
+    Completed: 350,
+    'In Progress': 50,
+    Cancelled: 100,
   },
   {
     name: 'Week 2',
-    'Fulfilled Orders': 250,
-    'In Progress Orders': 30,
-    'Canceled Orders': 80,
+    Completed: 250,
+    'In Progress': 30,
+    Cancelled: 80,
   },
   {
     name: 'Week 3',
-    'Fulfilled Orders': 400,
-    'In Progress Orders': 45,
-    'Canceled Orders': 120,
+    Completed: 400,
+    'In Progress': 45,
+    Cancelled: 120,
   },
-];
-
-const revenueData = [
-  { name: 'Mon', value: 4000 },
-  { name: 'Tue', value: 3000 },
-  { name: 'Wed', value: 5000 },
-  { name: 'Thu', value: 2780 },
-  { name: 'Fri', value: 1890 },
-  { name: 'Sat', value: 2390 },
-  { name: 'Sun', value: 3490 },
+  {
+    name: 'Week 4',
+    Completed: 380,
+    'In Progress': 40,
+    Cancelled: 90,
+  }
 ];
 
 interface SubStat {
@@ -54,18 +77,22 @@ interface StatCardProps {
   gradient?: string;
 }
 
-const StatCard = ({ 
-  title, 
-  value, 
-  icon: Icon, 
-  subStats = [], 
-  className = "", 
-  gradient = "from-blue-50 to-blue-100"
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+  subStats = [],
+  className = "",
+  gradient = "from-blue-50 to-blue-100",
 }: StatCardProps) => (
-  <div className={`p-4 sm:p-6 rounded-xl shadow-sm bg-gradient-to-br ${gradient} border border-white/50 backdrop-blur-sm ${className}`}>
+  <div
+    className={`p-4 sm:p-6 rounded-xl shadow-sm bg-gradient-to-br ${gradient} border border-white/50 backdrop-blur-sm ${className}`}
+  >
     <div className="flex justify-between items-start">
       <div>
-        <p className="text-gray-600 font-medium text-sm sm:text-base">{title}</p>
+        <p className="text-gray-600 font-medium text-sm sm:text-base">
+          {title}
+        </p>
         <h3 className="text-xl sm:text-2xl font-bold mt-2">{value}</h3>
       </div>
       {Icon && (
@@ -77,16 +104,27 @@ const StatCard = ({
     {subStats.length > 0 && (
       <div className="mt-4 space-y-2">
         {subStats.map((stat, index) => (
-          <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-white/60">
+          <div
+            key={index}
+            className="flex items-center justify-between p-2 rounded-lg bg-white/60"
+          >
             <div className="flex items-center space-x-2">
               {stat.icon}
-              <span className="text-xs sm:text-sm text-gray-600">{stat.label}</span>
+              <span className="text-xs sm:text-sm text-gray-600">
+                {stat.label}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs sm:text-sm font-semibold">{stat.value}</span>
+              <span className="text-xs sm:text-sm font-semibold">
+                {stat.value}
+              </span>
               {stat.trend && (
-                <span className={`text-xs ${stat.trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {stat.trend > 0 ? '↑' : '↓'} {Math.abs(stat.trend)}%
+                <span
+                  className={`text-xs ${
+                    stat.trend > 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {stat.trend > 0 ? "↑" : "↓"} {Math.abs(stat.trend)}%
                 </span>
               )}
             </div>
@@ -96,15 +134,22 @@ const StatCard = ({
     )}
   </div>
 );
- 
-  console.log("Global Constants:", GLOBAL_CONSTANTS.userType);
- 
+
+console.log("Global Constants:", GLOBAL_CONSTANTS.userType);
+
 const Dashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { data: dashboardData, loading: dashboardLoading } = useSelector((state: RootState) => state.data.dashboardCounts);
-  const { data: sellerCounts, loading: sellerLoading } = useSelector((state: RootState) => state.data.sellerCounts);
-  const { data: affiliatePartnerCounts, loading: affiliateLoading } = useSelector((state: RootState) => state.data.affiliatePartnerCounts);
-  const { data: salesOrdersCount, loading: salesOrdersLoading } = useSelector((state: RootState) => state.data.salesOrdersCount);
+  const { data: dashboardData, loading: dashboardLoading } = useSelector(
+    (state: RootState) => state.data.dashboardCounts
+  );
+  const { data: sellerCounts, loading: sellerLoading } = useSelector(
+    (state: RootState) => state.data.sellerCounts
+  );
+  const { data: affiliatePartnerCounts, loading: affiliateLoading } =
+    useSelector((state: RootState) => state.data.affiliatePartnerCounts);
+  const { data: salesOrdersCount, loading: salesOrdersLoading } = useSelector(
+    (state: RootState) => state.data.salesOrdersCount
+  );
 
   useEffect(() => {
     dispatch(getDashboardCounts());
@@ -114,168 +159,201 @@ const Dashboard = () => {
   }, [dispatch]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 bg-gray-50/30">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-0">Dashboard Overview</h1>
-        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-          <span className="font-medium">Last Updated:</span>
-          <span>{new Date().toLocaleString()}</span>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Revenue"
-          value={`₹${dashboardData?.total_revenue?._sum?.order_amount?.toLocaleString('en-IN') || 0}`}
-          icon={IndianRupee}
-          gradient="from-emerald-50 to-teal-100"
-        />
-        
-        <StatCard
-          title="Total Partners"
-          value={affiliatePartnerCounts?.Total.toString() || "0"}
-          icon={Users}
-          gradient="from-blue-50 to-indigo-100"
-          subStats={[
-            {
-              icon: <Users className="text-blue-600" size={16} />,
-              label: "Active Partners",
-              value: affiliatePartnerCounts?.Approved.toString() || "0",
-              trend: 12
-            },
-            {
-              icon: <Clock className="text-orange-600" size={16} />,
-              label: "Pending Partners",
-              value: affiliatePartnerCounts?.Pending.toString() || "0",
-              trend: -5
-            }
-          ]}
-        />
-        
-        <StatCard
-          title="Total Orders"
-          value={salesOrdersCount?.total_orders.toString() || "0"}
-          icon={ShoppingCart}
-          gradient="from-violet-50 to-purple-100"
-          subStats={[
-            {
-              icon: <CheckCircle className="text-green-600" size={16} />,
-              label: "Completed Orders",
-              value: salesOrdersCount?.completed.toString() || "0",
-              trend: 8
-            },
-            {
-              icon: <XCircle className="text-red-600" size={16} />,
-              label: "Cancelled Orders",
-              value: salesOrdersCount?.cancelled.toString() || "0",
-              trend: -3
-            }
-          ]}
-        />
-        
-        <StatCard
-          title="Total Sellers"
-          value={dashboardData?.total_sellers.toString() || "0"}
-          icon={Store}
-          gradient="from-rose-50 to-pink-100"
-          subStats={[
-            {
-              icon: <Store className="text-blue-600" size={16} />,
-              label: "Active Sellers",
-              value: sellerCounts?.Approved.toString() || "0",
-              trend: 15
-            },
-            {
-              icon: <Clock className="text-orange-600" size={16} />,
-              label: "Pending Approval",
-              value: sellerCounts?.Pending.toString() || "0",
-              trend: -2
-            }
-          ]}
-        />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
-        {/* Order Statistics */}
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-            <div className="mb-2 sm:mb-0">
-              <h3 className="text-base sm:text-lg font-bold text-gray-800">Order Statistics</h3>
-              <p className="text-xs sm:text-sm text-gray-600">Weekly order distribution</p>
-            </div>
-            <select className="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-gray-200 text-sm">
-              <option>This Week</option>
-              <option>Last Week</option>
-              <option>Last Month</option>
-            </select>
-          </div>
-          <div className="h-[250px] sm:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }} 
-                />
-                <Legend />
-                <Bar dataKey="Fulfilled Orders" fill="#4F46E5" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="In Progress Orders" fill="#F59E0B" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Canceled Orders" fill="#EF4444" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+    <div className="min-h-screen bg-gray-50/30">
+      <div className="p-4 lg:p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-0">
+            Dashboard Overview
+          </h1>
+          <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+            <span className="font-medium">Last Updated:</span>
+            <span>{new Date().toLocaleString()}</span>
           </div>
         </div>
 
-        {/* Revenue Trend */}
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-            <div className="mb-2 sm:mb-0">
-              <h3 className="text-base sm:text-lg font-bold text-gray-800">Revenue Trend</h3>
-              <p className="text-xs sm:text-sm text-gray-600">Daily revenue analysis</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            title="Total Revenue"
+            value={`₹${
+              dashboardData?.total_revenue?._sum?.order_amount?.toLocaleString(
+                "en-IN"
+              ) || 0
+            }`}
+            icon={IndianRupee}
+            gradient="from-emerald-50 to-teal-100"
+          />
+
+          <StatCard
+            title="Total Partners"
+            value={affiliatePartnerCounts?.Total.toString()}
+            icon={Users}
+            gradient="from-blue-50 to-indigo-100"
+            subStats={[
+              {
+                icon: <Users className="text-blue-600" size={16} />,
+                label: "Active Partners",
+                value: affiliatePartnerCounts?.Approved.toString(),
+                trend: 12,
+              },
+              {
+                icon: <Clock className="text-orange-600" size={16} />,
+                label: "Pending Partners",
+                value: affiliatePartnerCounts?.Pending.toString(),
+                trend: -5,
+              },
+            ]}
+          />
+
+          <StatCard
+            title="Total Orders"
+            value={salesOrdersCount?.total_orders.toString()}
+            icon={ShoppingCart}
+            gradient="from-violet-50 to-purple-100"
+            subStats={[
+              {
+                icon: <CheckCircle className="text-green-600" size={16} />,
+                label: "Completed Orders",
+                value: salesOrdersCount?.completed.toString(),
+                trend: 8,
+              },
+              {
+                icon: <XCircle className="text-red-600" size={16} />,
+                label: "Cancelled Orders",
+                value: salesOrdersCount?.cancelled.toString(),
+                trend: -3,
+              },
+            ]}
+          />
+
+          <StatCard
+            title="Total Sellers"
+            value={dashboardData?.total_sellers.toString()}
+            icon={Store}
+            gradient="from-rose-50 to-pink-100"
+            subStats={[
+              {
+                icon: <Store className="text-blue-600" size={16} />,
+                label: "Active Sellers",
+                value: sellerCounts?.Approved.toString(),
+                trend: 15,
+              },
+              {
+                icon: <Clock className="text-orange-600" size={16} />,
+                label: "Pending Approval",
+                value: sellerCounts?.Pending.toString(),
+                trend: -2,
+              },
+            ]}
+          />
+        </div>
+
+        {/* Make the chart section full width */}
+        <div className="w-full">
+          <div className="bg-white p-4 lg:p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Order Statistics</h3>
+                <p className="text-sm text-gray-500 mt-1">Weekly order distribution</p>
+              </div>
+              <select className="mt-2 sm:mt-0 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option>This Week</option>
+                <option>Last Month</option>
+                <option>Last Quarter</option>
+              </select>
             </div>
-            <select className="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-gray-200 text-sm">
-              <option>This Week</option>
-              <option>Last Week</option>
-              <option>Last Month</option>
-            </select>
-          </div>
-          <div className="h-[250px] sm:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            
+            {/* Increase chart height and add better styling */}
+            <div className="h-[400px] mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 20,
                   }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#4F46E5" 
-                  fillOpacity={1} 
-                  fill="url(#colorRevenue)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+                  barGap={8}
+                  barSize={32}
+                >
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    vertical={false}
+                    stroke="#f0f0f0"
+                  />
+                  <XAxis 
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'transparent' }}
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      padding: '12px',
+                    }}
+                    labelStyle={{ color: '#111827', fontWeight: 600, marginBottom: '4px' }}
+                    itemStyle={{ color: '#6B7280', fontSize: '12px', padding: '4px 0' }}
+                  />
+                  <Legend 
+                    verticalAlign="top"
+                    height={36}
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{
+                      paddingBottom: '20px',
+                    }}
+                  />
+                  <Bar 
+                    dataKey="Completed" 
+                    fill="#10B981" // Green
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="In Progress" 
+                    fill="#6366F1" // Indigo
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="Cancelled" 
+                    fill="#F43F5E" // Rose
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Summary section below chart */}
+            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-500">Completed Orders</p>
+                <p className="text-2xl font-semibold text-emerald-600 mt-1">
+                  {chartData.reduce((sum, item) => sum + item.Completed, 0)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-500">In Progress</p>
+                <p className="text-2xl font-semibold text-indigo-600 mt-1">
+                  {chartData.reduce((sum, item) => sum + item['In Progress'], 0)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-500">Cancelled</p>
+                <p className="text-2xl font-semibold text-rose-600 mt-1">
+                  {chartData.reduce((sum, item) => sum + item.Cancelled, 0)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -30,7 +30,7 @@ export interface Column {
   id: string;
   key: string | string[];
   label: string;
-  type?: 'custom' | 'status' | 'image_text' | 'amount' | 'status_toggle' | 'number';
+  type?: 'custom' | 'status' | 'image_text' | 'amount' | 'status_toggle' | 'number' | 'actions';
   maxWidth?: number;
   minWidth?: number;
   join?: boolean;
@@ -51,6 +51,7 @@ export interface Column {
   defaultValue?: string;
   max_limit_key?: string;
   renderCell?: (row: any) => React.ReactNode;
+  actions?: ColumnButton[];
 }
 
 interface CustomTableProps {
@@ -206,6 +207,22 @@ const CustomTable: React.FC<CustomTableProps> = ({
                               : cell.key
                                   .split(".")
                                   .reduce((obj, key) => obj?.[key], row)}
+                          </div>
+                        ) : cell.type === 'actions' ? (
+                          <div className="flex items-center gap-2">
+                            {cell.actions?.map((action, actionIndex) => (
+                              <button
+                                key={actionIndex}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  action.onClick(row);
+                                }}
+                                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                                title={action.label}
+                              >
+                                {action.icon}
+                              </button>
+                            ))}
                           </div>
                         ) : (
                           <div className="text-gray-900">

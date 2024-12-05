@@ -148,6 +148,9 @@ import {
   UPDATE_BUSINESS_SETTINGS_REQUEST,
   UPDATE_BUSINESS_SETTINGS_SUCCESS,
   UPDATE_BUSINESS_SETTINGS_FAILURE,
+  GET_COMPANY_BY_ID_REQUEST,
+  GET_COMPANY_BY_ID_SUCCESS,
+  GET_COMPANY_BY_ID_FAILURE,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -395,6 +398,11 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: []
+  },
+  companyDetails: {
+    loading: false,
+    error: null,
+    data: null
   }
 };
 
@@ -1677,6 +1685,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         loading: false,
         error: action.payload,
+      };
+    case GET_COMPANY_BY_ID_REQUEST:
+      return {
+        ...state,
+        companyDetails: {
+          ...state.companyDetails,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_COMPANY_BY_ID_SUCCESS:
+      return {
+        ...state,
+        companyDetails: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_COMPANY_BY_ID_FAILURE:
+      return {
+        ...state,
+        companyDetails: {
+          ...state.companyDetails,
+          loading: false,
+          error: action.payload
+        }
       };
     default:
       return state;

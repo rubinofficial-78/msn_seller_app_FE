@@ -188,8 +188,12 @@ import {
   GET_PRODUCT_STATUS_LIST_REQUEST,
   GET_PRODUCT_STATUS_LIST_SUCCESS,
   GET_PRODUCT_STATUS_LIST_FAILURE,
+  GET_COMPANY_BY_ID_REQUEST,
+  GET_COMPANY_BY_ID_SUCCESS,
+  GET_COMPANY_BY_ID_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
+ 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -1061,7 +1065,7 @@ export const getCompanyDropdown = (): ThunkAction<Promise<any>, RootState, unkno
   };
 };
 
-export const createBranch = (
+export const createBranchApi = (
   data: {
     name: string;
     email: string;
@@ -1941,6 +1945,7 @@ export const getProducts = (
     status?: string;
     page_no: number;
     per_page: number;
+    master_catalog: boolean;
   }
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
@@ -1951,7 +1956,7 @@ export const getProducts = (
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/catalog/products`,
         {
-          params,
+          params: { ...params, master_catalog: false },
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -2912,20 +2917,26 @@ export const getLocations = (): ThunkAction<Promise<any>, RootState, unknown, Au
   };
 };
 
-export const getMasterCatalogProducts = (
-  params: { page_no: number; per_page: number }
-): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+export const getMasterCatalogProducts = (params: { 
+  page_no: number; 
+  per_page: number;
+  status?: string;
+  master_catalog?: boolean;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_PRODUCTS_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
-      console.log('Fetching master catalog products with params:', { ...params, master_catalog: true });
-
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/catalog/products`,
         {
-          params: { ...params, master_catalog: true },
+          params: {
+            page_no: params.page_no,
+            per_page: params.per_page,
+            status: params.status,
+            master_catalog: params.master_catalog ?? true // Default to true if not provided
+          },
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -2945,11 +2956,11 @@ export const getMasterCatalogProducts = (
         });
         return response.data;
       } else {
-        throw new Error(response.data?.meta?.message || 'Failed to fetch master catalog products');
+        throw new Error(response.data?.meta?.message || 'Failed to fetch products');
       }
     } catch (error) {
-      console.error('Error fetching master catalog products:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch master catalog products';
+      console.error('Error fetching products:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch products';
       dispatch({
         type: GET_PRODUCTS_FAILURE,
         payload: errorMessage
@@ -3195,6 +3206,44 @@ export const getProductStatusList = (): ThunkAction<Promise<any>, RootState, unk
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch product status list';
       dispatch({
         type: GET_PRODUCT_STATUS_LIST_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getCompanyById = (
+  id: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_COMPANY_BY_ID_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/company_partners/get/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_COMPANY_BY_ID_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch company details');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch company details';
+      dispatch({
+        type: GET_COMPANY_BY_ID_FAILURE,
         payload: errorMessage
       });
       throw error;

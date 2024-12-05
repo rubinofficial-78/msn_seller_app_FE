@@ -53,9 +53,9 @@ import UiConfig from "../pages/settings/UiConfig";
 import CreatePartner from "../components/CreatePartner";
 import ViewPartner from "../pages/partners/ViewPartner";
 import EditPartner from "../pages/partners/EditPartner";
-// import CreateCompany from "../pages/companies/CreateCompany";
-// import ViewCompany from "../pages/companies/ViewCompany";
-// import EditCompany from "../pages/companies/EditCompany";
+import CreateCompany from "../components/CreateCompany";
+import ViewCompany from "../pages/ViewCompany";
+import EditCompany from "../pages/EditCompany";
 
 // Branch Related Pages
 import CreateBranch from "../components/CreateBranch";
@@ -69,6 +69,9 @@ import EditSeller from "../pages/EditSeller";
 
 // Add import for Payouts
 import Payouts from "../pages/Payouts";
+
+// Add import for CreateTicket
+import CreateTicket from "../pages/support/CreateTicket";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -228,20 +231,36 @@ export const routes: RouteObject[] = [
         children: [
           {
             path: "",
-            element: <Companies />,
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <Companies />
+              </ProtectedRoute>
+            ),
           },
-          // {
-          //   path: "create",
-          //   element: <CreateCompany />,
-          // },
-          // {
-          //   path: "view/:id",
-          //   element: <ViewCompany />,
-          // },
-          // {
-          //   path: "edit/:id",
-          //   element: <EditCompany />,
-          // },
+          {
+            path: "create",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <CreateCompany />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "view/:id",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <ViewCompany />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "edit/:id",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <EditCompany />
+              </ProtectedRoute>
+            ),
+          },
         ],
       },
 
@@ -334,7 +353,16 @@ export const routes: RouteObject[] = [
       },
       {
         path: "support",
-        element: <Support />,
+        children: [
+          {
+            path: "",
+            element: <Support />,
+          },
+          {
+            path: "create-ticket",
+            element: <CreateTicket />,
+          }
+        ],
       },
       {
         path: "reports",
@@ -480,6 +508,16 @@ export const routes: RouteObject[] = [
             <Payouts />
           </ProtectedRoute>
         ),
+      },
+
+      // Add this route for creating new offers
+      {
+        path: "/dashboard/products/create-offer",
+        element: <CreateOffer />,
+      },
+      {
+        path: "/dashboard/products/edit-offer/:id",
+        element: <CreateOffer />,
       },
     ],
   },

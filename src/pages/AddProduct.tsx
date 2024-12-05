@@ -230,134 +230,91 @@ const AddProduct = () => {
     }
   };
   const handleSelectChange = async (key: string, value: any) => {
-    console.log("Select changed:", key, value);
+    console.log("Select changed:", key, value); // Debug log
 
-    if (!ondcDetails) return;
-
-    // Find the field details from ONDC details
-    const fieldDetails = ondcDetails.find((o) => o.field_key === key);
-    if (!fieldDetails) return;
-
-    const dependentId = (fieldDetails as any).dependent_id;
-
-    if (dependentId) {
-      // Handle dependent dropdown
-      const mainDataValue = mainData.find((o) => o.id === dependentId)?.value;
-      if (!mainDataValue) return;
-
-      // Construct API path with the correct prefix
-      const apiPath = fieldDetails.data_source
-        ? `api/v1/backend_master/${fieldDetails.data_source.replace(
-            "$value",
-            mainDataValue
-          )}`
-        : "";
-
-      if (!apiPath) return;
-
-      loadDynamicApiData(apiPath, null, (responseData) => {
-        // Update dynamic fields
-        const updatedDynamicFields = { ...dynamicFields };
-        Object.keys(updatedDynamicFields).forEach((section) => {
-          updatedDynamicFields[section] = updatedDynamicFields[section].map(
-            (field: any) => {
-              if (field.key === key) {
-                return {
-                  ...field,
-                  value: value ?? null,
-                  options: responseData?.map((item: any) => ({
-                    id: item.id,
-                    label: item[field.data_source_params.display_name],
-                    value: item[field.data_source_params.field_to_send],
-                  })),
-                };
-              }
-              return field;
-            }
-          );
-        });
-
-        setDynamicFields(updatedDynamicFields);
-
-        // Update main data
-        const newValue = { id: Number(key), value };
-        setMainData((prev) => [
-          ...prev.filter((o) => o.id !== Number(key)),
-          newValue,
-        ]);
-
-        // Update form data
-        setFormData((prev) => ({
-          ...prev,
-          [key]: value,
-        }));
-      });
-    } else {
-      // Handle independent dropdown
-      if (fieldDetails.data_source) {
-        // Construct API path with the correct prefix
-        const apiPath = `api/v1/backend_master/${fieldDetails.data_source}`;
-
-        loadDynamicApiData(apiPath, null, (responseData) => {
-          // Update dynamic fields
-          const updatedDynamicFields = { ...dynamicFields };
-          Object.keys(updatedDynamicFields).forEach((section) => {
-            updatedDynamicFields[section] = updatedDynamicFields[section].map(
-              (field: any) => {
-                if (field.key === key) {
-                  return {
-                    ...field,
-                    value: value ?? null,
-                    options: responseData?.map((item: any) => ({
-                      id: item.id,
-                      label: item[field.data_source_params.display_name],
-                      value: item[field.data_source_params.field_to_send],
-                    })),
-                  };
-                }
-                return field;
-              }
-            );
-          });
-
-          setDynamicFields(updatedDynamicFields);
-
-          // Update main data
-          const newValue = { id: Number(key), value };
-          setMainData((prev) => [
-            ...prev.filter((o) => o.id !== Number(key)),
-            newValue,
-          ]);
-
-          // Update form data
-          setFormData((prev) => ({
-            ...prev,
-            [key]: value,
-          }));
-        });
-      }
+    // Special handling for HSN Code
+    if (key === 'hsnCode') {
+      const selectedHsn = hsnCodes?.find(hsn => hsn.hsn_code === value);
+      setFormData(prev => ({
+        ...prev,
+        [key]: value,
+        hsnReferenceNumber: selectedHsn?.reference_number || "",
+        hsnDescription: selectedHsn?.description || "",
+      }));
+      return;
     }
 
-    // Update main data regardless of API call
-    const newValue = { id: Number(key), value };
-    setMainData((prev) => [
-      ...prev.filter((o) => o.id !== Number(key)),
-      newValue,
-    ]);
+    // Special handling for category selection
+    if (key === 'categoryName') {
+      setFormData(prev => ({
+          ...prev,
+          [key]: value,
+        subCategoryName: null // Reset subcategory when category changes
+      }));
+      return;
+    }
 
-    // Update form data
-    setFormData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleInputChange = (key: string, value: any) => {
-    console.log('Input changed:', key, value);
+    // For all other select fields
     setFormData(prev => ({
       ...prev,
       [key]: value
     }));
+
+    // If this is an ONDC field, handle it specially
+    if (ondcDetails?.find(field => field.field_key === key)) {
+      const fieldDetails = ondcDetails.find(field => field.field_key === key);
+      if (!fieldDetails) return;
+
+      // Handle dependent dropdowns if needed
+      if (fieldDetails.data_source) {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await axios.get(
+            `${GLOBAL_CONSTANTS.BACKEND_API_URL}/${fieldDetails.data_source}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (response.data?.meta?.status) {
+            const options = response.data.data.map((item: any) => ({
+              label: item[fieldDetails.data_source_params.display_name],
+              value: item[fieldDetails.data_source_params.field_to_send],
+            }));
+
+            setFormData(prev => ({
+            ...prev,
+              [`${key}_options`]: options,
+              [key]: value
+            }));
+          }
+        } catch (error) {
+          console.error("Failed to fetch dependent options:", error);
+        }
+      }
+    }
+  };
+
+  const handleInputChange = (key: string, value: any) => {
+    console.log('Input/Select changed:', key, value); // Debug log
+    
+    if (key === 'hsnCode') {
+      const selectedHsn = hsnCodes?.find(hsn => hsn.hsn_code === value);
+      setFormData(prev => ({
+      ...prev,
+      [key]: value,
+        hsnReferenceNumber: selectedHsn?.reference_number || "",
+        hsnDescription: selectedHsn?.description || "",
+    }));
+    } else {
+    setFormData(prev => ({
+      ...prev,
+      [key]: value
+    }));
+    }
   };
 
   // Add loading state
@@ -676,7 +633,7 @@ const AddProduct = () => {
       label: "Category Name",
       required: true,
       placeholder: "Category name",
-      value: formData.categoryName,
+      value: formData.categoryName || '',
       options: loading
         ? []
         : categories
@@ -692,7 +649,7 @@ const AddProduct = () => {
       label: "Sub Category Name",
       required: true,
       placeholder: "Sub Category name",
-      value: formData.subCategoryName,
+      value: formData.subCategoryName || '',
       options: subCategoriesLoading
         ? []
         : subCategories
@@ -892,6 +849,7 @@ const AddProduct = () => {
         <AddForm
           data={basicInfoFields}
           handleInputonChange={handleInputChange}
+          handleSelectonChange={handleSelectChange}
         />
         <div className="flex justify-end mt-6">
           <button
@@ -916,6 +874,7 @@ const AddProduct = () => {
         <AddForm
           data={productImagesFields}
           handleInputonChange={handleInputChange}
+          handleSelectonChange={handleSelectChange}
           handleImageLink={handleImageUpload}
         />
         <div className="flex justify-end mt-6">
@@ -942,7 +901,11 @@ const AddProduct = () => {
         <p className="text-gray-600 mb-4">
           This information will help us to make the Measurement of your product.
         </p>
-        <AddForm data={uomFields} handleInputonChange={handleInputChange} />
+        <AddForm 
+          data={uomFields} 
+          handleInputonChange={handleInputChange}
+          handleSelectonChange={handleSelectChange}
+        />
         <div className="flex justify-end mt-6">
           <button
             onClick={() => handleSave("Unit of Measurement")}
@@ -973,7 +936,11 @@ const AddProduct = () => {
           This information is product pricing which will be shown to your
           customers.
         </p>
-        <AddForm data={pricingFields} handleInputonChange={handleInputChange} />
+        <AddForm 
+          data={pricingFields} 
+          handleInputonChange={handleInputChange}
+          handleSelectonChange={handleSelectChange}
+        />
         <div className="flex justify-end mt-6">
           <button
             onClick={() => handleSave("Pricing Details")}

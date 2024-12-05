@@ -36,105 +36,8 @@ const tabs: Tab[] = [
   { label: "System Users" },
 ];
 
+
 // Define table columns for CustomTable
-const tableColumns = [
-  {
-    id: "companyName",
-    key: "companyName",
-    label: "Company Name",
-    minWidth: 180,
-  },
-  {
-    id: "whiteLabeledUrl",
-    key: "whiteLabeledUrl",
-    label: "White Labeled URL",
-    minWidth: 180,
-    type: "link",
-  },
-  {
-    id: "companyWebsite",
-    key: "companyWebsite",
-    label: "Company Website",
-    minWidth: 180,
-    type: "link",
-  },
-  {
-    id: "createdDate",
-    key: "createdDate",
-    label: "Created Date",
-    minWidth: 140,
-  },
-  {
-    id: "contactInformation",
-    key: ["contactInformation.email", "contactInformation.phone"],
-    label: "Contact Information",
-    minWidth: 200,
-    join: true,
-    join_type: "multiline",
-  },
-  {
-    id: "address",
-    key: "address",
-    label: "Address",
-    minWidth: 200,
-  },
-  {
-    id: "branchCount",
-    key: "branchCount",
-    label: "Branch Count",
-    minWidth: 120,
-    type: "number",
-  },
-  {
-    id: "systemUsersCount",
-    key: "systemUsersCount",
-    label: "System Users Count",
-    minWidth: 140,
-    type: "number",
-  },
-  {
-    id: "status",
-    key: "status",
-    label: "Status",
-    minWidth: 200,
-    type: "status_toggle",
-  },
-];
-
-// Add columns for system users table
-const systemUserColumns = [
-  {
-    id: 'parent',
-    key: 'parent.name',
-    label: 'Company Name',
-    minWidth: 180,
-  },
-  {
-    id: 'name',
-    key: 'name',
-    label: 'Name',
-    minWidth: 180,
-  },
-  {
-    id: 'email',
-    key: 'email',
-    label: 'Email',
-    minWidth: 180,
-  },
-  {
-    id: 'mobile_number',
-    key: 'mobile_number',
-    label: 'Mobile Number',
-    minWidth: 140,
-  },
-  {
-    id: 'createdAt',
-    key: 'createdAt',
-    label: 'Created Date',
-    minWidth: 140,
-  }
-];
-
 const Companies = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -203,8 +106,11 @@ const Companies = () => {
   };
 
   // Handle row click for view/edit actions
-  const handleRowClick = (row: any) => {
-    navigate(`view/${row.id}`);
+  const handleRowClick = (row: any, source?: string) => {
+    // Only navigate to view if not clicking action buttons
+    if (source !== 'action') {
+      navigate(`view/${row.id}`);
+    }
   };
 
   // Add state for status lookup
@@ -288,6 +194,132 @@ const Companies = () => {
       }));
     }
   };
+
+  // Update system user columns definition
+  const systemUserColumns = [
+    {
+      id: "company",
+      key: "company.name",
+      label: "Company Name",
+      minWidth: 180,
+      type: "custom", // Use custom type for proper typing
+    },
+    {
+      id: "name",
+      key: "name",
+      label: "Name",
+      minWidth: 180,
+      type: "custom",
+    },
+    {
+      id: "email",
+      key: "email",
+      label: "Email",
+      minWidth: 200,
+      type: "custom",
+    },
+    {
+      id: "mobile_number",
+      key: "mobile_number",
+      label: "Mobile Number",
+      minWidth: 150,
+      type: "custom",
+    },
+    {
+      id: "created_date",
+      key: "createdAt",
+      label: "Created Date",
+      minWidth: 150,
+      type: "custom",
+      renderCell: (row: any) => (
+        <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+      ),
+    }
+  ];
+
+  // Move tableColumns definition here to access navigate
+  const tableColumns = [
+    {
+      id: "companyName",
+      key: "companyName",
+      label: "Company Name",
+      minWidth: 180,
+    },
+    {
+      id: "whiteLabeledUrl",
+      key: "whiteLabeledUrl",
+      label: "White Labeled URL",
+      minWidth: 180,
+      type: "link",
+    },
+    // {
+    //   id: "companyWebsite",
+    //   key: "companyWebsite",
+    //   label: "Company Website",
+    //   minWidth: 180,
+    //   type: "link",
+    // },
+    {
+      id: "createdDate",
+      key: "createdDate",
+      label: "Created Date",
+      minWidth: 140,
+    },
+    {
+      id: "contactInformation",
+      key: ["contactInformation.email", "contactInformation.phone"],
+      label: "Contact Information",
+      minWidth: 200,
+      join: true,
+      join_type: "multiline",
+    },
+    {
+      id: "address",
+      key: "address",
+      label: "Address",
+      minWidth: 200,
+    },
+    {
+      id: "branchCount",
+      key: "branchCount",
+      label: "Branch Count",
+      minWidth: 120,
+      type: "number",
+    },
+    {
+      id: "systemUsersCount",
+      key: "systemUsersCount",
+      label: "System Users Count",
+      minWidth: 140,
+      type: "number",
+    },
+    {
+      id: "status",
+      key: "status",
+      label: "Status",
+      minWidth: 200,
+      type: "status_toggle",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Actions",
+      minWidth: 120,
+      type: "actions",
+      actions: [
+        {
+          icon: <Eye size={18} className="text-blue-600" />,
+          label: "View",
+          onClick: (row: any) => navigate(`view/${row.id}`),
+        },
+        {
+          icon: <Edit size={18} className="text-green-600" />,
+          label: "Edit",
+          onClick: (row: any) => navigate(`edit/${row.id}`),
+        },
+      ],
+    },
+  ];
 
   // Update renderCompanies
   const renderCompanies = () => {

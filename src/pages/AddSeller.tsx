@@ -120,8 +120,18 @@ const AddSeller = () => {
       value: code.id.toString(),
     })) || [];
 
+  // Update handleInputChange to handle both input and select changes
   const handleInputChange = (key: string, value: any) => {
-    console.log("Radio change:", key, value);
+    console.log("Input/Select change:", key, value);
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // Add separate handler for select changes
+  const handleSelectChange = (key: string, value: any) => {
+    console.log("Select change:", key, value);
     setFormData((prev) => ({
       ...prev,
       [key]: value,
@@ -618,72 +628,27 @@ const AddSeller = () => {
         <h1 className="text-xl font-semibold">Create Seller</h1>
       </div>
 
-      <div className="space-y-8">
-        {/* Basic Details Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-lg font-medium mb-2">{formFields[0].title}</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            {formFields[0].description}
-          </p>
-          <AddForm
-            data={formFields[0].fields}
-            handleInputonChange={handleInputChange}
-            handleSelectonChange={handleInputChange}
-            handleImageLink={handleImageLink}
-          />
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={handleBasicDetailsSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Save Basic Details
-            </button>
+      <div className="space-y-6">
+        {formFields.map((section, index) => (
+          <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-medium mb-2">{section.title}</h2>
+            <p className="text-sm text-gray-500 mb-6">{section.description}</p>
+            <AddForm
+              data={section.fields}
+              handleInputonChange={handleInputChange}
+              handleSelectonChange={handleSelectChange}
+              handleImageLink={handleImageLink}
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={index === 0 ? handleBasicDetailsSave : index === 1 ? handleGstDetailsSave : handleBankDetailsSave}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Save {index === 0 ? "Basic" : index === 1 ? "GST" : "Banking"} Details
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* GST PAN Details Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-lg font-medium mb-2">{formFields[1].title}</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            {formFields[1].description}
-          </p>
-          <AddForm
-            data={formFields[1].fields}
-            handleInputonChange={handleInputChange}
-            handleSelectonChange={handleInputChange}
-            handleImageLink={handleImageLink}
-          />
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={handleGstDetailsSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Save GST Details
-            </button>
-          </div>
-        </div>
-
-        {/* Banking Details Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-lg font-medium mb-2">{formFields[2].title}</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            {formFields[2].description}
-          </p>
-          <AddForm
-            data={formFields[2].fields}
-            handleInputonChange={handleInputChange}
-            handleSelectonChange={handleInputChange}
-            handleImageLink={handleImageLink}
-          />
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={handleBankDetailsSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Save Banking Details
-            </button>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

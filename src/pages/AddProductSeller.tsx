@@ -364,18 +364,18 @@ const AddProductSeller = () => {
   };
 
   const handleInputChange = (key: string, value: any, index?: number) => {
-    if (key === 'hsnCode') {
-      const selectedHsn = hsnCodes?.find(hsn => hsn.hsn_code === value);
-      setFormData(prev => ({
+    if (key === "hsnCode") {
+      const selectedHsn = hsnCodes?.find((hsn) => hsn.hsn_code === value);
+      setFormData((prev) => ({
         ...prev,
         [key]: value,
         hsnReferenceNumber: selectedHsn?.reference_number || "",
         hsnDescription: selectedHsn?.description || "",
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [key]: value
+        [key]: value,
       }));
     }
   };
@@ -389,7 +389,9 @@ const AddProductSeller = () => {
 
       if (section === "Basic Information") {
         // Find the selected HSN code to get its reference number
-        const selectedHsn = hsnCodes?.find(hsn => hsn.hsn_code === formData.hsnCode);
+        const selectedHsn = hsnCodes?.find(
+          (hsn) => hsn.hsn_code === formData.hsnCode
+        );
 
         const basicDetails = {
           section_key: "BASIC_INFORMATION",
@@ -404,7 +406,7 @@ const AddProductSeller = () => {
 
         const response = await dispatch(saveBasicDetails(basicDetails));
         if (response?.meta?.status) {
-          localStorage.setItem('current_sku_id', formData.skuId);
+          localStorage.setItem("current_sku_id", formData.skuId);
           toast.success("Basic details saved successfully!");
         }
 
@@ -464,42 +466,46 @@ const AddProductSeller = () => {
         }
 
         // Prepare the bulk update payload
-        const bulkUpdatePayload = ondcDetails.map(field => {
+        const bulkUpdatePayload = ondcDetails.map((field) => {
           const value = formData[field.field_key];
           let processedValue = value;
 
           // Process value based on field type
           switch (field.type) {
-            case 'checkbox':
+            case "checkbox":
               processedValue = Boolean(value);
               break;
 
-            case 'dropdown':
-              if (field.field_name === "Return Within" || 
-                  field.field_name === "Time To Ship" || 
-                  field.field_name === "Time to Ship" ||
-                  field.field_name === "Expected Delivery_time") {
-                const selectedOption = timeOptions.find(opt => opt.value === value);
+            case "dropdown":
+              if (
+                field.field_name === "Return Within" ||
+                field.field_name === "Time To Ship" ||
+                field.field_name === "Time to Ship" ||
+                field.field_name === "Expected Delivery_time"
+              ) {
+                const selectedOption = timeOptions.find(
+                  (opt) => opt.value === value
+                );
                 if (selectedOption) {
                   processedValue = {
                     id: selectedOption.id,
                     label: selectedOption.label,
-                    lookup_code: selectedOption.value
+                    lookup_code: selectedOption.value,
                   };
                 }
               }
               break;
 
-            case 'decimal':
+            case "decimal":
               processedValue = value ? Number(value) : null;
               break;
 
-            case 'text':
-            case 'textarea':
+            case "text":
+            case "textarea":
               processedValue = value || null;
               break;
 
-            case 'date':
+            case "date":
               processedValue = value || null;
               break;
 
@@ -509,20 +515,24 @@ const AddProductSeller = () => {
 
           return {
             id: field.id,
-            value: processedValue
+            value: processedValue,
           };
         });
 
         // Call the bulk update API
-        const response = await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
+        const response = await dispatch(
+          bulkUpdateOndcDetails(bulkUpdatePayload)
+        );
         if (response?.meta?.status) {
           toast.success("ONDC details saved successfully!");
         } else {
-          throw new Error(response?.meta?.message || "Failed to save ONDC details");
+          throw new Error(
+            response?.meta?.message || "Failed to save ONDC details"
+          );
         }
       }
     } catch (error) {
-      console.error('Failed to save:', error);
+      console.error("Failed to save:", error);
       toast.error(`Failed to save ${section.toLowerCase()}. Please try again.`);
     } finally {
       setIsSaving(false);
@@ -586,7 +596,7 @@ const AddProductSeller = () => {
   // Update the getOndcFieldsBySection function
   const getOndcFieldsBySection = () => {
     if (!ondcDetails) return {};
-    
+
     return ondcDetails.reduce((acc: any, field: any) => {
       if (!acc[field.section_name]) {
         acc[field.section_name] = [];
@@ -598,81 +608,83 @@ const AddProductSeller = () => {
         label: field.field_name,
         required: field.category_id.is_mandatory,
         placeholder: field.placeholder || field.field_name,
-        value: formData[field.field_key] || field.value || '', // Use formData value if exists
+        value: formData[field.field_key] || field.value || "", // Use formData value if exists
         data_type: field.data_type,
       };
 
       // Special handling for time-related fields
-      if (field.field_name === "Return Within" || 
-          field.field_name === "Time To Ship" || 
-          field.field_name === "Time to Ship" ||
-          field.field_name === "Expected Delivery_time") {
+      if (
+        field.field_name === "Return Within" ||
+        field.field_name === "Time To Ship" ||
+        field.field_name === "Time to Ship" ||
+        field.field_name === "Expected Delivery_time"
+      ) {
         fieldObject = {
           ...fieldObject,
-          type: 'select',
+          type: "select",
           options: timeOptions,
-          data_source: null
+          data_source: null,
         };
       } else {
         // Handle other field types
         switch (field.type) {
-          case 'checkbox':
+          case "checkbox":
             fieldObject = {
               ...fieldObject,
-              type: 'checkbox',
-              checked: Boolean(formData[field.field_key] || field.value)
+              type: "checkbox",
+              checked: Boolean(formData[field.field_key] || field.value),
             };
             break;
 
-          case 'dropdown':
+          case "dropdown":
             fieldObject = {
               ...fieldObject,
-              type: 'select',
+              type: "select",
               options: formData[`${field.key}_options`] || [],
               data_source: field.data_source,
-              data_source_params: field.data_source_params
+              data_source_params: field.data_source_params,
             };
             break;
 
-          case 'decimal':
+          case "decimal":
             fieldObject = {
               ...fieldObject,
-              type: 'number',
-              step: '0.01',
-              value: formData[field.field_key] || field.value || ''
+              type: "number",
+              step: "0.01",
+              value: formData[field.field_key] || field.value || "",
             };
             break;
 
-          case 'textarea':
+          case "textarea":
             fieldObject = {
               ...fieldObject,
-              type: 'textarea',
+              type: "textarea",
               rows: 3,
-              value: formData[field.field_key] || field.value || ''
+              value: formData[field.field_key] || field.value || "",
             };
             break;
 
-          case 'date':
+          case "date":
             fieldObject = {
               ...fieldObject,
-              type: 'date',
-              value: formData[field.field_key] || field.value || ''
+              type: "date",
+              value: formData[field.field_key] || field.value || "",
             };
             break;
 
-          case 'text':
+          case "text":
             fieldObject = {
               ...fieldObject,
-              type: 'text',
-              value: formData[field.field_key] || field.value || ''
+              type: "text",
+              value: formData[field.field_key] || field.value || "",
             };
             break;
 
           default:
             fieldObject = {
               ...fieldObject,
-              type: 'text',
-              value: formData[field.field_key] || field.value || ''
+              type: "text",
+              value: formData[field.field_key] || field.value || "",
             };
         }
       }
@@ -858,7 +870,7 @@ const AddProductSeller = () => {
       options: locationsLoading
         ? []
         : (locations || []).map((location: any) => {
-            console.log('Mapping Location:', location);
+            console.log("Mapping Location:", location);
             return {
               label: location.name,
               value: location.id.toString(),
@@ -873,7 +885,7 @@ const AddProductSeller = () => {
       placeholder: "Add item inventory",
       value: formData.itemInventory,
       endAdornment: (
-        <select 
+        <select
           className="border-0 bg-transparent text-gray-500 text-sm"
           onChange={(e) => handleInputChange("inventoryUnit", e.target.value)}
         >
@@ -891,7 +903,7 @@ const AddProductSeller = () => {
       placeholder: "Add minimum item count",
       value: formData.minimumItemCount,
       endAdornment: (
-        <select 
+        <select
           className="border-0 bg-transparent text-gray-500 text-sm"
           onChange={(e) => handleInputChange("minimumUnit", e.target.value)}
         >
@@ -907,29 +919,31 @@ const AddProductSeller = () => {
   const handleSaveInventory = async () => {
     try {
       setIsSaving(true);
-      
+
       // Get the SKU ID from local storage
-      const storedSkuId = localStorage.getItem('current_sku_id');
-      
+      const storedSkuId = localStorage.getItem("current_sku_id");
+
       if (!storedSkuId) {
         toast.error("Please save basic information first");
         return;
       }
 
-      const inventoryPayload = [{
-        section_key: "INVENTORY",
-        product_sku_id: storedSkuId,
-        location_id: Number(formData.location),
-        on_hand_quantity: Number(formData.itemInventory),
-        alert_quantity: Number(formData.minimumItemCount),
-      }];
+      const inventoryPayload = [
+        {
+          section_key: "INVENTORY",
+          product_sku_id: storedSkuId,
+          location_id: Number(formData.location),
+          on_hand_quantity: Number(formData.itemInventory),
+          alert_quantity: Number(formData.minimumItemCount),
+        },
+      ];
 
       const response = await dispatch(upsertInventory(inventoryPayload));
       if (response?.meta?.status) {
         toast.success("Inventory details saved successfully!");
       }
     } catch (error) {
-      console.error('Failed to save inventory details:', error);
+      console.error("Failed to save inventory details:", error);
       toast.error("Failed to save inventory details. Please try again.");
     } finally {
       setIsSaving(false);
@@ -937,7 +951,7 @@ const AddProductSeller = () => {
   };
 
   // Add a check to disable the inventory save button if basic details haven't been saved
-  const isBasicDetailsSaved = Boolean(localStorage.getItem('current_sku_id'));
+  const isBasicDetailsSaved = Boolean(localStorage.getItem("current_sku_id"));
 
   // Add debug logging
   useEffect(() => {
@@ -997,26 +1011,26 @@ const AddProductSeller = () => {
     const fetchLocations = async () => {
       try {
         const response = await dispatch(getLocations());
-        console.log('Locations API Response:', response);
-        console.log('Locations Data:', response?.data);
+        console.log("Locations API Response:", response);
+        console.log("Locations Data:", response?.data);
       } catch (error) {
-        console.error('Error fetching locations:', error);
+        console.error("Error fetching locations:", error);
       }
     };
-    
+
     fetchLocations();
   }, [dispatch]);
 
   // Also log when locations data changes in the selector
   useEffect(() => {
-    console.log('Current Locations State:', locations);
-    console.log('Locations Loading:', locationsLoading);
+    console.log("Current Locations State:", locations);
+    console.log("Locations Loading:", locationsLoading);
   }, [locations, locationsLoading]);
 
   useEffect(() => {
     // Cleanup function
     return () => {
-      localStorage.removeItem('current_sku_id');
+      localStorage.removeItem("current_sku_id");
     };
   }, []);
 
@@ -1131,8 +1145,8 @@ const AddProductSeller = () => {
         <p className="text-gray-600 mb-4">
           This information will help us to make the Measurement of your product.
         </p>
-        <AddForm 
-          data={uomFields} 
+        <AddForm
+          data={uomFields}
           handleInputonChange={handleInputChange}
           handleSelectonChange={handleInputChange}
         />
@@ -1166,8 +1180,8 @@ const AddProductSeller = () => {
           This information is product pricing which will be shown to your
           customers.
         </p>
-        <AddForm 
-          data={pricingFields} 
+        <AddForm
+          data={pricingFields}
           handleInputonChange={handleInputChange}
           handleSelectonChange={handleInputChange}
         />

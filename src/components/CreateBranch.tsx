@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { createBranch, getCompanyDropdown } from "../redux/Action/action";
+import { createBranchApi, getCompanyDropdown } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
 import AddForm from "./AddForm";
@@ -72,7 +72,7 @@ const CreateBranch: React.FC = () => {
 
       console.log('Creating branch with payload:', payload);
 
-      const response = await dispatch(createBranch(payload));
+      const response = await dispatch(createBranchApi(payload));
       
       if (response?.meta?.status) {
         toast.success('Branch created successfully');

@@ -21,10 +21,15 @@ import ScrollableTabs from "../components/ScrollableTabs";
 import CustomTable, { Column } from "../components/CustomTable";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getMasterCatalogProducts, getMasterCatalogueProductCounts, getProductById,saveBasicDetails } from "../redux/Action/action";
+import {
+  getMasterCatalogProducts,
+  getMasterCatalogueProductCounts,
+  getProductById,
+  saveBasicDetails,
+} from "../redux/Action/action";
 import { RootState } from "../redux/types";
-import { AppDispatch } from '../redux/store';
-import { toast } from 'react-hot-toast';
+import { AppDispatch } from "../redux/store";
+import { toast } from "react-hot-toast";
 
 interface Product {
   id: number;
@@ -93,12 +98,6 @@ const tabs = [
     bgColor: "bg-gray-50",
     borderColor: "border-gray-200",
   },
-  { label: "My Groups", status: "GROUPS" },
-  { label: "Add Ons", status: "ADDONS" },
-  { label: "My Menu", status: "MENU" },
-  { label: "Stock Overview", status: "STOCK" },
-  { label: "Pricing", status: "PRICING" },
-  { label: "Offers & Discounts", status: "OFFERS" },
 ];
 
 // Update the ProductGrid component
@@ -111,7 +110,7 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
       await dispatch(getProductById(product.id));
       navigate(`/dashboard/products/view/${product.id}`);
     } catch (error) {
-      console.error('Failed to fetch product details:', error);
+      console.error("Failed to fetch product details:", error);
     }
   };
 
@@ -119,21 +118,20 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
     try {
       console.log("Toggle status for product:", product);
       const newStatusId = product.status?.lookup_code === "ACTIVE" ? 34 : 33;
-      
+
       const payload = {
         sku_id: product.sku_id,
         status_id: newStatusId,
-         
       };
 
-      console.log('Updating product status with payload:', payload);
-      
+      console.log("Updating product status with payload:", payload);
+
       const response = await dispatch(saveBasicDetails(payload));
-      console.log('Status update response:', response);
-      
+      console.log("Status update response:", response);
+
       // Refresh the products list after status update
       await dispatch(getMasterCatalogProducts({ page_no: 1, per_page: 10 }));
-      
+
       toast.success("Product status updated successfully");
     } catch (error) {
       console.error("Failed to update product status:", error);
@@ -144,7 +142,10 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {data.map((product) => (
-        <div key={product.id} className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+        <div
+          key={product.id}
+          className="bg-white rounded-lg shadow-sm p-4 border border-gray-200"
+        >
           {/* Product Image */}
           <div className="relative aspect-square mb-4">
             <img
@@ -164,7 +165,11 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
               <button
                 onClick={() => handleStatusToggle(product)}
                 className={`p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-50 
-                  ${product.status?.lookup_code === "ACTIVE" ? "text-green-600" : "text-red-600"}`}
+                  ${
+                    product.status?.lookup_code === "ACTIVE"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
                 title="Toggle Status"
               >
                 {product.status?.lookup_code === "ACTIVE" ? (
@@ -178,10 +183,13 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
 
           {/* Product Info */}
           <div className="space-y-2">
-            <h3 className="font-medium text-gray-900 truncate" title={product.name}>
+            <h3
+              className="font-medium text-gray-900 truncate"
+              title={product.name}
+            >
               {product.name}
             </h3>
-            
+
             <div className="flex items-center justify-between text-sm">
               <div className="text-gray-500">SKU: {product.sku_id}</div>
               <div className="text-gray-500">HSN: {product.hsn?.hsn_code}</div>
@@ -221,7 +229,11 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
                 Variants: {product.variants?.length || 0}
               </div>
               <div className="text-gray-500">
-                Stock: {product.inventory_arr?.reduce((sum, inv) => sum + (inv.quantity || 0), 0) || 0}
+                Stock:{" "}
+                {product.inventory_arr?.reduce(
+                  (sum, inv) => sum + (inv.quantity || 0),
+                  0
+                ) || 0}
               </div>
             </div>
           </div>
@@ -235,8 +247,12 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
 const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const productsMetaData = useSelector((state: RootState) => state.data.products.meta);
-  const selectedProduct = useSelector((state: RootState) => state.data.selectedProduct);
+  const productsMetaData = useSelector(
+    (state: RootState) => state.data.products.meta
+  );
+  const selectedProduct = useSelector(
+    (state: RootState) => state.data.selectedProduct
+  );
 
   const handleViewProduct = async (product: Product) => {
     try {
@@ -245,30 +261,29 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       // For example:
       navigate(`/dashboard/products/view/${product.id}`);
     } catch (error) {
-      console.error('Failed to fetch product details:', error);
+      console.error("Failed to fetch product details:", error);
       // Handle error (show toast notification, etc.)
     }
   };
 
   const handleStatusToggle = async (product: Product) => {
     try {
-    console.log("Toggle status for product:", product);
+      console.log("Toggle status for product:", product);
       const newStatusId = product.status?.lookup_code === "ACTIVE" ? 34 : 33;
-      
+
       const payload = {
         sku_id: product.sku_id,
         status_id: newStatusId,
-     
       };
 
-      console.log('Updating product status with payload:', payload);
-      
+      console.log("Updating product status with payload:", payload);
+
       const response = await dispatch(saveBasicDetails(payload));
-      console.log('Status update response:', response);
-      
+      console.log("Status update response:", response);
+
       // Refresh the products list after status update
       await dispatch(getMasterCatalogProducts({ page_no: 1, per_page: 10 }));
-      
+
       toast.success("Product status updated successfully");
     } catch (error) {
       console.error("Failed to update product status:", error);
@@ -433,17 +448,21 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       headCells={columns}
       data={data}
       pagination={true}
-      meta_data={productsMetaData || {
-        total_rows: 0,
-        page_no: 1,
-        per_page: 10,
-        totalPages: 0,
-      }}
+      meta_data={
+        productsMetaData || {
+          total_rows: 0,
+          page_no: 1,
+          per_page: 10,
+          totalPages: 0,
+        }
+      }
       setParams={(params) => {
-        dispatch(getMasterCatalogProducts({ 
-          page_no: params.page_no  , 
-          per_page: params.per_page  
-        }));
+        dispatch(
+          getMasterCatalogProducts({
+            page_no: params.page_no,
+            per_page: params.per_page,
+          })
+        );
       }}
     />
   );
@@ -458,13 +477,68 @@ const MasterCatalog = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const productsData = useSelector((state: RootState) => state.data.products);
-  const productCounts = useSelector((state: RootState) => state.data.productCounts?.data);
+  const productCounts = useSelector(
+    (state: RootState) => state.data.productCounts?.data
+  );
 
-  // Fetch products and counts when component mounts
+  // Add state for API params
+  const [queryParams, setQueryParams] = useState({
+    page_no: 1,
+    per_page: 10,
+    status: "",
+  });
+
+  // Update useEffect to use queryParams
   useEffect(() => {
-    dispatch(getMasterCatalogProducts({ page_no: 1, per_page: 10 }));
+    // Map tab status to API status
+    let status = "";
+    switch (activeTab) {
+      case "Active":
+        status = "ACTIVE";
+        break;
+      case "Inactive":
+        status = "INACTIVE";
+        break;
+      case "Draft":
+        status = "DRAFT";
+        break;
+      default:
+        status = "";
+    }
+
+    // Update query params
+    setQueryParams((prev) => ({
+      ...prev,
+      status,
+    }));
+
+    // Fetch products with status filter
+    dispatch(
+      getMasterCatalogProducts({
+        page_no: queryParams.page_no,
+        per_page: queryParams.per_page,
+        status: status, // Only include status if it's not empty
+      })
+    );
+
+    // Fetch counts
     dispatch(getMasterCatalogueProductCounts());
-  }, [dispatch]);
+  }, [dispatch, activeTab]);
+
+  // Update the table pagination handler
+  const handlePaginationChange = (params: {
+    page_no?: number;
+    per_page?: number;
+  }) => {
+    const newParams = {
+      ...queryParams,
+      page_no: params.page_no || queryParams.page_no,
+      per_page: params.per_page || queryParams.per_page,
+    };
+    setQueryParams(newParams);
+
+    dispatch(getMasterCatalogProducts(newParams));
+  };
 
   // Update the tabs with counts from API
   const updatedTabs = tabs.map((tab) => {
@@ -573,9 +647,7 @@ const MasterCatalog = () => {
             {viewMode === "grid" ? (
               <ProductGrid data={getFilteredData()} />
             ) : (
-              <ProductTable 
-                data={getFilteredData()} 
-              />
+              <ProductTable data={getFilteredData()} />
             )}
           </div>
         );

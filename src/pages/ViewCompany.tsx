@@ -1,32 +1,46 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { ArrowLeft, Edit } from 'lucide-react';
+import { getCompanyById } from '../redux/Action/action';
+import { RootState } from '../redux/types';
+import { AppDispatch } from '../redux/store';
+import { toast } from 'react-hot-toast';
 
 const ViewCompany: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const { data: company, loading, error } = useSelector(
+    (state: RootState) => state.data.companyDetails
+  );
 
-  // Mock data - replace with API call
-  const companyData = {
-    companyName: 'New Test Company',
-    whiteLabeledUrl: 'new.company.com',
-    website: 'new.company.com',
-    mobileNumber: '9896863423',
-    email: 'new_company@test.com',
-    address: '3-44/3, gandhi nagar Chintal',
-    state: 'Telangana',
-    contactPersonName: 'John Doe',
-    contactPersonDesignation: 'Manager',
-    contactPersonEmail: 'john@test.com',
-    contactPersonPhone: '9876543210',
-    bankName: 'Test Bank',
-    accountNumber: '1234567890',
-    ifscCode: 'TEST0001234',
-    branchName: 'Test Branch',
-    logoUrl: '',
-    primaryColor: '#1E40AF',
-    secondaryColor: '#60A5FA'
-  };
+  useEffect(() => {
+    const fetchCompanyDetails = async () => {
+      try {
+        await dispatch(getCompanyById(Number(id)));
+      } catch (error) {
+        toast.error('Failed to fetch company details');
+      }
+    };
+
+    if (id) {
+      fetchCompanyDetails();
+    }
+  }, [dispatch, id]);
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-64">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center">{error}</div>;
+  }
+
+  if (!company) {
+    return <div className="text-center">No company details found</div>;
+  }
 
   return (
     <div className="p-6">
@@ -50,150 +64,176 @@ const ViewCompany: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-lg p-6">
-        <h2 className="text-lg font-medium mb-4">Company Partner Basics Details</h2>
-        <p className="text-gray-600 text-sm mb-6">
-          This information represents partner basic details which is useful for identification of a partner
-        </p>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
+      <div className="space-y-6">
+        {/* Basic Details */}
+        <div className="bg-white rounded-lg p-6">
+          <h2 className="text-lg font-medium mb-4">Company Details</h2>
+          <div className="grid grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm text-gray-500">Company Name</h3>
-              <p className="mt-1">{companyData.companyName}</p>
+              <p className="mt-1">{company.name}</p>
             </div>
             <div>
-              <h3 className="text-sm text-gray-500">White Labeled URL</h3>
-              <p className="mt-1">{companyData.whiteLabeledUrl}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Website</h3>
-              <p className="mt-1">{companyData.website}</p>
+              <h3 className="text-sm text-gray-500">Email</h3>
+              <p className="mt-1">{company.email}</p>
             </div>
             <div>
               <h3 className="text-sm text-gray-500">Mobile Number</h3>
-              <p className="mt-1">{companyData.mobileNumber}</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">Email</h3>
-              <p className="mt-1">{companyData.email}</p>
+              <p className="mt-1">{company.mobile_number}</p>
             </div>
             <div>
-              <h3 className="text-sm text-gray-500">Address</h3>
-              <p className="mt-1">{companyData.address}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">State</h3>
-              <p className="mt-1">{companyData.state}</p>
+              <h3 className="text-sm text-gray-500">Created Date</h3>
+              <p className="mt-1">{new Date(company.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Contact Person Details */}
-      <div className="bg-white rounded-lg p-6 mt-8">
-        <h2 className="text-lg font-medium mb-4">Company Contact Person Details</h2>
-        <p className="text-gray-600 text-sm mb-6">
-          Contact person information for primary communication
-        </p>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">Contact Person Name</h3>
-              <p className="mt-1">{companyData.contactPersonName}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Designation</h3>
-              <p className="mt-1">{companyData.contactPersonDesignation}</p>
+        {/* Partner Company Details */}
+        {company.partner_company?.[0] && (
+          <div className="bg-white rounded-lg p-6">
+            <h2 className="text-lg font-medium mb-4">Partner Company Details</h2>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm text-gray-500">Contact Person</h3>
+                <p className="mt-1">{company.partner_company[0].contact_person_name}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Contact Email</h3>
+                <p className="mt-1">{company.partner_company[0].contact_person_email}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Contact Mobile</h3>
+                <p className="mt-1">{company.partner_company[0].contact_person_mobile}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Address</h3>
+                <p className="mt-1">{company.partner_company[0].address}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">GST Number</h3>
+                <p className="mt-1">{company.partner_company[0].gst_number}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">PAN Number</h3>
+                <p className="mt-1">{company.partner_company[0].pan_number}</p>
+              </div>
             </div>
           </div>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">Email</h3>
-              <p className="mt-1">{companyData.contactPersonEmail}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Phone Number</h3>
-              <p className="mt-1">{companyData.contactPersonPhone}</p>
+        )}
+
+        {/* Banking Details */}
+        {company.partner_company?.[0] && (
+          <div className="bg-white rounded-lg p-6">
+            <h2 className="text-lg font-medium mb-4">Banking Details</h2>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm text-gray-500">Bank Name</h3>
+                <p className="mt-1">{company.partner_company[0].bank_name}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Account Number</h3>
+                <p className="mt-1">{company.partner_company[0].bank_account_number}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Account Holder Name</h3>
+                <p className="mt-1">{company.partner_company[0].bank_account_holder_name}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">IFSC Code</h3>
+                <p className="mt-1">{company.partner_company[0].ifsc_code}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Banking Details */}
-      <div className="bg-white rounded-lg p-6 mt-8">
-        <h2 className="text-lg font-medium mb-4">Company Banking Details</h2>
-        <p className="text-gray-600 text-sm mb-6">
-          Banking information for financial transactions
-        </p>
+        {/* Brand Settings */}
+        {company.partner_company?.[0] && (
+          <div className="bg-white rounded-lg p-6">
+            <h2 className="text-lg font-medium mb-4">Brand Settings</h2>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm text-gray-500 mb-2">Company Logo</h3>
+                {company.partner_company[0].header_style?.logo ? (
+                  <img 
+                    src={company.partner_company[0].header_style.logo}
+                    alt="Company Logo"
+                    className="h-20 w-auto object-contain border rounded-lg p-2"
+                  />
+                ) : (
+                  <p className="text-gray-400">No logo uploaded</p>
+                )}
+              </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">Bank Name</h3>
-              <p className="mt-1">{companyData.bankName}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Account Number</h3>
-              <p className="mt-1">{companyData.accountNumber}</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">IFSC Code</h3>
-              <p className="mt-1">{companyData.ifscCode}</p>
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Branch Name</h3>
-              <p className="mt-1">{companyData.branchName}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+              <div>
+                <h3 className="text-sm text-gray-500">White Label URL</h3>
+                <p className="mt-1">{company.partner_company[0].url}</p>
+              </div>
 
-      {/* Brand Settings */}
-      <div className="bg-white rounded-lg p-6 mt-8">
-        <h2 className="text-lg font-medium mb-4">Company Brand Settings</h2>
-        <p className="text-gray-600 text-sm mb-6">
-          Company branding and appearance settings
-        </p>
+              <div>
+                <h3 className="text-sm text-gray-500">Header Color</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <div 
+                    className="w-10 h-10 rounded-lg border"
+                    style={{ 
+                      backgroundColor: company.partner_company[0].header_style?.background_color || '#000000'
+                    }}
+                  />
+                  <span className="text-sm text-gray-600">
+                    {company.partner_company[0].header_style?.background_color || '#000000'}
+                  </span>
+                </div>
+              </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">Company Logo</h3>
-              {companyData.logoUrl ? (
-                <img 
-                  src={companyData.logoUrl} 
-                  alt="Company Logo" 
-                  className="mt-1 h-20 object-contain"
-                />
-              ) : (
-                <p className="mt-1 text-gray-400">No logo uploaded</p>
+              <div>
+                <h3 className="text-sm text-gray-500">Seller Activation Charges</h3>
+                <div className="mt-1 space-y-1">
+                  <p className="text-sm">
+                    Min: ₹{company.seller_activation_min_charges || '0'}
+                  </p>
+                  <p className="text-sm">
+                    Max: ₹{company.seller_activation_max_charges || '0'}
+                  </p>
+                </div>
+              </div>
+
+              {company.partner_company[0].favicon_icon && (
+                <div>
+                  <h3 className="text-sm text-gray-500 mb-2">Favicon</h3>
+                  <img 
+                    src={company.partner_company[0].favicon_icon}
+                    alt="Favicon"
+                    className="h-8 w-8 object-contain border rounded-lg p-1"
+                  />
+                </div>
               )}
             </div>
           </div>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm text-gray-500">Primary Color</h3>
-              <div 
-                className="mt-1 w-10 h-10 rounded-lg border"
-                style={{ backgroundColor: companyData.primaryColor }}
-              />
-            </div>
-            <div>
-              <h3 className="text-sm text-gray-500">Secondary Color</h3>
-              <div 
-                className="mt-1 w-10 h-10 rounded-lg border"
-                style={{ backgroundColor: companyData.secondaryColor }}
-              />
+        )}
+
+        {/* Additional Details */}
+        {company.partner_company?.[0] && (
+          <div className="bg-white rounded-lg p-6">
+            <h2 className="text-lg font-medium mb-4">Additional Details</h2>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm text-gray-500">State</h3>
+                <p className="mt-1">{company.partner_company[0].state}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">City</h3>
+                <p className="mt-1">{company.partner_company[0].city}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Pincode</h3>
+                <p className="mt-1">{company.partner_company[0].pincode}</p>
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Aadhar Number</h3>
+                <p className="mt-1">{company.partner_company[0].aadhar_number}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

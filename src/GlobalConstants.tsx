@@ -63,7 +63,8 @@ const userType = determineUserType();
 console.log("Final Determined User Type:", userType);
 
 const GLOBAL_CONSTANTS = {
-  BACKEND_API_URL: "http://localhost:3001/",
+  // BACKEND_API_URL: "http://localhost:3001/",
+  BACKEND_API_URL: "http://20.197.4.12:3001/",
 
   url: import.meta.env.VITE_BACKEND_API_URL as string,
   fileUrl: import.meta.env.VITE_BACKEND_API_URL as string,

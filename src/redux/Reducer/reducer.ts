@@ -145,6 +145,9 @@ import {
   GET_INVENTORY_STATUS_LOOKUP_SUCCESS,
   GET_INVENTORY_STATUS_LOOKUP_FAILURE,
   GET_INVENTORY_SUCCESS,
+  UPDATE_BUSINESS_SETTINGS_REQUEST,
+  UPDATE_BUSINESS_SETTINGS_SUCCESS,
+  UPDATE_BUSINESS_SETTINGS_FAILURE,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes } from '../types';
 
@@ -1656,7 +1659,25 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
-      
+    case UPDATE_BUSINESS_SETTINGS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+    case UPDATE_BUSINESS_SETTINGS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        data: action.payload,
+        error: null,
+      };
+    case UPDATE_BUSINESS_SETTINGS_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
     default:
       return state;
   }

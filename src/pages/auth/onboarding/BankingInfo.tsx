@@ -80,12 +80,19 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
 
         // Get the email from local storage
         const email = localStorage.getItem("pendingLoginEmail");
+        const userRole = localStorage.getItem("userRole");
 
         if (email) {
-          // Mark onboarding as complete for this email
+          // Mark onboarding as complete and clear newUser flag
           localStorage.setItem(`onboarding_${email}`, "true");
-          // Go directly to seller dashboard after onboarding
-          navigate("/dashboard ");
+          localStorage.setItem("isNewUser", "false");
+          
+          // Navigate based on user role
+          if (userRole === "SELLER") {
+            navigate("/dashboard/seller-dashboard", { replace: true });
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
         }
       } else {
         toast.error(result?.payload?.meta?.message || "Failed to update bank details");

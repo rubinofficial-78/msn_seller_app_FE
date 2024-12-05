@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+ 
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -17,112 +18,32 @@ import {
   GitBranch,
   Truck,
 } from "lucide-react";
+import { Settings } from "lucide-react";
 import adya from "../assests/adya.png";
-import { useAuth } from "../contexts/AuthContext";
-
-const sellerAdminNavItems = [
-  {
-    icon: <LayoutDashboard size={20} />,
-    label: "Dashboard",
-    path: "/dashboard",
-  },
-  {
-    icon: <BookOpen size={20} />,
-    label: "Master Catalog",
-    path: "/dashboard/master-catalog",
-  },
-  {
-    icon: <Building2 size={20} />,
-    label: "Companies",
-    path: "/dashboard/companies",
-  },
-  {
-    icon: <GitBranch size={20} />,
-    label: "Branches",
-    path: "/dashboard/branches",
-  },
-  {
-    icon: <ShoppingCart size={20} />,
-    label: "Orders",
-    path: "/dashboard/orders",
-  },
-  { icon: <Users size={20} />, label: "Partners", path: "/dashboard/partners" },
-  {
-    icon: <CreditCard size={20} />,
-    label: "Payouts",
-    path: "/dashboard/payouts",
-  },
-  {
-    icon: <Package size={20} />,
-    label: "Products",
-    path: "/dashboard/products",
-  },
-  {
-    icon: <FileText size={20} />,
-    label: "Reports",
-    path: "/dashboard/reports",
-  },
-  { icon: <Store size={20} />, label: "Sellers", path: "/dashboard/sellers" },
-  {
-    icon: <HeadphonesIcon size={20} />,
-    label: "Support",
-    path: "/dashboard/support",
-  },
-  {
-    icon: <Truck size={20} />,
-    label: "Logistics",
-    path: "/dashboard/logistics",
-  },
-];
-
-const sellerNavItems = [
-  {
-    icon: <LayoutDashboard size={20} />,
-    label: "Dashboard",
-    path: "/dashboard",
-  },
-  {
-    icon: <Package size={20} className="flex-shrink-0" />,
-    label: "My Listings",
-    path: "/dashboard/my-listings",
-  },
-  {
-    icon: <ShoppingCart size={20} />,
-    label: "My Orders",
-    path: "/dashboard/my-orders",
-  },
-  {
-    icon: <HeadphonesIcon size={20} />,
-    label: "Support",
-    path: "/dashboard/support",
-  },
-  {
-    icon: <Truck size={20} />,
-    label: "Logistics",
-    path: "/dashboard/logistics",
-  },
-];
+import { navigationConfig, settingsConfig } from "../config/navigationConfig";
+import GLOBAL_CONSTANTS from "../GlobalConstants";
+import { UserRole } from "../types/auth";
 
 const Sidebar = () => {
-  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
+  
+  // Get userRole from localStorage first, then fallback to GLOBAL_CONSTANTS
+  const userRole = localStorage.getItem("userRole") || GLOBAL_CONSTANTS.userType;
+  // console.log("Current User Role in Sidebar:", userRole);
 
-  // Check if we're in the onboarding flow
-  const isOnboarding = location.pathname.includes('/onboarding');
+  // Filter navigation items based on user role
+  const filteredNavItems = navigationConfig.filter(item => 
+    item.roles.includes(userRole as UserRole)
+  );
+  
 
-  // Determine which nav items to show
-  const navItems = isAdmin 
-    ? sellerAdminNavItems 
-    : isOnboarding 
-      ? sellerNavItems.slice(0, 5) // Only show first 5 items during onboarding
-      : sellerNavItems;
-
-  const handleLogout = () => {
-    // Add your logout logic here
-    navigate("/");
-  };
+  // Get settings items based on role
+  const settingsItems = userRole === 'ADMIN' 
+    ? settingsConfig.ADMIN 
+    : userRole === 'SELLER' 
+      ? settingsConfig.SELLER 
+      : null;
 
   return (
     <div className="h-screen flex-shrink-0">
@@ -134,7 +55,7 @@ const Sidebar = () => {
         `}
       >
         <div className="flex flex-col h-full">
-          {/* Enhanced Logo and Header */}
+          {/* Logo and Header */}
           <div className="flex items-center p-6 border-b border-gray-100 relative">
             <div className="flex items-center">
               <img
@@ -152,12 +73,15 @@ const Sidebar = () => {
                   ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}
                 `}
               >
-                {isAdmin ? "Seller Admin" : "Seller"}
+                {userRole === 'ADMIN' ? "Admin Dashboard" : 
+                 userRole === 'SELLER' ? "Seller Dashboard" :
+                 userRole === 'AFFLIATE PARTNER' ? "Partner Dashboard" : 
+                 "Dashboard"}
               </h1>
             </div>
           </div>
 
-          {/* Improved Toggle Button */}
+          {/* Toggle Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={`
@@ -170,10 +94,11 @@ const Sidebar = () => {
             {isOpen ? <ChevronLeft size={18} /> : <Menu size={18} />}
           </button>
 
-          {/* Enhanced Navigation */}
+          {/* Navigation */}
           <nav className="flex-1 py-6 px-4">
             <ul className="space-y-1.5">
-              {navItems.map((item, index) => (
+              {/* Main Navigation Items */}
+              {filteredNavItems.map((item, index) => (
                 <li key={index}>
                   <NavLink
                     to={item.path}
@@ -188,12 +113,12 @@ const Sidebar = () => {
                     }
                     title={!isOpen ? item.label : ""}
                   >
-                    <div className={`flex-shrink-0 ${!isOpen ? "transform scale-110" : ""} transition-transform duration-200`}>
-                      {item.icon}
+                    <div className={`flex-shrink-0 ${!isOpen ? "transform scale-110" : ""}`}>
+                      {<item.icon size={20} />}
                     </div>
                     <span
                       className={`
-                        transition-all duration-300 text-sm font-medium truncate
+                        transition-all duration-300 text-sm font-medium
                         ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}
                       `}
                     >
@@ -202,13 +127,44 @@ const Sidebar = () => {
                   </NavLink>
                 </li>
               ))}
+
+              {/* Settings Navigation - Only for ADMIN and SELLER */}
+              {/* {settingsItems && (
+                <li>
+                  <NavLink
+                    to={userRole === 'ADMIN' ? '/dashboard/settings' : '/dashboard/seller-settings'}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap
+                      ${!isOpen && "justify-center"}
+                      ${
+                        isActive
+                          ? "bg-blue-50 text-blue-600 font-medium shadow-sm"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`
+                    }
+                  >
+                    <Settings size={20} />
+                    <span
+                      className={`
+                        transition-all duration-300 text-sm font-medium
+                        ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}
+                      `}
+                    >
+                      Settings
+                    </span>
+                  </NavLink>
+                </li>
+              )} */}
             </ul>
           </nav>
 
-          {/* Add Logout Button at Bottom */}
-          <div className={`p-4 border-t border-gray-100`}>
+          {/* Logout Section */}
+          <div className="p-4 border-t border-gray-100">
             <button
-              onClick={handleLogout}
+              onClick={() => {
+                localStorage.clear();
+                navigate("/login");
+              }}
               className={`
                 w-full flex items-center gap-3 px-4 py-3 rounded-lg
                 text-gray-600 hover:bg-gray-50 hover:text-gray-900
@@ -230,12 +186,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Spacer div */}
-      <div
-        className={`flex-shrink-0 transition-all duration-300 ${
-          isOpen ? "w-72" : "w-20"
-        }`}
-      />
+      {/* Spacer */}
+      <div className={`flex-shrink-0 transition-all duration-300 ${isOpen ? "w-72" : "w-20"}`} />
     </div>
   );
 };

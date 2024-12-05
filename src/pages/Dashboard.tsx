@@ -5,7 +5,7 @@ import { getDashboardCounts, getSellerCounts, getAffiliatePartnerCounts, getSale
 import { RootState } from '../redux/types';
 import { AppDispatch } from '../redux/store';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-
+import GLOBAL_CONSTANTS, { useGlobalConstants } from '../GlobalConstants';
 // Sample data for the charts
 const chartData = [
   {
@@ -96,7 +96,9 @@ const StatCard = ({
     )}
   </div>
 );
-
+ 
+  console.log("Global Constants:", GLOBAL_CONSTANTS.userType);
+ 
 const Dashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { data: dashboardData, loading: dashboardLoading } = useSelector((state: RootState) => state.data.dashboardCounts);

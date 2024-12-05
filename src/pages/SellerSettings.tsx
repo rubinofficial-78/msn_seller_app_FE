@@ -2,11 +2,7 @@ import React from "react";
 import {
   ArrowLeft,
   CreditCard,
-  Settings as SettingsIcon,
-  Mail,
-  Map,
   Database,
-  Eye,
   MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,72 +10,34 @@ import { useNavigate } from "react-router-dom";
 const SellerSettings = () => {
   const navigate = useNavigate();
 
-  const handleCardClick = (title: string) => {
-    switch (title) {
-      case "Account Details":
-        navigate("/dashboard/seller-settings/account-details");
-        break;
-      case "Banking & Business Details":
-        navigate("/dashboard/seller-settings/banking-details");
-        break;
-      case "Locations & Serviceability":
-        navigate("/dashboard/seller-settings/location-services");
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Use the same settings array as the original Settings component
   const settings = [
     {
       icon: <CreditCard size={24} />,
       title: "Account Details",
+      path: "account-details",
       description:
         "This information will help us to setup your account in our seller application and ensure smooth running.",
     },
     {
       icon: <Database size={24} />,
       title: "Banking & Business Details",
+      path: "banking-details",
       description:
-        "This information will help us to setup your Bank accounts in our seller application and ensure smooth running of funds from different network participants.",
-    },
-    {
-      icon: <SettingsIcon size={24} />,
-      title: "Access Management",
-      description:
-        "This information will help us to setup your account in our seller application and ensure smooth running.",
-    },
-    {
-      icon: <Mail size={24} />,
-      title: "Email & SMS Services",
-      description:
-        "Business information will help us to verify your business so the store at ONDC works smoothly and help us in smoother interactions.",
-    },
-    {
-      icon: <Map size={24} />,
-      title: "Maps Services",
-      description:
-        "This information will help us to setup your account in our seller application and ensure smooth running.",
-    },
-    {
-      icon: <Eye size={24} />,
-      title: "UI configuration",
-      description:
-        "This information will help you customize the look and feel of the platform. Change your brand Colors, CTA colors and tables and Data's visual look and feel",
+        "This information will help us to setup your Bank accounts in our seller application and ensure smooth running of funds.",
     },
     {
       icon: <MapPin size={24} />,
       title: "Locations & Serviceability",
+      path: "location-services",
       description:
         "This information will help us to setup your account in our seller application and ensure smooth running.",
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg"
@@ -91,19 +49,24 @@ const SellerSettings = () => {
 
       {/* Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {settings.map((setting, index) => (
+        {settings.map((setting) => (
           <div
-            key={index}
-            onClick={() => handleCardClick(setting.title)}
-            className="bg-white rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
+            key={setting.path}
+            onClick={() => navigate(setting.path)}
+            className="bg-white rounded-lg p-6 hover:shadow-md transition-all duration-200 
+                     cursor-pointer border border-gray-200 hover:border-blue-200 group"
           >
             <div className="flex items-start gap-4">
-              <div className="text-blue-500">{setting.icon}</div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+              <div className="p-3 rounded-lg bg-blue-50 text-blue-600 
+                            group-hover:bg-blue-100 transition-colors">
+                {setting.icon}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 
+                             group-hover:text-blue-600 transition-colors">
                   {setting.title}
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600">
                   {setting.description}
                 </p>
               </div>
@@ -115,4 +78,4 @@ const SellerSettings = () => {
   );
 };
 
-export default SellerSettings; 
+export default SellerSettings;

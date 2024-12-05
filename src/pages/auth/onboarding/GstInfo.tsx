@@ -15,6 +15,7 @@ interface BusinessType {
 const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { data: businessTypes, loading } = useSelector((state: RootState) => state.data.lookupCodes);
+  const [error, setError] = useState("");
   
   const [formValues, setFormValues] = useState({
     gstNumber: "",
@@ -58,6 +59,7 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     // Validate required fields
     if (!formValues.businessTypeId) {
@@ -81,45 +83,47 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
         section_key: "BUSINESS_DETAILS"
       };
 
-      // Log the payload for debugging
       console.log('Submitting payload:', payload);
 
-      // Get token for debugging
-      const token = localStorage.getItem('token');
-      console.log('Token:', token);
-
       const result = await dispatch(updateBusinessSettings(2, payload));
-      
-      // Log the complete response for debugging
-      console.log('Complete API Response:', result);
+      console.log('API Response:', result);
 
-      // Check if result has the expected structure
-      if (result?.payload?.meta?.status) {
+      // Check response structure based on your API response format
+      if (result?.meta?.status === true) {
+        // Success case
         toast.success("Business settings updated successfully");
         onNext(formValues);
-      } else if (result?.payload?.meta?.message) {
-        // Show specific error message from API
-        toast.error(result.payload.meta.message);
+      } else if (result?.meta?.message) {
+        // API returned an error message
+        setError(result.meta.message);
+        toast.error(result.meta.message);
       } else {
-        // Show generic error if no specific message
-        toast.error("Failed to update business settings. Please try again.");
+        // Unexpected response format
+        setError("Unexpected response from server");
+        toast.error("Unexpected response from server");
       }
-    } catch (error: any) {
-      // Log detailed error for debugging
-      console.error('Error updating business settings:', {
-        error,
-        message: error?.message,
-        response: error?.response?.data
-      });
 
-      // Show appropriate error message
-      if (error?.response?.data?.meta?.message) {
-        toast.error(error.response.data.meta.message);
-      } else if (error?.message) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
+    } catch (error: any) {
+      console.error('Error updating business settings:', error);
+      
+      // Detailed error logging
+      if (error.response) {
+        console.log('Error Response Data:', error.response.data);
+        console.log('Error Response Status:', error.response.status);
+        console.log('Error Response Headers:', error.response.headers);
       }
+
+      // Handle different error scenarios
+      let errorMessage = "Failed to update business settings";
+      
+      if (error.response?.data?.meta?.message) {
+        errorMessage = error.response.data.meta.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -209,6 +213,11 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
 
   return (
     <form onSubmit={handleSubmit}>
+      {error && (
+        <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-lg">
+          {error}
+        </div>
+      )}
       <AddForm
         data={formFields}
         handleInputonChange={handleInputChange}

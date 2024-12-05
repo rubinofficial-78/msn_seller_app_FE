@@ -1,26 +1,40 @@
-import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import { UserRole } from "../types/auth";
+import GLOBAL_CONSTANTS from "../GlobalConstants";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
 }
 
-export default function ProtectedRoute({
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   allowedRoles,
-}: ProtectedRouteProps) {
-  const { user } = useAuth();
+}) => {
+  const token = localStorage.getItem("token");
+  const userRole =
+    localStorage.getItem("userRole") || GLOBAL_CONSTANTS.userType;
+  const isNewUser = localStorage.getItem("isNewUser") === "true";
 
-  if (!user) {
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+  if (isNewUser) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(userRole as UserRole)) {
+    // Redirect to appropriate dashboard based on role
+    switch (userRole) {
+      case "SELLER":
+        return <Navigate to="/dashboard/seller-dashboard" replace />;
+      default:
+        return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;
-}
+};
+
+export default ProtectedRoute;

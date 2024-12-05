@@ -1,70 +1,101 @@
-import { RouteObject } from "react-router-dom";
-import { Navigate } from "react-router-dom";
+import { Navigate, RouteObject } from "react-router-dom";
+import GLOBAL_CONSTANTS from "../GlobalConstants";
+
+// Main Layout and Auth Components
+import DashboardLayout from "../components/layouts/DashboardLayout";
 import Login from "../pages/auth/Login";
 import VerifyOTP from "../pages/auth/VerifyOTP";
+import Onboarding from "../pages/auth/Onboarding";
+import ProtectedRoute from "../components/ProtectedRoute";
+
+// Dashboard and Main Pages
 import Dashboard from "../pages/Dashboard";
+import SellerDashboard from "../pages/seller/SellerDashboard";
 import Orders from "../pages/Orders";
-import Partners from "../pages/Partners";
-import Payouts from "../pages/Payouts";
 import Products from "../pages/Products";
-import Reports from "../pages/Reports";
-import Sellers from "../pages/Sellers";
-import Support from "../pages/Support";
-import DashboardLayout from "../components/layouts/DashboardLayout";
-import Settings from "../pages/Settings";
 import MasterCatalog from "../pages/MasterCatalog";
+import Sellers from "../pages/Sellers";
+import Partners from "../pages/Partners";
 import Companies from "../pages/Companies";
 import Branches from "../pages/Branches";
+import Support from "../pages/Support";
+import Reports from "../pages/Reports";
 import Logistics from "../pages/Logistics";
 import Notifications from "../pages/Notifications";
-import ProtectedRoute from "../components/ProtectedRoute";
+import Settings from "../pages/Settings";
+import SellerSettings from "../pages/SellerSettings";
 import MyListings from "../pages/seller/MyListing";
 import MyOrders from "../pages/seller/MyOrders";
-import SellerDashboard from "../pages/seller/SellerDashboard";
-import AccountDetails from "../pages/settings/AccountDetails";
-import LocationServices from "../pages/settings/LocationServices";
-import BankingDetails from "../pages/settings/BankingDetails";
-import SellerAccountDetails from "../pages/sellerSettings/AccountDetails";
-import SellerLocationServices from "../pages/sellerSettings/LocationServices";
-import SellerBankingDetails from "../pages/sellerSettings/BankingDetails";
-import SellerSettings from "../pages/SellerSettings";
-import Onboarding from "../pages/auth/Onboarding";
-import CreateCompany from "../components/CreateCompany";
-import CreateBranch from "../components/CreateBranch";
-import ViewBranch from "../pages/ViewBranch";
-import EditBranch from "../pages/EditBranch";
-import ViewCompany from "../pages/ViewCompany";
-import EditCompany from "../pages/EditCompany";
-import CreatePartner from "../components/CreatePartner";
-import AddSeller from "../pages/AddSeller";
-import SellerOnboarding from "../components/SellerOnboarding";
+
+// Product Related Pages
+import AddProduct from "../pages/AddProduct";
+import AddProductSeller from "../pages/AddProductSeller";
+import ViewProduct from "../pages/products/ViewProduct";
+// import EditProduct from "../pages/products/EditProduct";
 import BulkUpload from "../pages/BulkUpload";
-import UiConfig from "../pages/settings/UiConfig";
-import LogisticsDetails from "../pages/LogisticsDetails";
+import CreateOffer from "../pages/products/CreateOffer";
 import AddGroup from "../pages/AddGroup";
 import AddAddOn from "../pages/AddAddOn";
 import AddMenu from "../pages/AddMenu";
-import ShippingDetailsPage from "../pages/sellerSettings/ShippingDetailsPage";
-import CreateOffer from "../pages/products/CreateOffer";
+
+// Settings Related Pages
+import AccountDetails from "../pages/settings/AccountDetails";
+import LocationServices from "../pages/settings/LocationServices";
+import BankingDetails from "../pages/settings/BankingDetails";
 import AccessManagement from "../pages/settings/AccessManagement";
 import CreateRole from "../pages/settings/CreateRole";
 import CreateUser from "../pages/settings/CreateUser";
-import CreateTicket from "../pages/support/CreateTicket";
 import NotificationSettings from "../pages/settings/NotificationSettings";
 import MapSettings from "../pages/settings/MapSettings";
+import UiConfig from "../pages/settings/UiConfig";
+
+// Partner and Company Related Pages
+import CreatePartner from "../components/CreatePartner";
 import ViewPartner from "../pages/partners/ViewPartner";
 import EditPartner from "../pages/partners/EditPartner";
+// import CreateCompany from "../pages/companies/CreateCompany";
+// import ViewCompany from "../pages/companies/ViewCompany";
+// import EditCompany from "../pages/companies/EditCompany";
+
+// Branch Related Pages
+import CreateBranch from "../components/CreateBranch";
+import ViewBranch from "../pages/ViewBranch";
+import EditBranch from "../pages/EditBranch";
+
+// Seller Related Pages
+import AddSeller from "../pages/AddSeller";
 import ViewSeller from "../pages/ViewSeller";
-import EditSeller from "../pages/EditSeller"; 
-import ViewProduct from "../pages/products/ViewProduct";
-import AddProduct from "../pages/AddProduct";
-import AddProductSeller from "../pages/AddProductSeller";
+import EditSeller from "../pages/EditSeller";
+
+// Add import for Payouts
+import Payouts from "../pages/Payouts";
+
+const checkAuth = () => {
+  const token = localStorage.getItem("token");
+  const isNewUser = localStorage.getItem("isNewUser") === "true";
+  const userRole = localStorage.getItem("userRole");
+
+  if (!token) {
+    return "/login";
+  }
+
+  if (isNewUser) {
+    return "/onboarding";
+  }
+
+  if (userRole === "SELLER") {
+    return "/dashboard/seller-dashboard";
+  }
+
+  return "/dashboard";
+};
 
 export const routes: RouteObject[] = [
   {
     path: "/",
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to={checkAuth()} replace />,
   },
+  // Auth Routes
   {
     path: "/login",
     element: <Login />,
@@ -77,10 +108,8 @@ export const routes: RouteObject[] = [
     path: "/onboarding",
     element: <Onboarding />,
   },
-  {
-    path: "/sellers/onboarding",
-    element: <SellerOnboarding />,
-  },
+
+  // Dashboard Routes
   {
     path: "/dashboard",
     element: (
@@ -89,115 +118,30 @@ export const routes: RouteObject[] = [
       </ProtectedRoute>
     ),
     children: [
+      // Main Dashboard
       {
-        index: true,
-        element: <Dashboard />,
+        path: "",
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES","AFFILIATE_PARTNER"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: "master-catalog",
-        children: [
-          {
-            index: true,
-            element: (
-              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
-                <MasterCatalog />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "add-product",
-            element: (
-              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
-                <AddProduct />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "bulk-upload",
-            element: (
-              <ProtectedRoute allowedRoles={["SELLER_ADMIN"]}>
-                <BulkUpload />
-              </ProtectedRoute>
-            ),
-          },
-        ],
+        path: "seller-dashboard",
+        element: (
+          <ProtectedRoute allowedRoles={["SELLER"]}>
+            <SellerDashboard />
+          </ProtectedRoute>
+        ),
       },
-      {
-        path: "companies",
-        children: [
-          {
-            index: true,
-            element: <Companies />,
-          },
-          {
-            path: "create",
-            element: <CreateCompany />,
-          },
-          {
-            path: "view/:id",
-            element: <ViewCompany />,
-          },
-          {
-            path: "edit/:id",
-            element: <EditCompany />,
-          },
-        ],
-      },
-      {
-        path: "branches",
-        children: [
-          {
-            index: true,
-            element: <Branches />,
-          },
-          {
-            path: "create",
-            element: <CreateBranch />,
-          },
-          {
-            path: "view/:id",
-            element: <ViewBranch />,
-          },
-          {
-            path: "edit/:id",
-            element: <EditBranch />,
-          },
-        ],
-      },
-      {
-        path: "orders",
-        element: <Orders />,
-      },
-      {
-        path: "partners",
-        children: [
-          {
-            index: true,
-            element: <Partners />,
-          },
-          {
-            path: "create",
-            element: <CreatePartner />,
-          },
-          {
-            path: "view/:id",
-            element: <ViewPartner />,
-          },
-          {
-            path: "edit/:id",
-            element: <EditPartner />,
-          },
-        ],
-      },
-      {
-        path: "payouts",
-        element: <Payouts />,
-      },
+
+      // Products Routes
       {
         path: "products",
         children: [
           {
-            index: true,
+            path: "",
             element: <Products />,
           },
           {
@@ -205,8 +149,24 @@ export const routes: RouteObject[] = [
             element: <AddProduct />,
           },
           {
+            path: "add-product-seller",
+            element: <AddProductSeller />,
+          },
+          {
+            path: "view/:id",
+            element: <ViewProduct />,
+          },
+          {
+            path: "edit/:id",
+            // element: <EditProduct />,
+          },
+          {
             path: "bulk-upload",
             element: <BulkUpload />,
+          },
+          {
+            path: "create-offer",
+            element: <CreateOffer />,
           },
           {
             path: "add-group",
@@ -220,178 +180,309 @@ export const routes: RouteObject[] = [
             path: "add-menu",
             element: <AddMenu />,
           },
+        ],
+      },
+
+      // Partners Routes
+      {
+        path: "partners",
+        children: [
           {
-            path: "create-offer",
-            element: <CreateOffer />,
-          }, 
-          {
-            path: "view/:id",
-            element: <ViewProduct />
+            path: "",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+                <Partners />
+              </ProtectedRoute>
+            ),
           },
           {
-            path: "add-product-seller",
-            element: <AddProductSeller />,
+            path: "create",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+                <CreatePartner />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "view/:id",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+                <ViewPartner />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "edit/:id",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+                <EditPartner />
+              </ProtectedRoute>
+            ),
           },
         ],
       },
+
+      // Companies Routes
       {
-        path: "reports",
-        element: <Reports />,
+        path: "companies",
+        children: [
+          {
+            path: "",
+            element: <Companies />,
+          },
+          // {
+          //   path: "create",
+          //   element: <CreateCompany />,
+          // },
+          // {
+          //   path: "view/:id",
+          //   element: <ViewCompany />,
+          // },
+          // {
+          //   path: "edit/:id",
+          //   element: <EditCompany />,
+          // },
+        ],
       },
+
+      // Branches Routes
+      {
+        path: "branches",
+        children: [
+          {
+            path: "",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER"]}>
+                <Branches />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "create",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER"]}>
+                <CreateBranch />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "view/:id",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER"]}>
+                <ViewBranch />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "edit/:id",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER"]}>
+                <EditBranch />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
+
+      // Sellers Routes
       {
         path: "sellers",
         children: [
           {
-            index: true,
-            element: <Sellers />,
+            path: "",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+                <Sellers />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "add",
-            element: <AddSeller />,
-          },
-          {
-            path: "onboarding",
-            element: <SellerOnboarding />,
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+                <AddSeller />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "view/:id",
-            element: <ViewSeller />,
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+                <ViewSeller />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "edit/:id",
-            element: <EditSeller />,
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+                <EditSeller />
+              </ProtectedRoute>
+            ),
           },
         ],
+      },
+
+      // Other Main Routes
+      {
+        path: "orders",
+        element: <Orders />,
+      },
+      {
+        path: "master-catalog",
+        element: <MasterCatalog />,
       },
       {
         path: "support",
         element: <Support />,
       },
       {
-        path: "logistics",
-        element: <Logistics />,
+        path: "reports",
+        element: <Reports />,
       },
       {
-        path: "settings",
-        element: <Settings />,
+        path: "logistics",
+        element: <Logistics />,
       },
       {
         path: "notifications",
         element: <Notifications />,
       },
+
+      // Admin Settings Routes
       {
-        path: "my-listings",
-        element: <MyListings />,
-      },
-      {
-        path: "my-orders",
-        element: <MyOrders />,
-      },
-      {
-        path: "seller-dashboard",
-        element: <SellerDashboard />,
-      },
-      {
-        path: "settings/account-details",
-        element: <AccountDetails />,
-      },
-      {
-        path: "/dashboard/settings/location-services",
+        path: "settings",
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <Settings />
+          </ProtectedRoute>
+        ),
         children: [
           {
-            index: true,
-            element: <LocationServices />,
+            path: "account-details",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <AccountDetails />
+              </ProtectedRoute>
+            ),
           },
           {
-            path: "shipping/:id",
-            element: <ShippingDetailsPage />,
+            path: "banking-details",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <BankingDetails />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "access-management",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <AccessManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "create-role",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <CreateRole />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "create-user",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <CreateUser />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "notification-settings",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <NotificationSettings />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "map-settings",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <MapSettings />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "ui-config",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <UiConfig />
+              </ProtectedRoute>
+            ),
           },
         ],
       },
-      {
-        path: "settings/banking-details",
-        element: <BankingDetails />,
-      },
-      {
-        path: "seller-settings/account-details",
-        element: <SellerAccountDetails />,
-      },
-      {
-        path: "seller-settings/location-services",
-        element: <SellerLocationServices />,
-      },
-      {
-        path: "seller-settings/banking-details",
-        element: <SellerBankingDetails />,
-      },
+
+      // Seller Settings Routes
       {
         path: "seller-settings",
-        element: <SellerSettings />,
+        children: [
+          {
+            path: "",
+            element: (
+              <ProtectedRoute allowedRoles={["SELLER"]}>
+                <SellerSettings />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "account-details",
+            element: <AccountDetails />,
+          },
+          {
+            path: "banking-details",
+            element: <BankingDetails />,
+          },
+          {
+            path: "location-services",
+            element: <LocationServices />,
+          },
+        ],
       },
+
+      // My Listings Routes
       {
-        path: "onboarding",
+        path: "my-listings",
         element: (
-          <ProtectedRoute>
-            <Onboarding />
+          <ProtectedRoute allowedRoles={["SELLER"]}>
+            <MyListings />
           </ProtectedRoute>
         ),
       },
+
+      // Add MyOrders route
       {
-        path: "/dashboard/settings/ui-config",
-        element: <UiConfig />,
+        path: "my-orders",
+        element: (
+          <ProtectedRoute allowedRoles={["SELLER"]}>
+            <MyOrders />
+          </ProtectedRoute>
+        ),
       },
+
+      // Payouts route
       {
-        path: "/dashboard/logistics/:orderId",
-        element: <LogisticsDetails />,
-      },
-      {
-        path: "/dashboard/products/create-offer",
-        element: <CreateOffer />,
-      },
-      {
-        path: "/dashboard/products/edit-offer/:id",
-        element: <CreateOffer />,
-      },
-      {
-        path: "/dashboard/settings/access-management",
-        element: <AccessManagement />,
-      },
-      {
-        path: "/dashboard/settings/access-management/create-role",
-        element: <CreateRole />,
-      },
-      {
-        path: "/dashboard/settings/access-management/edit-role/:roleName",
-        element: <CreateRole />,
-      },
-      {
-        path: "/dashboard/settings/access-management/create-user",
-        element: <CreateUser />,
-      },
-      {
-        path: "/dashboard/settings/access-management/edit-user/:userName",
-        element: <CreateUser />,
-      },
-      {
-        path: "/dashboard/support/create",
-        element: <CreateTicket />,
-      },
-      {
-        path: "/dashboard/settings/email-sms",
-        element: <NotificationSettings />,
-      },
-      {
-        path: "/dashboard/seller-settings/email-sms",
-        element: <NotificationSettings />,
-      },
-      {
-        path: "/dashboard/settings/maps",
-        element: <MapSettings />,
-      },
-      {
-        path: "/dashboard/seller-settings/maps",
-        element: <MapSettings />,
+        path: "payouts",
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "SELLER", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+            <Payouts />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
 ];
+
+export default routes;

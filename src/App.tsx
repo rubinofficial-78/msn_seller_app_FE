@@ -7,6 +7,10 @@ import "./styles/table.css";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Toaster } from 'react-hot-toast';
+import GLOBAL_CONSTANTS from './GlobalConstants';
+
+// Force an initial log of the constants
+console.log("Initial GLOBAL_CONSTANTS load:", GLOBAL_CONSTANTS);
 
 export default function App() {
   return (

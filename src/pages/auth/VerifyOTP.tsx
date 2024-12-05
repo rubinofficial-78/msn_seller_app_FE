@@ -5,6 +5,8 @@ import { verifyOTP, getUserDetails } from "../../redux/Action/action";
 import { RootState } from "../../redux/types";
 import adyaLogo from "../../assests/adya.png";
 import { toast } from "react-toastify";
+import GLOBAL_CONSTANTS from "../../GlobalConstants";
+import { jwtDecode } from "jwt-decode";
 
 export default function VerifyOTP() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -13,6 +15,7 @@ export default function VerifyOTP() {
   const location = useLocation();
   const dispatch = useDispatch();
   const email = localStorage.getItem("pendingLoginEmail");
+  const redirectTo = location.state?.redirectTo;
 
   const loading = useSelector(
     (state: RootState) => state.data.otpVerification.loading
@@ -67,33 +70,47 @@ export default function VerifyOTP() {
         verifyOTP(Number(userId), otpValue) as any
       );
 
-      // Store the token
       if (otpResponse?.data?.token) {
+        // Store the new token
         localStorage.setItem("token", otpResponse.data.token);
-      }
+        
+        // Force reload GLOBAL_CONSTANTS with new token
+        const decoded = jwtDecode(otpResponse.data.token);
+        console.log("Decoded Token after OTP:", decoded);
+        
+        // Extract role from token
+        const userRole = decoded?.roles?.[0] || 
+                        decoded?.user_types?.[0]?.name || 
+                        decoded?.affiliate_details?.user_role;
+        
+        console.log("Extracted User Role:", userRole);
+        localStorage.setItem("userRole", userRole);
 
-      // Get user details
-      const userResponse = await dispatch(
-        getUserDetails(Number(userId)) as any
-      );
+        // Get user details with new token
+        const userResponse = await dispatch(
+          getUserDetails(Number(userId)) as any
+        );
 
-      // Clear verification data
-       
+        console.log("User Details Response:", userResponse);
 
-      if (isNewUser) {
-        // New users always go to onboarding first
-        navigate("/onboarding");
-      } else {
-        // Check user type for existing users
-        const userType = userResponse?.data?.user_type?.value;
-        if (userType === "ADMIN") {
-          navigate("/dashboard");
-        } else {
-          navigate("/dashboard/seller-dashboard");
+        // Force a page reload to update GLOBAL_CONSTANTS
+        if (!isNewUser) {
+          window.location.href = userRole === "SELLER" 
+            ? "/dashboard/seller-dashboard"
+            : "/dashboard";
+          return;
         }
+
+        if (isNewUser) {
+          navigate("/onboarding");
+        }
+      } else {
+        throw new Error("OTP verification failed - no token received");
       }
-    } catch (err) {
-      setError(reduxError || "OTP verification failed. Please try again.");
+    } catch (err: any) {
+      console.error("OTP verification error:", err);
+      setError(err?.message || "OTP verification failed. Please try again.");
+      toast.error(err?.message || "OTP verification failed. Please try again.");
     }
   };
 

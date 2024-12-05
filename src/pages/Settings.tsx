@@ -1,4 +1,5 @@
 import React from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   CreditCard,
@@ -6,109 +7,61 @@ import {
   Mail,
   Map,
   Eye,
-  MapPin,
+  Users,
+  Bell,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const location = useLocation();
+  
+  // Check if we're on the main settings page
+  const isMainPage = location.pathname === "/dashboard/settings";
 
-  const adminSettings = [
+  const settings = [
     {
       icon: <CreditCard size={24} />,
       title: "Account Details",
-      description: "This information will help us to setup your account in our seller application and ensure smooth running.",
-      path: "/dashboard/settings/account-details"
+      description: "This information will help us to setup your account in our application and ensure smooth running.",
+      path: "account-details"
     },
     {
       icon: <CreditCard size={24} />,
       title: "Banking & Business Details",
-      description: "This information will help us to setup your Bank accounts in our seller application and ensure smooth running of funds from different network participants.",
-      path: "/dashboard/settings/banking-details"
+      description: "This information will help us to setup your Bank accounts and ensure smooth running of funds.",
+      path: "banking-details"
     },
     {
-      icon: <SettingsIcon size={24} />,
+      icon: <Users size={24} />,
       title: "Access Management",
       description: "Manage user access and roles for different modules in the application.",
-      path: "/dashboard/settings/access-management"
+      path: "access-management"
     },
+    
     {
-      icon: <Mail size={24} />,
-      title: "Email & SMS Services",
-      description: "Configure email and SMS notification settings for the platform.",
-      path: "/dashboard/settings/email-sms"
+      icon: <Bell size={24} />,
+      title: "Notification Settings",
+      description: "Configure notification preferences and settings.",
+      path: "notification-settings"
     },
     {
       icon: <Map size={24} />,
-      title: "Maps Services",
+      title: "Maps Settings",
       description: "Configure map service providers and settings.",
-      path: "/dashboard/settings/maps"
+      path: "map-settings"
     },
     {
       icon: <Eye size={24} />,
-      title: "UI configuration",
-      description: "Customize the look and feel of the platform. Change your brand Colors, CTA colors and tables and Data's visual look and feel",
-      path: "/dashboard/settings/ui-config"
+      title: "UI Configuration",
+      description: "Customize the look and feel of the platform.",
+      path: "ui-config"
     }
   ];
-
-  const sellerSettings = [
-    {
-      icon: <CreditCard size={24} />,
-      title: "Account Details",
-      description: "This information will help us to setup your account in our seller application and ensure smooth running.",
-      path: "/dashboard/seller-settings/account-details"
-    },
-    {
-      icon: <CreditCard size={24} />,
-      title: "Banking & Business Details",
-      description: "This information will help us to setup your Bank accounts in our seller application and ensure smooth running of funds from different network participants.",
-      path: "/dashboard/seller-settings/banking-details"
-    },
-    {
-      icon: <SettingsIcon size={24} />,
-      title: "Access Management",
-      description: "Manage user access and roles for different modules in the application.",
-      path: "/dashboard/seller-settings/access-management"
-    },
-    {
-      icon: <Mail size={24} />,
-      title: "Email & SMS Services",
-      description: "Configure email and SMS notification settings for your store.",
-      path: "/dashboard/seller-settings/email-sms"
-    },
-    {
-      icon: <Map size={24} />,
-      title: "Maps Services",
-      description: "Configure map service providers and settings.",
-      path: "/dashboard/seller-settings/maps"
-    },
-    {
-      icon: <Eye size={24} />,
-      title: "UI configuration",
-      description: "Customize the look and feel of your store. Change your brand Colors, CTA colors and tables and Data's visual look and feel",
-      path: "/dashboard/seller-settings/ui-config"
-    },
-    {
-      icon: <MapPin size={24} />,
-      title: "Locations & Serviceability",
-      description: "Manage your store locations and delivery serviceability areas.",
-      path: "/dashboard/seller-settings/location-services"
-    }
-  ];
-
-  const settings = isAdmin ? adminSettings : sellerSettings;
-
-  const handleCardClick = (path: string) => {
-    navigate(path);
-  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg"
@@ -118,28 +71,40 @@ const Settings = () => {
         <h1 className="text-2xl font-bold">Application Settings</h1>
       </div>
 
-      {/* Settings Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {settings.map((setting, index) => (
-          <div
-            key={index}
-            onClick={() => handleCardClick(setting.path)}
-            className="bg-white rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
-          >
-            <div className="flex items-start gap-4">
-              <div className="text-blue-500">{setting.icon}</div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {setting.title}
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {setting.description}
-                </p>
+      {isMainPage ? (
+        // Show settings grid on main settings page
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {settings.map((setting, index) => (
+            <div
+              key={index}
+              onClick={() => navigate(setting.path)}
+              className="bg-white rounded-lg p-6 hover:shadow-md transition-all duration-200 
+                       cursor-pointer border border-gray-200 hover:border-blue-200 group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-blue-50 text-blue-600 
+                              group-hover:bg-blue-100 transition-colors">
+                  {setting.icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 
+                               group-hover:text-blue-600 transition-colors">
+                    {setting.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {setting.description}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        // Show nested route content
+        <div className="bg-white rounded-lg shadow-sm">
+          <Outlet />
+        </div>
+      )}
     </div>
   );
 };

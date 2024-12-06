@@ -334,8 +334,7 @@ const Branches: React.FC = () => {
                 ? "bg-blue-100 text-blue-600"
                 : "text-gray-600"
             }`}
-            title="Grid view"
-            id="grid-view-button"
+            title="Grid view"          
           >
             <LayoutGrid size={20} />
           </button>

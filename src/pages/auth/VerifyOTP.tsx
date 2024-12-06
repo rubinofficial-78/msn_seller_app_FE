@@ -120,62 +120,145 @@ export default function VerifyOTP() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div className="flex flex-col items-center">
-          <img id="adya-logo" src={adyaLogo} alt="Adya Logo" className="w-20 h-20" />
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome</h2>
-          <p className="mt-2 text-sm text-gray-600 text-center">
-            Please provide your email or mobile number to sign up or log in.
-          </p>
+    <div className="min-h-screen relative overflow-hidden bg-[#FDF8F4]">
+      {/* Decorative Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Dotted Rectangle - Left */}
+        <div 
+          className="absolute left-[10%] bottom-[20%] w-20 h-28 bg-[#FFE4C8] opacity-60"
+          style={{ 
+            backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
+            backgroundSize: '8px 8px'
+          }}
+        />
+
+        {/* Dotted Rectangle - Right */}
+        <div 
+          className="absolute right-[10%] top-[30%] w-20 h-28 bg-[#FFE4C8] opacity-60"
+          style={{ 
+            backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
+            backgroundSize: '8px 8px'
+          }}
+        />
+
+        {/* Curved Lines */}
+        <div className="absolute left-[15%] bottom-[30%] w-32 h-32 opacity-30">
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <path 
+              d="M10,50 Q30,20 50,50 T90,50" 
+              fill="none" 
+              stroke="#000" 
+              strokeWidth="1"
+              className="animate-draw"
+            />
+          </svg>
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
-            {error}
+        <div className="absolute right-[15%] bottom-[40%] w-32 h-32 opacity-30">
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <path 
+              d="M10,50 Q30,80 50,50 T90,50" 
+              fill="none" 
+              stroke="#000" 
+              strokeWidth="1"
+              className="animate-draw"
+            />
+          </svg>
+        </div>
+
+        {/* Small Rectangles */}
+        <div className="absolute left-[25%] bottom-[25%] w-12 h-16 border border-gray-300 opacity-30" />
+        <div className="absolute right-[25%] top-[35%] w-12 h-16 border border-gray-300 opacity-30" />
+      </div>
+
+      {/* Content Container */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          {/* OTP Verification Card - Updated with cream background */}
+          <div className="bg-[#FDF8F4] rounded-2xl shadow-lg p-8 space-y-6 border border-[#FFE4C8]/20">
+            {/* Logo Container */}
+            <div className="flex flex-col items-center space-y-4">
+              <div className="p-3 bg-white/50 rounded-full shadow-sm animate-pulse-slow">
+                <img
+                  id="adya-logo"
+                  src={adyaLogo}
+                  alt="Adya Logo"
+                  className="w-16 h-16 animate-float"
+                />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900">Verify OTP</h2>
+              <p className="text-gray-600 text-center">
+                Please enter the verification code sent to your {email ? `email ${email.slice(0, 3)}***${email.slice(email.indexOf("@"))}` : "registered email"}
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50/50 text-red-500 px-4 py-3 rounded-lg text-center text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* OTP Form */}
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* OTP Input Grid */}
+              <div className="flex justify-center gap-3">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`otp-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\d*"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    className="w-12 h-12 text-center text-xl font-semibold 
+                             bg-white/80 border-2 border-[#FFE4C8]/50 rounded-lg 
+                             text-gray-900 
+                             focus:border-[#FFE4C8]/70 focus:ring-0 
+                             transition-all duration-300
+                             hover:border-[#FFE4C8]/60
+                             shadow-sm"
+                  />
+                ))}
+              </div>
+
+              {/* Resend OTP Link */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  className="text-gray-500 hover:text-gray-700 text-sm transition-colors duration-300"
+                >
+                  Didn't receive code? Resend OTP
+                </button>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                id="verify-otp-continue-button"
+                type="submit"
+                className="w-full py-3 px-4 bg-blue-900 text-white rounded-lg font-medium
+                         transform transition-all duration-300 hover:scale-[1.02]
+                         hover:shadow-lg active:scale-[0.98] focus:outline-none
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         hover:bg-blue-800"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Verifying...</span>
+                  </div>
+                ) : (
+                  "Verify & Continue"
+                )}
+              </button>
+            </form>
           </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="mt-8">
-          {/* OTP Input Grid */}
-          <div className="flex justify-center gap-2">
-            {otp.map((digit, index) => (
-              <input
-                key={index}
-                id={`otp-${index}`}
-                type="text"
-                inputMode="numeric"
-                pattern="\d*"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
-              />
-            ))}
-          </div>
-
-          {/* Resend OTP Link */}
-          {/* <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={handleResendOTP}
-              className="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              Resend OTP to{" "}
-              {email ? `s***${email.slice(email.indexOf("@"))}` : ""}
-            </button>
-          </div> */}
-
-          <button
-            id="verify-otp-continue-button"
-            type="submit"
-            className="mt-6 w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            disabled={loading}
-          >
-            {loading ? "Verifying..." : "CONTINUE"}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );

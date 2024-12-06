@@ -89,6 +89,12 @@ export const DOWNLOAD_TEMPLATE_FAILURE = 'DOWNLOAD_TEMPLATE_FAILURE';
 export const UPLOAD_TEMPLATE_REQUEST = 'UPLOAD_TEMPLATE_REQUEST';
 export const UPLOAD_TEMPLATE_SUCCESS = 'UPLOAD_TEMPLATE_SUCCESS';
 export const UPLOAD_TEMPLATE_FAILURE = 'UPLOAD_TEMPLATE_FAILURE';
+export const GET_PAYOUTS_REQUEST = 'GET_PAYOUTS_REQUEST';
+export const GET_PAYOUTS_SUCCESS = 'GET_PAYOUTS_SUCCESS';
+export const GET_PAYOUTS_FAILURE = 'GET_PAYOUTS_FAILURE';
+export const GET_MY_LISTING_REQUEST = 'GET_MY_LISTING_REQUEST';
+export const GET_MY_LISTING_SUCCESS = 'GET_MY_LISTING_SUCCESS';
+export const GET_MY_LISTING_FAILURE = 'GET_MY_LISTING_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -330,6 +336,25 @@ export interface AuthState {
     error: string | null;
     data: Category[] | null;
     subCategories: Category[] | null;
+  };
+  payouts: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: any;
+  };
+  myListing: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: {
+      pagination?: {
+        total_rows: number;
+        total_pages: number;
+        page_no: number;
+        per_page: number;
+      }
+    };
   };
 }
 
@@ -780,6 +805,37 @@ interface UploadTemplateFailureAction {
   payload: string;
 }
 
+interface GetPayoutsRequestAction {
+  type: typeof GET_PAYOUTS_REQUEST;
+}
+
+interface GetPayoutsSuccessAction {
+  type: typeof GET_PAYOUTS_SUCCESS;
+  payload: any;
+}
+
+interface GetPayoutsFailureAction {
+  type: typeof GET_PAYOUTS_FAILURE;
+  payload: string;
+}
+
+interface GetMyListingRequestAction {
+  type: typeof GET_MY_LISTING_REQUEST;
+}
+
+interface GetMyListingSuccessAction {
+  type: typeof GET_MY_LISTING_SUCCESS;
+  payload: {
+    data: any[];
+    meta: any;
+  };
+}
+
+interface GetMyListingFailureAction {
+  type: typeof GET_MY_LISTING_FAILURE;
+  payload: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -870,7 +926,13 @@ export type AuthActionTypes =
   | DownloadTemplateFailureAction
   | UploadTemplateRequestAction
   | UploadTemplateSuccessAction
-  | UploadTemplateFailureAction;
+  | UploadTemplateFailureAction
+  | GetPayoutsRequestAction
+  | GetPayoutsSuccessAction
+  | GetPayoutsFailureAction
+  | GetMyListingRequestAction
+  | GetMyListingSuccessAction
+  | GetMyListingFailureAction;
 
 
 export interface FileUploadPayload {

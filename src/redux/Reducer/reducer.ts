@@ -151,8 +151,11 @@ import {
   GET_COMPANY_BY_ID_REQUEST,
   GET_COMPANY_BY_ID_SUCCESS,
   GET_COMPANY_BY_ID_FAILURE,
+  GET_PAYOUTS_REQUEST,
+  GET_PAYOUTS_SUCCESS,
+  GET_PAYOUTS_FAILURE,
 } from '../Action/action.types';
-import { AuthState, AuthActionTypes } from '../types';
+import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
 const initialState: AuthState = {
   loading: false,
@@ -403,6 +406,18 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  payouts: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  myListing: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: {}
   }
 };
 
@@ -1713,6 +1728,64 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
+    case GET_PAYOUTS_REQUEST:
+      return {
+        ...state,
+        payouts: {
+          ...state.payouts,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PAYOUTS_SUCCESS:
+      return {
+        ...state,
+        payouts: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_PAYOUTS_FAILURE:
+      return {
+        ...state,
+        payouts: {
+          ...state.payouts,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_MY_LISTING_REQUEST:      
+      return {
+        ...state,
+          myListing: {
+            ...state.myListing,
+            loading: true,
+            error: null
+          }
+        };
+
+      case GET_MY_LISTING_SUCCESS:
+        return {
+          ...state,
+          myListing: {
+            loading: false,
+            error: null,
+            data: action.payload.data,
+            meta: action.payload.meta
+          }
+        };
+
+      case GET_MY_LISTING_FAILURE:
+        return {
+          ...state,
+          myListing: {
+            ...state.myListing,
+            loading: false,
+            error: action.payload
+          }
+        };
     default:
       return state;
   }

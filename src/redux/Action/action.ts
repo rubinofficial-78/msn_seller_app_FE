@@ -191,6 +191,12 @@ import {
   GET_COMPANY_BY_ID_REQUEST,
   GET_COMPANY_BY_ID_SUCCESS,
   GET_COMPANY_BY_ID_FAILURE,
+  GET_PAYOUTS_REQUEST,
+  GET_PAYOUTS_SUCCESS,
+  GET_PAYOUTS_FAILURE,
+  GET_MY_LISTING_REQUEST,
+  GET_MY_LISTING_SUCCESS,
+  GET_MY_LISTING_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
  
@@ -1988,6 +1994,53 @@ export const getProducts = (
   };
 };
 
+export const getmylisting = (
+  params: { 
+    status?: string;
+    page_no: number;
+    per_page: number;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_MY_LISTING_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/products`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_MY_LISTING_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch listings');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch listings';
+      dispatch({
+        type: GET_MY_LISTING_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
 export const getProductCounts = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_PRODUCT_COUNTS_REQUEST });
@@ -1996,6 +2049,43 @@ export const getProductCounts = (): ThunkAction<Promise<any>, RootState, unknown
       const token = localStorage.getItem('token');
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/catalog/products/count?master_catalog=false`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_COUNTS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch product counts');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch product counts';
+      dispatch({
+        type: GET_PRODUCT_COUNTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getmylistingCounts = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_COUNTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/products/count`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -3244,6 +3334,53 @@ export const getCompanyById = (
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch company details';
       dispatch({
         type: GET_COMPANY_BY_ID_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getPayouts = (params: {
+  page_no: number;
+  per_page: number;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PAYOUTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/sales_orders`,
+        {
+          params: {
+            ...params,
+            is_payouts: true
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PAYOUTS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch payouts');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch payouts';
+      dispatch({
+        type: GET_PAYOUTS_FAILURE,
         payload: errorMessage
       });
       throw error;

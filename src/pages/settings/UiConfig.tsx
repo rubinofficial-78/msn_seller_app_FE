@@ -51,6 +51,7 @@ const UiConfig = () => {
       <div className="flex items-center gap-3">
         <div className="relative">
           <input
+            id="color-input"
             type="color"
             value={value}
             onChange={(e) => handleColorChange(colorKey, e.target.value)}
@@ -58,6 +59,7 @@ const UiConfig = () => {
           />
         </div>
         <input 
+          id="color-input-text"
           type="text"
           value={value.toUpperCase()}
           onChange={(e) => handleColorChange(colorKey, e.target.value)}
@@ -72,6 +74,7 @@ const UiConfig = () => {
     <div className="space-y-6 max-w-5xl mx-auto p-6">
       <div className="flex items-center gap-4">
         <button
+          id="back-button"
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg"
         >
@@ -85,6 +88,7 @@ const UiConfig = () => {
           <div>
             <h2 className="text-lg font-semibold mb-4">Upload Your Logo</h2>
             <ImageUpload
+              id="logo-image-upload"
               onImageUpload={(file) => console.log('Logo uploaded:', file)}
               accept="image/png,image/svg+xml"
               maxSize={10}
@@ -95,6 +99,7 @@ const UiConfig = () => {
           <div>
             <h2 className="text-lg font-semibold mb-4">Browser Favicon Image</h2>
             <ImageUpload
+              id="favicon-image-upload"
               onImageUpload={(file) => console.log('Favicon uploaded:', file)}
               accept="image/png,image/svg+xml"
               maxSize={10}
@@ -112,11 +117,13 @@ const UiConfig = () => {
               <h3 className="font-medium mb-4">Header Colors</h3>
               <div className="space-y-4">
                 <ColorInput 
+                  id="header-background-color-input"
                   label="Background Color" 
                   colorKey="headerBackground" 
                   value={colors.headerBackground} 
                 />
                 <ColorInput 
+                  id="header-text-color-input"
                   label="Text Color" 
                   colorKey="headerText" 
                   value={colors.headerText} 
@@ -129,11 +136,13 @@ const UiConfig = () => {
               <h3 className="font-medium mb-4">Button Colors</h3>
               <div className="space-y-4">
                 <ColorInput 
+                  id="button-background-color-input"
                   label="Background Color" 
                   colorKey="buttonBackground" 
                   value={colors.buttonBackground} 
                 />
                 <ColorInput 
+                  id="button-text-color-input"
                   label="Text Color" 
                   colorKey="buttonText" 
                   value={colors.buttonText} 
@@ -146,11 +155,13 @@ const UiConfig = () => {
               <h3 className="font-medium mb-4">Table Colors</h3>
               <div className="space-y-4">
                 <ColorInput 
+                  id="table-header-background-color-input"
                   label="Header Background" 
                   colorKey="tableHeader" 
                   value={colors.tableHeader} 
                 />
                 <ColorInput 
+                  id="table-header-text-color-input"
                   label="Header Text" 
                   colorKey="tableHeaderText" 
                   value={colors.tableHeaderText} 
@@ -163,6 +174,7 @@ const UiConfig = () => {
 
       <div className="flex justify-end mt-8">
         <button
+          id="update-button"
           onClick={handleSubmit}
           className="bg-blue-700 text-white px-6 py-2 rounded-md hover:bg-blue-800 transition-colors"
         >

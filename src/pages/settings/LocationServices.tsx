@@ -208,18 +208,20 @@ const LocationServices = () => {
     return (
       <div className="flex gap-2">
         <button
+          id="view-details-button"
           className="p-1 text-gray-600 hover:text-gray-800"
           title="View Details"
           onClick={onView}
         >
-          <Eye size={18} />
+          <Eye id="view-details-icon" size={18} />
         </button>
         <button
+          id="edit-button"
           className="p-1 text-gray-600 hover:text-gray-800"
           title="Edit"
           onClick={() => console.log("Edit clicked")}
         >
-          <Edit size={18} />
+          <Edit id="edit-icon" size={18} />
         </button>
         <button
           className={`p-1 ${
@@ -230,7 +232,7 @@ const LocationServices = () => {
           title={isActive ? "Deactivate" : "Activate"}
           onClick={handleToggle}
         >
-          {isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+          {isActive ? <ToggleRight id="toggle-right-icon" size={18} /> : <ToggleLeft id="toggle-left-icon" size={18} />}
         </button>
       </div>
     );
@@ -240,11 +242,14 @@ const LocationServices = () => {
     <>
       {/* Add Store Button and Search */}
       <div className="flex justify-between items-center mb-6">
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          id="add-new-store-button"
+        >
           ADD NEW STORE
         </button>
         <div className="relative">
           <input
+            id="search-store-input"
             type="text"
             placeholder="Search Store Name"
             className="border border-gray-300 rounded-lg px-4 py-2 w-64"

@@ -72,6 +72,7 @@ interface StatCardProps {
   title: string;
   value: string;
   icon?: React.ElementType;
+  iconId?: string;
   subStats?: SubStat[];
   className?: string;
   gradient?: string;
@@ -81,6 +82,7 @@ const StatCard = ({
   title,
   value,
   icon: Icon,
+  iconId,
   subStats = [],
   className = "",
   gradient = "from-blue-50 to-blue-100",
@@ -97,7 +99,7 @@ const StatCard = ({
       </div>
       {Icon && (
         <div className="p-2 sm:p-3 rounded-lg bg-white/80 shadow-sm">
-          <Icon className="text-gray-700" size={20} />
+          <Icon uid={iconId} className="text-gray-700" size={20} />
         </div>
       )}
     </div>
@@ -109,7 +111,9 @@ const StatCard = ({
             className="flex items-center justify-between p-2 rounded-lg bg-white/60"
           >
             <div className="flex items-center space-x-2">
-              {stat.icon}
+              {React.cloneElement(stat.icon as React.ReactElement, {
+                'uid': `${iconId}-substat-${index}`
+              })}
               <span className="text-xs sm:text-sm text-gray-600">
                 {stat.label}
               </span>
@@ -181,6 +185,7 @@ const Dashboard = () => {
               ) || 0
             }`}
             icon={IndianRupee}
+            iconId="dashboard-revenue-icon"
             gradient="from-emerald-50 to-teal-100"
           />
 
@@ -188,6 +193,7 @@ const Dashboard = () => {
             title="Total Partners"
             value={affiliatePartnerCounts?.Total.toString()}
             icon={Users}
+            iconId="dashboard-partners-icon"
             gradient="from-blue-50 to-indigo-100"
             subStats={[
               {
@@ -209,6 +215,7 @@ const Dashboard = () => {
             title="Total Orders"
             value={salesOrdersCount?.total_orders.toString()}
             icon={ShoppingCart}
+            iconId="dashboard-orders-icon"
             gradient="from-violet-50 to-purple-100"
             subStats={[
               {
@@ -230,6 +237,7 @@ const Dashboard = () => {
             title="Total Sellers"
             value={dashboardData?.total_sellers.toString()}
             icon={Store}
+            iconId="dashboard-sellers-icon"
             gradient="from-rose-50 to-pink-100"
             subStats={[
               {
@@ -256,11 +264,11 @@ const Dashboard = () => {
                 <h3 className="text-lg font-semibold text-gray-800">Order Statistics</h3>
                 <p className="text-sm text-gray-500 mt-1">Weekly order distribution</p>
               </div>
-              <select className="mt-2 sm:mt-0 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              {/* <select className="mt-2 sm:mt-0 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option>This Week</option>
                 <option>Last Month</option>
                 <option>Last Quarter</option>
-              </select>
+              </select> */}
             </div>
             
             {/* Increase chart height and add better styling */}

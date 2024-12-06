@@ -128,10 +128,11 @@ const CreateTicket = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
+          id="back-button-create-ticket"
           onClick={() => navigate('/dashboard/support')}
           className="p-2 hover:bg-gray-100 rounded-lg"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft id="back-icon-create-ticket"   size={20} />
         </button>
         <div>
           <h1 className="text-2xl font-semibold">Create Ticket</h1>
@@ -151,12 +152,14 @@ const CreateTicket = () => {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
           <button
+            id="cancel-button-create-ticket"
             onClick={() => navigate('/dashboard/support')}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
+            id="raise-ticket-button-create-ticket"
             onClick={handleSubmit}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
           >

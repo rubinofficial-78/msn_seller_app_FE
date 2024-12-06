@@ -156,6 +156,7 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
             {/* Action Buttons Overlay */}
             <div className="absolute top-2 right-2 flex gap-2">
               <button
+                id={`view-button-${product.id}`}
                 onClick={() => handleViewProduct(product)}
                 className="p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-50 text-gray-600"
                 title="View"
@@ -163,6 +164,7 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
                 <Eye size={16} />
               </button>
               <button
+                id={`toggle-status-button-${product.id}`}
                 onClick={() => handleStatusToggle(product)}
                 className={`p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-50 
                   ${
@@ -417,6 +419,7 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       renderCell: (row: any) => (
         <div className="flex items-center gap-2">
           <button
+            id={`view-button-${row.id}`}
             onClick={() => handleViewProduct(row)}
             className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
             title="View"
@@ -424,6 +427,7 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
             <Eye size={16} />
           </button>
           <button
+            id={`toggle-status-button-${row.id}`}
             onClick={() => handleStatusToggle(row)}
             className={`p-1 rounded-full ${
               row.status?.lookup_code === "ACTIVE"
@@ -568,6 +572,7 @@ const MasterCatalog = () => {
           <div className="flex gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search
+                id="search-icon-products"
                 className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
                 size={16}
               />
@@ -577,16 +582,28 @@ const MasterCatalog = () => {
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
               />
             </div>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+            <select
+              id="select-company"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+            >
               <option value="">Select Company</option>
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+            <select
+              id="select-branch"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+            >
               <option value="">Select Branch</option>
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+            <select
+              id="select-partner"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+            >
               <option value="">Select Partner</option>
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+            <select
+              id="select-seller"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+            >
               <option value="">Select Seller</option>
             </select>
           </div>
@@ -599,7 +616,7 @@ const MasterCatalog = () => {
                   : "text-gray-600"
               }`}
             >
-              <LayoutGrid size={18} />
+              <LayoutGrid id="grid-view-button" size={18} />
             </button>
             <button
               onClick={() => setViewMode("table")}
@@ -609,9 +626,10 @@ const MasterCatalog = () => {
                   : "text-gray-600"
               }`}
             >
-              <Table size={18} />
+              <Table id="table-view-button" size={18} />
             </button>
             <button
+              id="add-product-button"
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg"
             >
@@ -656,12 +674,12 @@ const MasterCatalog = () => {
 
   const handleManualUpload = () => {
     setShowAddModal(false);
-    navigate("/dashboard/products/add-product");
+    navigate("/dashboard/mastercatalogue/add-product");
   };
 
   const handleBulkUpload = () => {
     setShowAddModal(false);
-    navigate("/dashboard/products/bulk-upload");
+    navigate("/dashboard/mastercatalogue/bulk-upload");
   };
 
   const renderAddModal = () => {
@@ -685,11 +703,12 @@ const MasterCatalog = () => {
 
           <div className="space-y-4">
             <button
+              id="add-button-manual-upload"
               onClick={handleManualUpload}
               className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
             >
               <div className="p-2 bg-gray-100 rounded">
-                <Plus size={24} className="text-gray-600" />
+                <Plus id="add-icon-manual-upload" size={24} className="text-gray-600" />
               </div>
               <div>
                 <h3 className="font-medium">Manual upload</h3>
@@ -701,11 +720,12 @@ const MasterCatalog = () => {
             </button>
 
             <button
+              id="add-button-bulk-upload"
               onClick={handleBulkUpload}
               className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
             >
               <div className="p-2 bg-gray-100 rounded">
-                <Upload size={24} className="text-gray-600" />
+                <Upload id="add-icon-bulk-upload" size={24} className="text-gray-600" />
               </div>
               <div>
                 <h3 className="font-medium">Bulk upload</h3>

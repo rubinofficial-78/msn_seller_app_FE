@@ -123,7 +123,7 @@ export default function VerifyOTP() {
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="flex flex-col items-center">
-          <img src={adyaLogo} alt="Adya Logo" className="w-20 h-20" />
+          <img id="adya-logo" src={adyaLogo} alt="Adya Logo" className="w-20 h-20" />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome</h2>
           <p className="mt-2 text-sm text-gray-600 text-center">
             Please provide your email or mobile number to sign up or log in.
@@ -156,7 +156,7 @@ export default function VerifyOTP() {
           </div>
 
           {/* Resend OTP Link */}
-          <div className="mt-4 text-center">
+          {/* <div className="mt-4 text-center">
             <button
               type="button"
               onClick={handleResendOTP}
@@ -165,9 +165,10 @@ export default function VerifyOTP() {
               Resend OTP to{" "}
               {email ? `s***${email.slice(email.indexOf("@"))}` : ""}
             </button>
-          </div>
+          </div> */}
 
           <button
+            id="verify-otp-continue-button"
             type="submit"
             className="mt-6 w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             disabled={loading}

@@ -190,7 +190,8 @@ const EditBranch: React.FC = () => {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <button 
+        <button
+          id="back-button-branch"
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
@@ -210,6 +211,7 @@ const EditBranch: React.FC = () => {
         {/* Save Button */}
         <div className="flex justify-end mt-6">
           <button
+            id="save-button-branch"
             onClick={handleSubmit}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >

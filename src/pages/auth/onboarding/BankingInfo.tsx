@@ -128,6 +128,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               Bank Name <span className="text-red-500">*</span>
             </label>
             <input
+              id="bank-name-input"
               type="text"
               value={formValues.bankName}
               onChange={(e) => handleInputChange("bankName", e.target.value)}
@@ -140,6 +141,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               IFSC Code <span className="text-red-500">*</span>
             </label>
             <input
+              id="ifsc-code-input"
               type="text"
               value={formValues.ifscCode}
               onChange={(e) => handleInputChange("ifscCode", e.target.value)}
@@ -160,6 +162,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               Account Number <span className="text-red-500">*</span>
             </label>
             <input
+              id="account-number-input"
               type="text"
               value={formValues.accountNumber}
               onChange={(e) =>
@@ -175,6 +178,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               <span className="text-red-500">*</span>
             </label>
             <input
+              id="beneficiary-name-input"
               type="text"
               value={formValues.beneficiaryName}
               onChange={(e) =>
@@ -212,6 +216,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
 
       <div className="flex justify-between mt-6">
         <button
+          id="back-button"
           type="button"
           onClick={() => window.history.back()}
           className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -219,6 +224,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
           Back
         </button>
         <button
+          id="go-to-dashboard-button"
           type="submit"
           className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >

@@ -292,6 +292,7 @@ const CreatePartner: React.FC = () => {
           type: 'select',
           key: 'companyName',
           label: 'Company Name',
+          id: 'company-name-input',
           required: true,
           value: formData.companyName,
           options: companies.map(company => ({
@@ -305,6 +306,7 @@ const CreatePartner: React.FC = () => {
           key: 'branchName',
           label: 'Branch Name',
           required: true,
+          id: 'branch-name-input',
           value: formData.branchName,
           options: branches.map(branch => ({
             label: branch.name,
@@ -318,7 +320,8 @@ const CreatePartner: React.FC = () => {
           label: 'Partner Name',
           required: true,
           value: formData.partnerName,
-          placeholder: 'Enter partner name'
+          placeholder: 'Enter partner name',
+          id: 'partner-name-input'
         },
         {
           type: 'email',
@@ -326,7 +329,8 @@ const CreatePartner: React.FC = () => {
           label: 'Email',
           required: true,
           value: formData.email,
-          placeholder: 'Enter email address'
+          placeholder: 'Enter email address',
+          id: 'email-input'
         },
         {
           type: 'text',
@@ -334,14 +338,16 @@ const CreatePartner: React.FC = () => {
           label: 'Mobile Number',
           required: true,
           value: formData.mobileNumber,
-          placeholder: 'Enter mobile number'
+          placeholder: 'Enter mobile number',
+          id: 'mobile-number-input'
         },
         {
           type: 'text',
           key: 'website',
           label: 'Website',
           value: formData.website,
-          placeholder: 'Enter website URL'
+          placeholder: 'Enter website URL',
+          id: 'website-input'
         },
         {
           type: 'text',
@@ -349,7 +355,8 @@ const CreatePartner: React.FC = () => {
           label: 'Aadhaar Number',
           required: true,
           value: formData.aadhaarNumber,
-          placeholder: 'Enter Aadhaar number'
+          placeholder: 'Enter Aadhaar number',
+          id: 'aadhaar-number-input'
         },
         {
           type: 'textarea',
@@ -357,7 +364,8 @@ const CreatePartner: React.FC = () => {
           label: 'Address',
           required: true,
           value: formData.address,
-          placeholder: 'Enter complete address'
+          placeholder: 'Enter complete address',
+          id: 'address-input'
         },
         {
           type: 'text',
@@ -365,7 +373,8 @@ const CreatePartner: React.FC = () => {
           label: 'City',
           required: true,
           value: formData.city,
-          placeholder: 'Enter city'
+          placeholder: 'Enter city',
+          id: 'city-input'
         },
         {
           type: 'text',
@@ -373,7 +382,8 @@ const CreatePartner: React.FC = () => {
           label: 'State',
           required: true,
           value: formData.state,
-          placeholder: 'Enter state'
+          placeholder: 'Enter state',
+          id: 'state-input'
         },
         {
           type: 'text',
@@ -381,7 +391,8 @@ const CreatePartner: React.FC = () => {
           label: 'Pincode',
           required: true,
           value: formData.pincode,
-          placeholder: 'Enter pincode'
+          placeholder: 'Enter pincode',
+          id: 'pincode-input'
         }
       ],
       isEnabled: true
@@ -396,7 +407,8 @@ const CreatePartner: React.FC = () => {
           label: 'GST No',
           required: true,
           value: formData.gstNo,
-          placeholder: 'Enter GST number'
+          placeholder: 'Enter GST number',
+          id: 'gst-number-input'
         },
         {
           type: 'text',
@@ -404,7 +416,8 @@ const CreatePartner: React.FC = () => {
           label: 'PAN No',
           required: true,
           value: formData.panNo,
-          placeholder: 'Enter PAN number'
+          placeholder: 'Enter PAN number',
+          id: 'pan-number-input'
         },
         {
           type: 'text',
@@ -412,7 +425,8 @@ const CreatePartner: React.FC = () => {
           label: 'Bank Account Number',
           required: true,
           value: formData.bankAccountNumber,
-          placeholder: 'Enter bank account number'
+          placeholder: 'Enter bank account number',
+          id: 'bank-account-number-input'
         },
         {
           type: 'text',
@@ -420,7 +434,8 @@ const CreatePartner: React.FC = () => {
           label: 'Bank Name',
           required: true,
           value: formData.bankName,
-          placeholder: 'Enter bank name'
+          placeholder: 'Enter bank name',
+          id: 'bank-name-input'
         },
         {
           type: 'text',
@@ -428,7 +443,8 @@ const CreatePartner: React.FC = () => {
           label: 'IFSC No',
           required: true,
           value: formData.ifscNo,
-          placeholder: 'Enter IFSC code'
+          placeholder: 'Enter IFSC code',
+          id: 'ifsc-code-input'
         },
         {
           type: 'text',
@@ -436,7 +452,8 @@ const CreatePartner: React.FC = () => {
           label: 'Bank Account Holder Name',
           required: true,
           value: formData.bankAccountHolderName,
-          placeholder: 'Enter account holder name'
+          placeholder: 'Enter account holder name',
+          id: 'beneficiary-name-input'
         }
       ],
       isEnabled: basicCompleted
@@ -454,10 +471,11 @@ const CreatePartner: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button 
+          id="back-button-partner"
           onClick={() => window.history.back()} 
           className="p-2 hover:bg-gray-100 rounded-full"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft id="back-button-partner-icon" size={20} />
         </button>
         <h1 className="text-xl font-semibold">Create Partners</h1>
       </div>
@@ -478,6 +496,7 @@ const CreatePartner: React.FC = () => {
             />
             <div className="flex justify-end mt-4">
               <button
+                id="save-button"
                 onClick={() => {
                   if (index === 0) handleBasicSave();
                   else if (index === 1) handleBankingSave();

@@ -41,10 +41,11 @@ const CreateUser = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
+          id="back-button"
           onClick={() => navigate('/dashboard/settings/access-management')}
           className="p-2 hover:bg-gray-100 rounded-lg"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft id="back-button-icon" size={20} />
         </button>
         <h1 className="text-2xl font-semibold">{userName ? 'Edit User' : 'Create User'}</h1>
       </div>
@@ -64,6 +65,7 @@ const CreateUser = () => {
                 User / Agent First Name <span className="text-red-500">*</span>
               </label>
               <input
+                id="first-name-input"
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -78,6 +80,7 @@ const CreateUser = () => {
                 User / Agent Last Name <span className="text-red-500">*</span>
               </label>
               <input
+                id="last-name-input"
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -92,6 +95,7 @@ const CreateUser = () => {
                 User / Agent Email <span className="text-red-500">*</span>
               </label>
               <input
+                id="email-input"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
@@ -106,6 +110,7 @@ const CreateUser = () => {
                 User / Agent Mobile Number <span className="text-red-500">*</span>
               </label>
               <input
+                id="mobile-number-input"
                 type="tel"
                 value={formData.mobileNumber}
                 onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
@@ -120,6 +125,7 @@ const CreateUser = () => {
                 Role <span className="text-red-500">*</span>
               </label>
               <select
+                id="role-select"
                 value={formData.role}
                 onChange={(e) => handleInputChange('role', e.target.value)}
                 className="w-full p-2 border rounded-lg"
@@ -137,12 +143,14 @@ const CreateUser = () => {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <button
+            id="cancel-button"
             onClick={() => navigate('/dashboard/settings/access-management')}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
+            id="save-user-button"
             onClick={handleSubmit}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
           >

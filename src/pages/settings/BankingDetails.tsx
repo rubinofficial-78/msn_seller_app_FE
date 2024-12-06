@@ -22,7 +22,8 @@ const BankingDetails = () => {
       label: 'GST No',
       value: formData.gstnumber,
       required: true,
-      placeholder: 'Enter your GST number'
+      placeholder: 'Enter your GST number',
+      id: 'gst-number-input'
     },
     {
       type: 'text',
@@ -30,7 +31,8 @@ const BankingDetails = () => {
       label: 'Pan No',
       value: formData.panNumber,
       required: true,
-      placeholder: 'Enter your PAN number'
+      placeholder: 'Enter your PAN number',
+      id: 'pan-number-input'
     },
     {
       type: 'text',
@@ -38,7 +40,8 @@ const BankingDetails = () => {
       label: 'Tan No',
       value: formData.tanNumber,
       required: true,
-      placeholder: 'Enter TAN number'
+      placeholder: 'Enter TAN number',
+      id: 'tan-number-input'
     },
     {
       type: 'text',
@@ -46,7 +49,8 @@ const BankingDetails = () => {
       label: 'Current Bank Name',
       value: formData.currentBankName,
       required: true,
-      placeholder: 'Enter current bank name'
+      placeholder: 'Enter current bank name',
+      id: 'current-bank-name-input'
     },
     {
       type: 'text',
@@ -54,7 +58,8 @@ const BankingDetails = () => {
       label: 'Current Account Number',
       value: formData.currentAccountNumber,
       required: true,
-      placeholder: 'Enter current account number'
+      placeholder: 'Enter current account number',
+      id: 'current-account-number-input'
     },
     {
       type: 'text',
@@ -62,7 +67,8 @@ const BankingDetails = () => {
       label: 'Current IFSC Code',
       value: formData.currentIfscCode,
       required: true,
-      placeholder: 'Enter current IFSC code'
+      placeholder: 'Enter current IFSC code',
+      id: 'current-ifsc-code-input'
     },
     {
       type: 'text',
@@ -70,7 +76,8 @@ const BankingDetails = () => {
       label: 'Current Bank Holder Name',
       value: formData.currentBankHolderName,
       required: true,
-      placeholder: 'Enter current bank holder name'
+        placeholder: 'Enter current bank holder name',
+      id: 'current-bank-holder-name-input'
     } 
   ];
 
@@ -86,6 +93,7 @@ const BankingDetails = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
+            id="back-button"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
@@ -98,7 +106,9 @@ const BankingDetails = () => {
             </p>
           </div>
         </div>
-        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          id="save-and-update-button"
+        >
           Save and Update
         </button>
       </div>

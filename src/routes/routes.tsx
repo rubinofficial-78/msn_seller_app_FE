@@ -26,6 +26,7 @@ import Settings from "../pages/Settings";
 import SellerSettings from "../pages/SellerSettings";
 import MyListings from "../pages/seller/MyListing";
 import MyOrders from "../pages/seller/MyOrders";
+import AddproductMasterCatalogue from "../pages/AddproductMasterCatalogue";
 
 // Product Related Pages
 import AddProduct from "../pages/AddProduct";
@@ -72,6 +73,8 @@ import Payouts from "../pages/Payouts";
 
 // Add import for CreateTicket
 import CreateTicket from "../pages/support/CreateTicket";
+
+import BulkUploadMasterCatalogue from "../pages/bulkUploadMasterCatalogue";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -154,6 +157,10 @@ export const routes: RouteObject[] = [
           {
             path: "add-product-seller",
             element: <AddProductSeller />,
+          },
+          {
+            path: "add-product-master-catalogue",
+            element: <AddproductMasterCatalogue />,
           },
           {
             path: "view/:id",
@@ -519,6 +526,16 @@ export const routes: RouteObject[] = [
         path: "/dashboard/products/edit-offer/:id",
         element: <CreateOffer />,
       },
+
+      // Add this route under the dashboard routes
+      {
+        path: "/dashboard/mastercatalogue/add-product",
+        element: <AddproductMasterCatalogue />
+      },
+      {
+        path: "/dashboard/mastercatalogue/bulk-upload",
+        element: <BulkUploadMasterCatalogue />
+      }
     ],
   },
 ];

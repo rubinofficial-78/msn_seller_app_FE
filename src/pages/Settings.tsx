@@ -20,38 +20,38 @@ const Settings = () => {
 
   const settings = [
     {
-      icon: <CreditCard size={24} />,
+      icon: <CreditCard id="account-details" size={24} />,
       title: "Account Details",
       description: "This information will help us to setup your account in our application and ensure smooth running.",
       path: "account-details"
     },
     {
-      icon: <CreditCard size={24} />,
+      icon: <CreditCard id="banking-details" size={24} />,
       title: "Banking & Business Details",
       description: "This information will help us to setup your Bank accounts and ensure smooth running of funds.",
       path: "banking-details"
     },
     {
-      icon: <Users size={24} />,
+      icon: <Users id="access-management" size={24} />,
       title: "Access Management",
       description: "Manage user access and roles for different modules in the application.",
       path: "access-management"
     },
     
     {
-      icon: <Bell size={24} />,
+      icon: <Bell id="notification-settings" size={24} />,
       title: "Notification Settings",
       description: "Configure notification preferences and settings.",
       path: "notification-settings"
     },
     {
-      icon: <Map size={24} />,
+      icon: <Map id="map-settings" size={24} />,
       title: "Maps Settings",
       description: "Configure map service providers and settings.",
       path: "map-settings"
     },
     {
-      icon: <Eye size={24} />,
+      icon: <Eye id="ui-config" size={24} />,
       title: "UI Configuration",
       description: "Customize the look and feel of the platform.",
       path: "ui-config"
@@ -63,6 +63,7 @@ const Settings = () => {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
+          id="back-button"
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg"
         >

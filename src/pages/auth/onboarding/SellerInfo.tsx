@@ -165,6 +165,7 @@ const SellerInfo = ({ onNext }: { onNext: (data: any) => void }) => {
       
       <div className="flex justify-end mt-6">
         <button
+          id="next-step-button"
           type="submit"
           className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >

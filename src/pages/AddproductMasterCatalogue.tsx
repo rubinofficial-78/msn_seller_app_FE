@@ -37,7 +37,7 @@ interface FormData {
   salesPrice: string;
 }
 
-const AddProduct = () => {
+const AddproductMasterCatalogue = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { data: categories, loading } = useSelector(
@@ -1057,4 +1057,4 @@ const AddProduct = () => {
   );
 };
 
-export default AddProduct;
+export default AddproductMasterCatalogue;

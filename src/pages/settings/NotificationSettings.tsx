@@ -216,6 +216,7 @@ const NotificationSettings = () => {
         <button
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg"
+          id="back-button"
         >
           <ArrowLeft size={20} />
         </button>
@@ -226,6 +227,7 @@ const NotificationSettings = () => {
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           <button
+            id="email-configuration-button"
             onClick={() => setActiveTab('email')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'email'
@@ -236,6 +238,7 @@ const NotificationSettings = () => {
             Email Configuration
           </button>
           <button
+            id="sms-configuration-button"
             onClick={() => setActiveTab('sms')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'sms'
@@ -246,6 +249,7 @@ const NotificationSettings = () => {
             SMS Configuration
           </button>
           <button
+            id="email-sms-templates-button"
             onClick={() => setActiveTab('templates')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'templates'
@@ -267,6 +271,7 @@ const NotificationSettings = () => {
                 type="text"
                 placeholder="Search by Title"
                 className="px-4 py-2 border rounded-md text-sm"
+                id="search-by-title-input"
               />
               <select className="px-4 py-2 border rounded-md text-sm">
                 <option value="">Message type</option>
@@ -279,6 +284,7 @@ const NotificationSettings = () => {
                 placeholder="dd-mm-yyyy"
               />
               <input
+                id="date-input"
                 type="date"
                 className="px-4 py-2 border rounded-md text-sm"
                 placeholder="dd-mm-yyyy"

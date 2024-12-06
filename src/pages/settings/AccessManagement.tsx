@@ -149,6 +149,7 @@ const AccessManagement = () => {
       type: 'custom',
       renderCell: (row: User) => (
         <button 
+          id="edit-user-button"
           onClick={(e) => {
             e.stopPropagation();
             handleEditUser(row);
@@ -285,6 +286,7 @@ const AccessManagement = () => {
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
         <button
+            id="back-button"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
@@ -315,6 +317,7 @@ const AccessManagement = () => {
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
+                id="search-role-input"
                 type="text"
                 placeholder="Search by Role Name"
                 value={searchQuery}
@@ -350,6 +353,7 @@ const AccessManagement = () => {
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
+                id="search-user-input"
                 type="text"
                 placeholder="Search by User Name"
                 value={searchQuery}

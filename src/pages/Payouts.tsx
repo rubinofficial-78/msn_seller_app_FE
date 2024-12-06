@@ -249,8 +249,9 @@ const Payouts = () => {
       <div className="flex items-center gap-4">
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search id="search-icon-payouts" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
+            id="search-input-payouts"
             type="text"
             placeholder="Search Network Order ID"
             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -263,7 +264,7 @@ const Payouts = () => {
           title="Download"
           onClick={handleDownload}
         >
-          <Download size={20} />
+          <Download id="download-icon-payouts" size={20} />
         </button>
       </div>
 

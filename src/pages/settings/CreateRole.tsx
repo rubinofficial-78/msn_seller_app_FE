@@ -62,10 +62,11 @@ const CreateRole = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
+          id="back-button"
           onClick={() => navigate('/dashboard/settings/access-management')}
           className="p-2 hover:bg-gray-100 rounded-lg"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft id="back-button-icon" size={20} />
         </button>
         <h1 className="text-2xl font-semibold">{headerText}</h1>
       </div>
@@ -84,6 +85,7 @@ const CreateRole = () => {
                 Role Name <span className="text-red-500">*</span>
               </label>
               <input
+                id="role-name-input"
                 type="text"
                 value={formData.roleName}
                 onChange={(e) => setFormData(prev => ({ ...prev, roleName: e.target.value }))}
@@ -97,6 +99,7 @@ const CreateRole = () => {
                 Role Description <span className="text-red-500">*</span>
               </label>
               <textarea
+                id="role-description-input"
                 value={formData.roleDescription}
                 onChange={(e) => setFormData(prev => ({ ...prev, roleDescription: e.target.value }))}
                 className="w-full p-2 border rounded-lg"
@@ -130,6 +133,7 @@ const CreateRole = () => {
                       <div className="flex gap-4">
                         <label className="flex items-center gap-2">
                           <input
+                            id="read-checkbox"
                             type="checkbox"
                             checked={module.permissions.read}
                             onChange={() => handlePermissionChange(module.name, 'read')}
@@ -139,6 +143,7 @@ const CreateRole = () => {
                         </label>
                         <label className="flex items-center gap-2">
                           <input
+                            id="write-checkbox"
                             type="checkbox"
                             checked={module.permissions.write}
                             onChange={() => handlePermissionChange(module.name, 'write')}
@@ -164,6 +169,7 @@ const CreateRole = () => {
             Cancel
           </button>
           <button
+            id="save-role-button"
             onClick={() => {
               console.log('Save role:', { formData, modulePermissions });
               navigate('/dashboard/settings/access-management');

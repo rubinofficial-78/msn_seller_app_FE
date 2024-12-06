@@ -102,6 +102,7 @@ const DashboardLayout = () => {
               {/* Notification Icon */}
               <div className="relative">
                 <button
+                  id="notification-icon"
                   onClick={() => setIsNotificationOpen(true)}
                   className="p-2 hover:bg-gray-100 rounded-lg relative"
                 >
@@ -117,6 +118,7 @@ const DashboardLayout = () => {
               {/* Profile Menu */}
               <div className="relative">
                 <button
+                  id="profile-menu-button"
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg"
                 >

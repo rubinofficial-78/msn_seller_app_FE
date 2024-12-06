@@ -355,7 +355,7 @@ const AddSeller = () => {
         { key: "ifscCode", label: "IFSC Code" },
         { key: "accountNumber", label: "Account Number" },
         { key: "beneficiaryName", label: "Beneficiary Name" },
-        { key: "cancelledCheque", label: "Cancelled Cheque" }
+        { key: "cancelledCheque", label: "Cancelled Cheque" },
       ];
 
       // Check if any required field is empty
@@ -383,7 +383,7 @@ const AddSeller = () => {
           canceller_cheque: formData.cancelledCheque,
           ifsc_code: formData.ifscCode,
           bank_name: formData.bankName,
-          section_key: "BANK_DETAILS"
+          section_key: "BANK_DETAILS",
         })
       );
 
@@ -392,13 +392,12 @@ const AddSeller = () => {
       if (response?.meta?.status) {
         toast.success("Bank details saved successfully");
       } else {
-        toast.error(response?.meta?.message  );
+        toast.error(response?.meta?.message);
       }
     } catch (error: any) {
       console.error("Error saving bank details:", error);
       const errorMessage =
-        error?.response?.data?.meta?.message ||
-        error?.message  
+        error?.response?.data?.meta?.message || error?.message;
       toast.error(errorMessage);
     }
   };
@@ -422,6 +421,7 @@ const AddSeller = () => {
           type: "select",
           key: "companyName",
           label: "Company Name",
+          id: "company-select-add-seller",
           required: true,
           value: formData.companyName,
           placeholder: "Select company name",
@@ -432,6 +432,7 @@ const AddSeller = () => {
           type: "select",
           key: "branchName",
           label: "Branch Name",
+          id: "branch-select-add-seller",
           required: true,
           value: formData.branchName,
           placeholder: "Select branch name",
@@ -444,6 +445,7 @@ const AddSeller = () => {
           key: "partnerName",
           label: "Partner Name",
           required: true,
+          id: "partner-select-add-seller",
           value: formData.partnerName,
           placeholder: "Select partner name",
           options: partnerOptions,
@@ -453,6 +455,7 @@ const AddSeller = () => {
           type: "text",
           key: "sellerName",
           label: "Seller Name",
+          id: "seller-name-add-seller",
           required: true,
           value: formData.sellerName,
           placeholder: "Enter seller name",
@@ -461,6 +464,7 @@ const AddSeller = () => {
           type: "email",
           key: "email",
           label: "Email",
+          id: "email-add-seller",
           required: true,
           value: formData.email,
           placeholder: "Enter email address",
@@ -469,6 +473,7 @@ const AddSeller = () => {
           type: "text",
           key: "mobileNumber",
           label: "Mobile Number",
+          id: "mobile-number-add-seller",
           required: true,
           value: formData.mobileNumber,
           placeholder: "Enter mobile number",
@@ -477,6 +482,7 @@ const AddSeller = () => {
           type: "text",
           key: "storeName",
           label: "Store Name",
+          id: "store-name-add-seller",
           required: true,
           value: formData.storeName,
           placeholder: "Enter store name",
@@ -485,6 +491,7 @@ const AddSeller = () => {
           type: "text",
           key: "storeWebsite",
           label: "Store Website",
+          id: "store-website-add-seller",
           value: formData.storeWebsite,
           placeholder: "Enter store website",
         },
@@ -492,6 +499,7 @@ const AddSeller = () => {
           type: "textarea",
           key: "address",
           label: "Address",
+          id: "address-add-seller",
           required: true,
           value: formData.address,
           placeholder: "Enter complete address",
@@ -500,6 +508,7 @@ const AddSeller = () => {
           type: "text",
           key: "state",
           label: "State",
+          id: "state-add-seller",
           required: true,
           value: formData.state,
           placeholder: "Enter state",
@@ -508,6 +517,7 @@ const AddSeller = () => {
           type: "text",
           key: "city",
           label: "City",
+          id: "city-add-seller",
           required: true,
           value: formData.city,
           placeholder: "Enter city",
@@ -516,6 +526,7 @@ const AddSeller = () => {
           type: "text",
           key: "pinCode",
           label: "Pin Code",
+          id: "pin-code-add-seller",
           required: true,
           value: formData.pinCode,
           placeholder: "Enter pin code",
@@ -531,6 +542,7 @@ const AddSeller = () => {
           type: "text",
           key: "gstNumber",
           label: "GST Number",
+          id: "gst-number-add-seller",
           required: true,
           value: formData.gstNumber,
           placeholder: "Enter GST Number",
@@ -539,6 +551,7 @@ const AddSeller = () => {
           type: "radio",
           key: "businessType",
           label: "Business Type",
+          id: "business-type-add-seller",
           required: true,
           value: formData.businessType,
           options: businessTypeOptions,
@@ -550,6 +563,7 @@ const AddSeller = () => {
           type: "image",
           key: "govtAuthorizedProof",
           label: "Upload Government Authorized Id Proof",
+          id: "govt-authorized-proof-add-seller",
           value: formData.govtAuthorizedProof,
           // required: true,
           description:
@@ -559,6 +573,7 @@ const AddSeller = () => {
           type: "image",
           key: "signature",
           label: "Upload Your Signature",
+          id: "signature-add-seller",
           value: formData.signature,
           required: true,
           description:
@@ -575,6 +590,7 @@ const AddSeller = () => {
           type: "text",
           key: "bankName",
           label: "Bank Name",
+          id: "bank-name-add-seller",
           required: true,
           value: formData.bankName,
           placeholder: "Enter bank name",
@@ -583,6 +599,7 @@ const AddSeller = () => {
           type: "text",
           key: "ifscCode",
           label: "IFSC Code",
+          id: "ifsc-code-add-seller",
           required: true,
           value: formData.ifscCode,
           placeholder: "Enter IFSC code",
@@ -591,6 +608,7 @@ const AddSeller = () => {
           type: "text",
           key: "accountNumber",
           label: "Account Number",
+          id: "account-number-add-seller",
           required: true,
           value: formData.accountNumber,
           placeholder: "Enter account number",
@@ -599,6 +617,7 @@ const AddSeller = () => {
           type: "text",
           key: "beneficiaryName",
           label: "Name Of Beneficiary Account holder",
+          id: "beneficiary-name-add-seller",
           required: true,
           value: formData.beneficiaryName,
           placeholder: "Enter beneficiary name",
@@ -607,6 +626,7 @@ const AddSeller = () => {
           type: "image",
           key: "cancelledCheque",
           label: "Upload Bank Cheque",
+          id: "cancelled-cheque-add-seller",
           value: formData.cancelledCheque,
           required: true,
           description:
@@ -620,10 +640,11 @@ const AddSeller = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4 mb-6">
         <button
+          id="back-button-add-seller"
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-full"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft id="back-icon-add-seller" size={20} />
         </button>
         <h1 className="text-xl font-semibold">Create Seller</h1>
       </div>
@@ -641,10 +662,18 @@ const AddSeller = () => {
             />
             <div className="flex justify-end mt-4">
               <button
-                onClick={index === 0 ? handleBasicDetailsSave : index === 1 ? handleGstDetailsSave : handleBankDetailsSave}
+                id={`save-details-button-add-seller-${index}`}
+                onClick={
+                  index === 0
+                    ? handleBasicDetailsSave
+                    : index === 1
+                    ? handleGstDetailsSave
+                    : handleBankDetailsSave
+                }
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                Save {index === 0 ? "Basic" : index === 1 ? "GST" : "Banking"} Details
+                Save {index === 0 ? "Basic" : index === 1 ? "GST" : "Banking"}{" "}
+                Details
               </button>
             </div>
           </div>

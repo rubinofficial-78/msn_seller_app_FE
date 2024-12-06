@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Search, Download, Eye } from "lucide-react";
 import ScrollableTabs from "../components/ScrollableTabs";
 import CustomTable from "../components/CustomTable";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 interface LogisticsOrder {
   logisticsBuyerNPName: string;
@@ -346,17 +346,18 @@ const Logistics = () => {
   };
 
   const handleViewDetails = (order: LogisticsOrder) => {
-    navigate(`/dashboard/logistics/${order.networkOrderID}`, { 
-      state: { orderDetails: order } 
+    navigate(`/dashboard/logistics/${order.networkOrderID}`, {
+      state: { orderDetails: order },
     });
   };
 
   // Get the current data based on active tab with pagination
   const currentData = useMemo(() => {
-    const tabData = allLogisticsData[activeTab as keyof typeof allLogisticsData] || [];
-    setPaginationState(prev => ({
+    const tabData =
+      allLogisticsData[activeTab as keyof typeof allLogisticsData] || [];
+    setPaginationState((prev) => ({
       ...prev,
-      total_rows: tabData.length
+      total_rows: tabData.length,
     }));
     return getPaginatedData(tabData);
   }, [activeTab, paginationState.page_no, paginationState.per_page]);
@@ -464,6 +465,7 @@ const Logistics = () => {
 
           <div className="ml-4 py-2">
             <select
+              id="status-select-logistics"
               value={selectedStatus}
               onChange={handleStatusChange}
               className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
@@ -483,10 +485,12 @@ const Logistics = () => {
             {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
               <Search
+                id="search-icon-logistics"
                 className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
                 size={16}
               />
               <input
+                id="search-input-logistics"
                 type="text"
                 placeholder="Search Order ID/ Transaction ID"
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-primary-500"
@@ -494,10 +498,16 @@ const Logistics = () => {
             </div>
 
             {/* Other Filters */}
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500">
+            <select
+              id="shipment-type-select-logistics"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+            >
               <option value="">Shipment Type</option>
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500">
+            <select
+              id="provider-select-logistics"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+            >
               <option value="">Provider</option>
             </select>
             <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500">
@@ -512,6 +522,7 @@ const Logistics = () => {
               ))}
             </select>
             <input
+              id="from-date-picker-logistics"
               type="text"
               placeholder="From"
               className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
@@ -519,6 +530,7 @@ const Logistics = () => {
           </div>
 
           <button
+            id="download-icon-logistics"
             className="p-1.5 text-gray-600 hover:text-gray-800"
             title="Download"
           >

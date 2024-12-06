@@ -49,7 +49,11 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
       <div className="bg-white w-96 mt-16 mr-4 rounded-lg shadow-lg">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-semibold">Notifications</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button
+            id="close-button-notification"
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
             <X size={20} />
           </button>
         </div>
@@ -78,8 +82,9 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
 
         <div className="p-4 border-t">
           <button
+            id="view-all-notifications-button"
             onClick={() => {
-              navigate('/dashboard/notifications');
+              navigate("/dashboard/notifications");
               onClose();
             }}
             className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
@@ -92,4 +97,4 @@ const NotificationDialog: React.FC<NotificationDialogProps> = ({
   );
 };
 
-export default NotificationDialog; 
+export default NotificationDialog;

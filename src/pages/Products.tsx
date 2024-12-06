@@ -155,11 +155,12 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
             {/* Action Buttons Overlay */}
             <div className="absolute top-2 right-2 flex gap-2">
               <button
+                id="view-product-button-products"
                 onClick={() => handleViewProduct(product)}
                 className="p-1.5 bg-white rounded-full shadow-sm hover:bg-gray-50 text-gray-600"
                 title="View"
               >
-                <Eye size={16} />
+                <Eye id="view-icon-products" size={16} />
               </button>
               <button
                 onClick={() => handleStatusToggle(product)}
@@ -168,9 +169,9 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
                 title="Toggle Status"
               >
                 {product.status?.lookup_code === "ACTIVE" ? (
-                  <ToggleRight size={16} />
+                  <ToggleRight id="toggle-right-products" size={16} />
                 ) : (
-                  <ToggleLeft size={16} />
+                  <ToggleLeft id="toggle-left-products" size={16} />
                 )}
               </button>
             </div>
@@ -494,16 +495,21 @@ const Products = () => {
           <div className="flex gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search
+                id="search-products"
                 className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
                 size={16}
               />
               <input
+                id="search-input-products"
                 type="text"
                 placeholder="Search products"
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
               />
             </div>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+            <select
+              id="company-select-products"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+            >
               <option value="">Select Company</option>
             </select>
             <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
@@ -518,6 +524,7 @@ const Products = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
+              id="view-mode-products"
               onClick={() => setViewMode("grid")}
               className={`p-1.5 rounded ${
                 viewMode === "grid"
@@ -525,9 +532,10 @@ const Products = () => {
                   : "text-gray-600"
               }`}
             >
-              <LayoutGrid size={18} />
+              <LayoutGrid id="view-mode-grid-products" size={18} />
             </button>
             <button
+              id="view-mode-table-products"
               onClick={() => setViewMode("table")}
               className={`p-1.5 rounded ${
                 viewMode === "table"
@@ -535,9 +543,10 @@ const Products = () => {
                   : "text-gray-600"
               }`}
             >
-              <Table size={18} />
+              <Table id="view-mode-table-products" size={18} />
             </button>
             <button
+              id="add-product-button-products"
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg"
             >
@@ -601,6 +610,7 @@ const Products = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Add Product</h2>
             <button
+              id="close-add-product-modal"
               onClick={() => setShowAddModal(false)}
               className="text-gray-500 hover:text-gray-700"
             >
@@ -613,6 +623,7 @@ const Products = () => {
 
           <div className="space-y-4">
             <button
+              id="manual-upload-button-add-product"
               onClick={handleManualUpload}
               className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
             >
@@ -629,6 +640,7 @@ const Products = () => {
             </button>
 
             <button
+              id="bulk-upload-button-add-product"
               onClick={handleBulkUpload}
               className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
             >

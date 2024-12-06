@@ -30,7 +30,14 @@ export interface Column {
   id: string;
   key: string | string[];
   label: string;
-  type?: 'custom' | 'status' | 'image_text' | 'amount' | 'status_toggle' | 'number' | 'actions';
+  type?:
+    | "custom"
+    | "status"
+    | "image_text"
+    | "amount"
+    | "status_toggle"
+    | "number"
+    | "actions";
   maxWidth?: number;
   minWidth?: number;
   join?: boolean;
@@ -112,44 +119,55 @@ const CustomTable: React.FC<CustomTableProps> = ({
                         className="px-6 py-4 whitespace-nowrap text-sm"
                         style={{ minWidth: cell.minWidth || 150 }}
                       >
-                        {cell.type === 'status_toggle' ? (
-                          <div 
+                        {cell.type === "status_toggle" ? (
+                          <div
                             className="flex items-center gap-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               onStatusToggle && onStatusToggle(row);
                             }}
                           >
-                            <button 
+                            <button
                               className={`
                                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
                                 transition-colors duration-200 ease-in-out focus:outline-none
-                                ${row.status?.lookup_code === 'ACTIVE' ? 'bg-blue-600' : 'bg-gray-200'}
+                                ${
+                                  row.status?.lookup_code === "ACTIVE"
+                                    ? "bg-blue-600"
+                                    : "bg-gray-200"
+                                }
                               `}
                             >
                               <span
                                 className={`
                                   pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
                                   transition duration-200 ease-in-out
-                                  ${row.status?.lookup_code === 'ACTIVE' ? 'translate-x-5' : 'translate-x-0'}
+                                  ${
+                                    row.status?.lookup_code === "ACTIVE"
+                                      ? "translate-x-5"
+                                      : "translate-x-0"
+                                  }
                                 `}
                               />
                             </button>
-                            <span 
+                            <span
                               className={`
                                 text-sm font-medium px-3 py-1 rounded-full
-                                ${row.status?.lookup_code === 'ACTIVE' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
+                                ${
+                                  row.status?.lookup_code === "ACTIVE"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
                                 }
                               `}
                             >
-                              {row.status?.display_name || row.status?.lookup_code || 'Inactive'}
+                              {row.status?.display_name ||
+                                row.status?.lookup_code ||
+                                "Inactive"}
                             </span>
                           </div>
-                        ) : cell.type === 'custom' && cell.renderCell ? (
+                        ) : cell.type === "custom" && cell.renderCell ? (
                           cell.renderCell(row)
-                        ) : cell.type === 'status' ? (
+                        ) : cell.type === "status" ? (
                           <span
                             className={`px-2 py-1 rounded-full text-xs ${
                               row[cell.key as string] === "Active"
@@ -159,7 +177,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                           >
                             {row[cell.key as string]}
                           </span>
-                        ) : cell.type === 'image_text' ? (
+                        ) : cell.type === "image_text" ? (
                           <div className="flex items-center">
                             {cell.image_path && (
                               <Image
@@ -183,7 +201,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                               )}
                             </div>
                           </div>
-                        ) : cell.type === 'amount' ? (
+                        ) : cell.type === "amount" ? (
                           <div className="font-medium text-gray-900">
                             ₹
                             {Number(row[cell.key as string]).toLocaleString(
@@ -208,7 +226,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                   .split(".")
                                   .reduce((obj, key) => obj?.[key], row)}
                           </div>
-                        ) : cell.type === 'actions' ? (
+                        ) : cell.type === "actions" ? (
                           <div className="flex items-center gap-2">
                             {cell.actions?.map((action, actionIndex) => (
                               <button

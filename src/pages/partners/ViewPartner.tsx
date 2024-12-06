@@ -92,10 +92,11 @@ const ViewPartner: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
+            id="back-button-partner"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft id="back-icon-partner" size={20} />
           </button>
           <div>
             <h1 className="text-2xl font-bold">View Partner</h1>
@@ -105,10 +106,11 @@ const ViewPartner: React.FC = () => {
         
         {/* Add Edit Button */}
         <button
+          id="edit-button-partner"
           onClick={() => navigate(`/dashboard/partners/edit/${id}`)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          <Edit size={18} />
+          <Edit id="edit-icon-partner" size={18} />
           <span>Edit Partner</span>
         </button>
       </div>

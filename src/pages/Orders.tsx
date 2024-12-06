@@ -250,8 +250,9 @@ const Orders = () => {
       {/* Filter Section */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Search className="text-gray-400" size={20} />
+          <Search id="search-icon-orders" className="text-gray-400" size={20} />
           <input
+            id="search-input-orders"
             type="text"
             placeholder="Search"
             value={filterValues.search}
@@ -261,20 +262,23 @@ const Orders = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Calendar className="text-gray-400" size={20} />
+          <Calendar id="calendar-icon-orders" className="text-gray-400" size={20} />
           <DatePicker
+            id="from-date-picker-orders"
             selected={filterValues.fromDate}
             onChange={(date) => setFilterValues(prev => ({ ...prev, fromDate: date }))}
             placeholderText="From Date"
             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <DatePicker
+            id="to-date-picker-orders"
             selected={filterValues.toDate}
             onChange={(date) => setFilterValues(prev => ({ ...prev, toDate: date }))}
             placeholderText="To Date"
             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button
+            id="apply-filters-button-orders"
             onClick={handleApply}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
@@ -283,6 +287,7 @@ const Orders = () => {
         </div>
 
         <button
+          id="filter-button-orders"
           onClick={() => setShowFilters(!showFilters)}
           className="p-2 text-gray-600 hover:text-gray-800"
           title="Filter"
@@ -296,6 +301,7 @@ const Orders = () => {
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
             <button
+              id={`tab-button-orders-${tab.label}`}
               key={tab.label}
               onClick={() => handleTabChange(tab.label)}
               className={`

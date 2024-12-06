@@ -333,6 +333,7 @@ const EditPartner: React.FC = () => {
           })),
           placeholder: "Select company",
           disabled: true,
+          id: "company-select-partner",
         },
         {
           type: "select",
@@ -346,6 +347,7 @@ const EditPartner: React.FC = () => {
           })),
           placeholder: "Select branch",
           disabled: true,
+          id: "branch-select-partner",
         },
         {
           type: "text",
@@ -355,6 +357,7 @@ const EditPartner: React.FC = () => {
           value: formData.partnerName,
           placeholder: "Enter partner name",
           disabled: true,
+          id: "partner-name-partner",
         },
         {
           type: "email",
@@ -364,6 +367,7 @@ const EditPartner: React.FC = () => {
           value: formData.email,
           placeholder: "Enter email address",
           disabled: true,
+          id: "email-partner",
         },
         {
           type: "text",
@@ -373,6 +377,7 @@ const EditPartner: React.FC = () => {
           value: formData.mobileNumber,
           placeholder: "Enter mobile number",
           disabled: true,
+          id: "mobile-number-partner",
         },
         {
           type: "text",
@@ -380,6 +385,7 @@ const EditPartner: React.FC = () => {
           label: "Website",
           value: formData.website,
           placeholder: "Enter website URL",
+          id: "website-partner",
         },
         {
           type: "text",
@@ -388,6 +394,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.aadhaarNumber,
           placeholder: "Enter Aadhaar number",
+          id: "aadhaar-number-partner",
         },
         {
           type: "textarea",
@@ -396,6 +403,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.address,
           placeholder: "Enter complete address",
+          id: "address-partner",
         },
         {
           type: "text",
@@ -404,6 +412,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.city,
           placeholder: "Enter city",
+          id: "city-partner",
         },
         {
           type: "text",
@@ -412,6 +421,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.state,
           placeholder: "Enter state",
+          id: "state-partner",
         },
         {
           type: "text",
@@ -420,6 +430,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.pincode,
           placeholder: "Enter pincode",
+          id: "pincode-partner",
         },
       ],
       isEnabled: true,
@@ -436,6 +447,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.gstNo,
           placeholder: "Enter GST number",
+          id: "gst-number-partner",
         },
         {
           type: "text",
@@ -444,6 +456,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.panNo,
           placeholder: "Enter PAN number",
+          id: "pan-number-partner",
         },
         {
           type: "text",
@@ -452,6 +465,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.bankAccountNumber,
           placeholder: "Enter bank account number",
+          id: "bank-account-number-partner",
         },
         {
           type: "text",
@@ -460,6 +474,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.bankName,
           placeholder: "Enter bank name",
+          id: "bank-name-partner",
         },
         {
           type: "text",
@@ -468,6 +483,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.ifscNo,
           placeholder: "Enter IFSC code",
+          id: "ifsc-code-partner",
         },
         {
           type: "text",
@@ -476,6 +492,7 @@ const EditPartner: React.FC = () => {
           required: true,
           value: formData.bankAccountHolderName,
           placeholder: "Enter account holder name",
+          id: "bank-account-holder-name-partner",
         },
       ],
       isEnabled: basicCompleted,
@@ -491,6 +508,7 @@ const EditPartner: React.FC = () => {
           label: "Dynamic Affiliate Url",
           value: formData.dynamicAffiliateUrl,
           placeholder: "Enter dynamic affiliate URL",
+          id: "dynamic-affiliate-url-partner",
         },
         // New Seller OnBoarding
         {
@@ -509,6 +527,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "new-seller-commission-type-partner",
         },
         {
           type: "text",
@@ -516,6 +535,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.newSellerCommissionValue,
           placeholder: "Enter commission value",
+          id: "new-seller-commission-value-partner",
         },
         // Fashion
         {
@@ -534,6 +554,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "fashion-commission-type-partner",
         },
         {
           type: "text",
@@ -541,6 +562,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.fashionCommissionValue,
           placeholder: "Enter commission value",
+          id: "fashion-commission-value-partner",
         },
         // F&B
         {
@@ -559,6 +581,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "fnb-commission-type-partner",
         },
         {
           type: "text",
@@ -566,6 +589,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.fnbCommissionValue,
           placeholder: "Enter commission value",
+          id: "fnb-commission-value-partner",
         },
         // Groceries
         {
@@ -584,6 +608,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "groceries-commission-type-partner",
         },
         {
           type: "text",
@@ -591,6 +616,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.groceriesCommissionValue,
           placeholder: "Enter commission value",
+          id: "groceries-commission-value-partner",
         },
         // Beauty & Personal Care
         {
@@ -609,6 +635,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "beauty-commission-type-partner",
         },
         {
           type: "text",
@@ -616,6 +643,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.beautyCommissionValue,
           placeholder: "Enter commission value",
+          id: "beauty-commission-value-partner",
         },
         // Electronics
         {
@@ -634,6 +662,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "electronics-commission-type-partner",
         },
         {
           type: "text",
@@ -641,6 +670,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.electronicsCommissionValue,
           placeholder: "Enter commission value",
+          id: "electronics-commission-value-partner",
         },
         // Pharma
         {
@@ -659,6 +689,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "pharma-commission-type-partner",
         },
         {
           type: "text",
@@ -666,6 +697,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.pharmaCommissionValue,
           placeholder: "Enter commission value",
+          id: "pharma-commission-value-partner",
         },
         // Home & Decor
         {
@@ -684,6 +716,7 @@ const EditPartner: React.FC = () => {
             { label: "Flat", value: "Flat" },
             { label: "Percentage", value: "Percentage" },
           ],
+          id: "home-decor-commission-type-partner",
         },
         {
           type: "text",
@@ -691,6 +724,7 @@ const EditPartner: React.FC = () => {
           label: "Affiliate Commission",
           value: formData.homeDecorCommissionValue,
           placeholder: "Enter commission value",
+          id: "home-decor-commission-value-partner",
         },
       ],
       isEnabled: bankingCompleted,
@@ -869,6 +903,7 @@ const EditPartner: React.FC = () => {
             />
             <div className="flex justify-end mt-4">
               <button
+                id="update-button-partner"
                 onClick={() => {
                   if (index === 0) handleBasicSave();
                   else if (index === 1) handleBankingSave();

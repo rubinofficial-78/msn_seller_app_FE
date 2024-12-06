@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 import AddForm from "../../../components/AddForm";
-import { getLookupCodes, updateBusinessSettings } from "../../../redux/Action/action";
+import {
+  getLookupCodes,
+  updateBusinessSettings,
+} from "../../../redux/Action/action";
 import { RootState } from "../../../redux/types";
 import { AppDispatch } from "../../../redux/store";
 import { toast } from "react-toastify";
@@ -14,42 +17,46 @@ interface BusinessType {
 
 const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { data: businessTypes, loading } = useSelector((state: RootState) => state.data.lookupCodes);
+  const { data: businessTypes, loading } = useSelector(
+    (state: RootState) => state.data.lookupCodes
+  );
   const [error, setError] = useState("");
-  
+
   const [formValues, setFormValues] = useState({
     gstNumber: "",
     businessType: "",
     govtId: "",
     signature: "",
-    businessTypeId: null as number | null
+    businessTypeId: null as number | null,
   });
 
   useEffect(() => {
-    dispatch(getLookupCodes('TYPE_OF_BUSINESS'));
+    dispatch(getLookupCodes("TYPE_OF_BUSINESS"));
   }, [dispatch]);
 
   const handleInputChange = (key: string, value: any) => {
     if (key === "businessType") {
       // Find the corresponding business type ID
-      const selectedType = businessTypes?.find((type: BusinessType) => type.lookup_code === value);
-      setFormValues(prev => ({
+      const selectedType = businessTypes?.find(
+        (type: BusinessType) => type.lookup_code === value
+      );
+      setFormValues((prev) => ({
         ...prev,
         [key]: value,
-        businessTypeId: selectedType?.id || null
+        businessTypeId: selectedType?.id || null,
       }));
     } else {
-      setFormValues(prev => ({
+      setFormValues((prev) => ({
         ...prev,
-        [key]: value
+        [key]: value,
       }));
     }
   };
 
   const handleImageLink = (id: string, link: string | null) => {
-    setFormValues(prev => ({
+    setFormValues((prev) => ({
       ...prev,
-      [id]: link || ""
+      [id]: link || "",
     }));
   };
 
@@ -80,13 +87,13 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
         business_type_id: formValues.businessTypeId,
         gstin: formValues.gstNumber,
         signature: formValues.signature,
-        section_key: "BUSINESS_DETAILS"
+        section_key: "BUSINESS_DETAILS",
       };
 
-      console.log('Submitting payload:', payload);
+      console.log("Submitting payload:", payload);
 
       const result = await dispatch(updateBusinessSettings(2, payload));
-      console.log('API Response:', result);
+      console.log("API Response:", result);
 
       // Check response structure based on your API response format
       if (result?.meta?.status === true) {
@@ -102,20 +109,19 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
         setError("Unexpected response from server");
         toast.error("Unexpected response from server");
       }
-
     } catch (error: any) {
-      console.error('Error updating business settings:', error);
-      
+      console.error("Error updating business settings:", error);
+
       // Detailed error logging
       if (error.response) {
-        console.log('Error Response Data:', error.response.data);
-        console.log('Error Response Status:', error.response.status);
-        console.log('Error Response Headers:', error.response.headers);
+        console.log("Error Response Data:", error.response.data);
+        console.log("Error Response Status:", error.response.status);
+        console.log("Error Response Headers:", error.response.headers);
       }
 
       // Handle different error scenarios
       let errorMessage = "Failed to update business settings";
-      
+
       if (error.response?.data?.meta?.message) {
         errorMessage = error.response.data.meta.message;
       } else if (error.message) {
@@ -140,6 +146,7 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
           </div>
           <div className="flex gap-2">
             <input
+              id="gst-number-input"
               type="text"
               value={formValues.gstNumber}
               onChange={(e) => handleInputChange("gstNumber", e.target.value)}
@@ -147,6 +154,7 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
             <button
+              id="verify-gst-button"
               type="button"
               onClick={handleVerifyGST}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -155,7 +163,7 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
             </button>
           </div>
         </div>
-      )
+      ),
     },
     {
       type: "custom",
@@ -172,20 +180,25 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               businessTypes?.map((type: BusinessType) => (
                 <label key={type.id} className="flex items-center">
                   <input
+                    id="business-type-input"
                     type="radio"
                     name="businessType"
                     value={type.lookup_code}
                     checked={formValues.businessType === type.lookup_code}
-                    onChange={(e) => handleInputChange("businessType", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("businessType", e.target.value)
+                    }
                     className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700">{type.display_name}</span>
+                  <span className="ml-2 text-sm text-gray-700">
+                    {type.display_name}
+                  </span>
                 </label>
               ))
             )}
           </div>
         </div>
-      )
+      ),
     },
     {
       type: "image",
@@ -195,8 +208,9 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
       uploadText: "Upload a file",
       uploadDescription: "PNG, SVG up to 10MB",
       handleImageLink,
-      description: "For the ID proof image, please ensure image is not blur or tilted or has any light glare on it. Any Government Authorized Identification Card/paper which has your Image and Address will work. Like Passport, Aadhaar Card, PAN Card etc.",
-      showLable: false
+      description:
+        "For the ID proof image, please ensure image is not blur or tilted or has any light glare on it. Any Government Authorized Identification Card/paper which has your Image and Address will work. Like Passport, Aadhaar Card, PAN Card etc.",
+      showLable: false,
     },
     {
       type: "image",
@@ -206,9 +220,10 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
       uploadText: "Upload a file",
       uploadDescription: "PNG, SVG up to 10MB",
       handleImageLink,
-      description: "Upload your signature which is required for legal documentations.",
-      showLable: false
-    }
+      description:
+        "Upload your signature which is required for legal documentations.",
+      showLable: false,
+    },
   ];
 
   return (
@@ -223,9 +238,10 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
         handleInputonChange={handleInputChange}
         handleImageLink={handleImageLink}
       />
-      
+
       <div className="flex justify-end mt-6">
         <button
+          id="next-step-button"
           type="submit"
           className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
@@ -236,4 +252,4 @@ const GstInfo = ({ onNext }: { onNext: (data: any) => void }) => {
   );
 };
 
-export default GstInfo; 
+export default GstInfo;

@@ -524,6 +524,7 @@ const AccountDetails = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
+            id="back-button"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
@@ -532,6 +533,7 @@ const AccountDetails = () => {
           <h1 className="text-2xl font-bold">Company Settings</h1>
         </div>
         <button 
+          id="save-changes-button"
           onClick={handleSave}
           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
         >

@@ -48,7 +48,7 @@ const columns = [
   },
   {
     id: "gstin",
-    key: "gstin",
+    key: "business_details.gstin",
     label: "GST No",
     minWidth: 150,
   },
@@ -508,6 +508,7 @@ const Sellers = () => {
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                 size={20}
+                id="search-icon-sellers"
               />
               <input
                 type="text"
@@ -515,11 +516,13 @@ const Sellers = () => {
                 onChange={handleSearch}
                 placeholder="Search by Seller Name"
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                id="search-input-sellers"
               />
             </div>
             <div className="flex flex-wrap gap-4 mb-6"></div>
 
             <select
+              id="company-select-sellers"
               value={params.company_id || ""}
               onChange={handleCompanyChange}
               className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -533,6 +536,7 @@ const Sellers = () => {
             </select>
 
             <select
+              id="branch-select-sellers"
               value={params.branch_id || ""}
               onChange={handleBranchChange}
               className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -551,6 +555,7 @@ const Sellers = () => {
                 ))}
             </select>
             <select
+              id="partner-select-sellers"
               value={params.branch_id || ""}
               onChange={handlePartnerChange}
               className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -580,7 +585,7 @@ const Sellers = () => {
               }`}
               title="Grid view"
             >
-              <LayoutGrid size={20} />
+              <LayoutGrid id="grid-view-sellers" size={20} />
             </button>
             <button
               onClick={() => setViewMode("table")}
@@ -591,13 +596,14 @@ const Sellers = () => {
               }`}
               title="Table view"
             >
-              <Table size={20} />
+              <Table id="table-view-sellers" size={20} />
             </button>
             <button
               onClick={() => navigate("add")}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              id="add-button-sellers"
             >
-              <Plus size={20} />
+              <Plus id="add-icon-sellers" size={20} />
               <span>ADD</span>
             </button>
           </div>

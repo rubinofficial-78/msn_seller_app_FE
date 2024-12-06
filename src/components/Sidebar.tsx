@@ -91,7 +91,7 @@ const Sidebar = () => {
               ${isOpen ? "right-0 translate-x-1/2" : "-right-3 translate-x-full"}
             `}
           >
-            {isOpen ? <ChevronLeft size={18} /> : <Menu size={18} />}
+            {isOpen ? <ChevronLeft id="toggle-left-icon" size={18} /> : <Menu id="toggle-right-icon" size={18} />}
           </button>
 
           {/* Navigation */}
@@ -102,6 +102,7 @@ const Sidebar = () => {
                 <li key={index}>
                   <NavLink
                     to={item.path}
+                    id={`nav-icon-${item.label.replace(/\s+/g, '-').toLowerCase()}`}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap
                       ${!isOpen && "justify-center"}

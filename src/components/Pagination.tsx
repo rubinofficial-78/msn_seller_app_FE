@@ -74,7 +74,7 @@ const Pagination: React.FC<PaginationProps> = ({ setParams, data = [], meta_data
             className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Previous page"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft id="previous-page-icon" size={20} />
           </button>
           <button
             onClick={() => handlePageChange(currentPage + 1)}
@@ -82,7 +82,7 @@ const Pagination: React.FC<PaginationProps> = ({ setParams, data = [], meta_data
             className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next page"
           >
-            <ChevronRight size={20} />
+            <ChevronRight id="next-page-icon" size={20} />
           </button>
         </div>
       </div>

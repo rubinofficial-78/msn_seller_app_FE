@@ -237,6 +237,7 @@ function Support() {
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex flex-wrap items-center gap-4">
           <button 
+            id="raise-ticket-button-support"
             onClick={() => navigate('/dashboard/support/create-ticket')} 
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
           >
@@ -248,6 +249,7 @@ function Support() {
               <input
                 type="text"
                 placeholder="Search by Network Issue Id"
+                id="search-input-support"
                 className="w-full px-4 py-2 border rounded-md text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -255,6 +257,7 @@ function Support() {
             </div>
 
             <select 
+              id="issue-category-select-support"
               className="px-4 py-2 border rounded-md text-sm min-w-[180px]"
               value={issueCategory}
               onChange={(e) => {
@@ -270,6 +273,7 @@ function Support() {
             </select>
 
             <select 
+              id="status-select-support"
               className="px-4 py-2 border rounded-md text-sm min-w-[180px]"
               value={status}
               onChange={(e) => {
@@ -284,6 +288,7 @@ function Support() {
             </select>
 
             <input
+              id="from-date-picker-support"
               type="date"
               className="px-4 py-2 border rounded-md text-sm w-[150px]"
               value={fromDate}
@@ -291,6 +296,7 @@ function Support() {
             />
 
             <input
+              id="to-date-picker-support"
               type="date"
               className="px-4 py-2 border rounded-md text-sm w-[150px]"
               value={toDate}
@@ -307,6 +313,7 @@ function Support() {
             </button>
             <button
               onClick={handleExportToExcel}
+              id="download-excel-button-support"
               className="p-2 text-gray-600 hover:text-gray-800"
               title="Download Excel"
             >

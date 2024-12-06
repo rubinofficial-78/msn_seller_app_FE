@@ -44,6 +44,7 @@ const SellerGrid = ({ data, onView, onEdit }: SellerGridProps) => {
 
             <div className="flex justify-end gap-2 pt-2 border-t">
               <button
+                id="view-button-seller"
                 onClick={() => onView(seller.id)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded"
                 title="View"
@@ -51,6 +52,7 @@ const SellerGrid = ({ data, onView, onEdit }: SellerGridProps) => {
                 <Eye size={18} />
               </button>
               <button
+                id="edit-button-seller"
                 onClick={() => onEdit(seller.id)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded"
                 title="Edit"

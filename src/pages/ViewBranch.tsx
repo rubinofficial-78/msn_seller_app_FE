@@ -51,16 +51,17 @@ const ViewBranch: React.FC = () => {
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft id="back-button-branch" className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-medium">View Branch</h1>
         </div>
 
         <button
+          id="edit-button-branch"
           onClick={handleEdit}
           className="flex items-center gap-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
         >
-          <Edit size={20} />
+          <Edit id="edit-icon-branch" size={20} />
           <span>Edit</span>
         </button>
       </div>

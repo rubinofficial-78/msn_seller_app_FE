@@ -36,7 +36,6 @@ const tabs: Tab[] = [
   { label: "System Users" },
 ];
 
-
 // Define table columns for CustomTable
 const Companies = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -54,7 +53,7 @@ const Companies = () => {
   const [params, setParams] = useState({
     page_no: 1,
     per_page: 10,
-    status_id: null as number | null
+    status_id: null as number | null,
   });
 
   // Add state for filtered status ID
@@ -64,7 +63,7 @@ const Companies = () => {
   const fetchCompanies = useCallback(() => {
     const queryParams = {
       ...params,
-      status_id: params.status_id || undefined // Only include if not null
+      status_id: params.status_id || undefined, // Only include if not null
     };
     dispatch(getCompanies(queryParams));
   }, [dispatch, params]);
@@ -108,7 +107,7 @@ const Companies = () => {
   // Handle row click for view/edit actions
   const handleRowClick = (row: any, source?: string) => {
     // Only navigate to view if not clicking action buttons
-    if (source !== 'action') {
+    if (source !== "action") {
       navigate(`view/${row.id}`);
     }
   };
@@ -167,30 +166,37 @@ const Companies = () => {
   };
 
   // Add state for system users
-  const { data: systemUsers, loading: usersLoading, meta: usersMeta } = 
-    useSelector((state: RootState) => state.data.companyUsers);
+  const {
+    data: systemUsers,
+    loading: usersLoading,
+    meta: usersMeta,
+  } = useSelector((state: RootState) => state.data.companyUsers);
 
   // Update handleTabChange
   const handleTabChange = (tabLabel: string) => {
     setActiveTab(tabLabel);
-    
+
     if (tabLabel === "System Users") {
       dispatch(getCompanyUsers(params));
     } else {
       // Find corresponding status ID from lookup
       let statusId = null;
       if (tabLabel === "Active Companies") {
-        const activeStatus = statusLookup.find(s => s.lookup_code === "ACTIVE");
+        const activeStatus = statusLookup.find(
+          (s) => s.lookup_code === "ACTIVE"
+        );
         statusId = activeStatus?.id || null;
       } else if (tabLabel === "Inactive Companies") {
-        const inactiveStatus = statusLookup.find(s => s.lookup_code === "IN-ACTIVE");
+        const inactiveStatus = statusLookup.find(
+          (s) => s.lookup_code === "IN-ACTIVE"
+        );
         statusId = inactiveStatus?.id || null;
       }
 
-      setParams(prev => ({
+      setParams((prev) => ({
         ...prev,
         status_id: statusId,
-        page_no: 1
+        page_no: 1,
       }));
     }
   };
@@ -234,7 +240,7 @@ const Companies = () => {
       renderCell: (row: any) => (
         <span>{new Date(row.createdAt).toLocaleDateString()}</span>
       ),
-    }
+    },
   ];
 
   // Move tableColumns definition here to access navigate
@@ -304,20 +310,28 @@ const Companies = () => {
       id: "actions",
       key: "actions",
       label: "Actions",
-      minWidth: 120,
-      type: "actions",
-      actions: [
-        {
-          icon: <Eye size={18} className="text-blue-600" />,
-          label: "View",
-          onClick: (row: any) => navigate(`view/${row.id}`),
-        },
-        {
-          icon: <Edit size={18} className="text-green-600" />,
-          label: "Edit",
-          onClick: (row: any) => navigate(`edit/${row.id}`),
-        },
-      ],
+      type: "custom",
+      minWidth: 100,
+      renderCell: (row: any) => (
+        <div className="flex items-center gap-2">
+          <button
+            id={`view-button-${row.id}`}
+            onClick={() => handleRowClick(row, "action")}
+            className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
+            title="View"
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            id={`edit-button-${row.id}`}
+            onClick={() => handleRowClick(row, "action")}
+            className="p-1 text-green-600 hover:text-green-700 rounded-full hover:bg-green-50"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+        </div>
+      ),
     },
   ];
 
@@ -325,7 +339,11 @@ const Companies = () => {
   const renderCompanies = () => {
     if (activeTab === "System Users") {
       if (usersLoading) {
-        return <div className="flex justify-center items-center h-64">Loading...</div>;
+        return (
+          <div className="flex justify-center items-center h-64">
+            Loading...
+          </div>
+        );
       }
 
       return (
@@ -370,22 +388,20 @@ const Companies = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="companies-container">
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200" id="tabs-container">
         <nav className="-mb-px flex flex-wrap gap-4">
           {tabs.map((tab) => (
             <button
               key={tab.label}
               onClick={() => handleTabChange(tab.label)}
-              className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                ${
-                  activeTab === tab.label
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }
-              `}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab.label
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              id={`tab-${tab.label.replace(/\s+/g, '-').toLowerCase()}`}
             >
               {tab.label}
             </button>
@@ -394,15 +410,17 @@ const Companies = () => {
       </div>
 
       {/* Search and Actions */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
+      <div className="flex flex-wrap gap-4 items-center justify-between" id="search-actions-container">
         <div className="flex flex-wrap gap-4 flex-1">
           {/* Search */}
           <div className="relative flex-1 max-w-xs">
             <Search
+              id="search-icon-companies"
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={20}
             />
             <input
+              id="search-input-companies"
               type="text"
               placeholder="Search by Company Name"
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -421,7 +439,7 @@ const Companies = () => {
             }`}
             title="Grid view"
           >
-            <LayoutGrid size={20} />
+            <LayoutGrid id="grid-view-button-companies" size={20} />
           </button>
           <button
             onClick={() => setViewMode("table")}
@@ -432,13 +450,14 @@ const Companies = () => {
             }`}
             title="Table view"
           >
-            <Table size={20} />
+            <Table id="table-view-button-companies" size={20} />
           </button>
           <button
+            id="add-button-companies"
             onClick={handleAddClick}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            <Plus size={20} />
+            <Plus id="add-button-companies" size={20} />
             <span>ADD</span>
           </button>
         </div>

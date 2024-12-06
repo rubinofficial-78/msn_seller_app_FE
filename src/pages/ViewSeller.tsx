@@ -45,6 +45,7 @@ const ViewSeller = () => {
     if (companyPaymentStatus !== "Active") {
       return (
         <button
+          id="activate-seller-button"
           onClick={handleActivateSeller}
           disabled={updating}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
@@ -63,6 +64,7 @@ const ViewSeller = () => {
       case "APPROVED":
         return (
           <button
+            id="reject-seller-button"
             onClick={() => handleStatusUpdate(97)}
             disabled={updating}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
@@ -83,6 +85,7 @@ const ViewSeller = () => {
         return (
           <div className="flex gap-2">
             <button
+              id="approve-seller-button"
               onClick={() => handleStatusUpdate(96)}
               disabled={updating}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
@@ -95,6 +98,7 @@ const ViewSeller = () => {
               Approve Seller
             </button>
             <button
+              id="reject-seller-button"
               onClick={() => handleStatusUpdate(97)}
               disabled={updating}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
@@ -233,19 +237,19 @@ const ViewSeller = () => {
         },
         {
           label: "Address",
-          value: sellerData?.store_details?.[0]?.address || "Chennai",
+          value: sellerData?.store_details?.[0]?.address || "--",
         },
         {
           label: "City",
-          value: sellerData?.store_details?.[0]?.city || "chennai",
+          value: sellerData?.store_details?.[0]?.city || "--",
         },
         {
           label: "State",
-          value: sellerData?.store_details?.[0]?.state || "tamilnadu",
+          value: sellerData?.store_details?.[0]?.state || "--",
         },
         {
           label: "Postal code",
-          value: sellerData?.store_details?.[0]?.postal_code || "600773",
+          value: sellerData?.store_details?.[0]?.postal_code || "--",
         },
         {
           label: "Fulfillment Type",
@@ -369,10 +373,11 @@ const ViewSeller = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
+            id="back-button-seller"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-full"
           >
-            <ArrowLeft className="h-6 w-6" />
+            <ArrowLeft id="back-icon-seller" className="h-6 w-6" />
           </button>
           <h1 className="text-2xl font-semibold">View Seller Details</h1>
         </div>

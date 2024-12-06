@@ -54,7 +54,7 @@ const ViewProduct = () => {
           onClick={() => navigate(-1)}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft id="back-to-products-button" className="w-4 h-4 mr-2" />
           Back to Products
         </button>
         <h1 className="text-2xl font-semibold text-gray-900">{product.name}</h1>
@@ -72,6 +72,7 @@ const ViewProduct = () => {
                 <div className="mt-2 flex gap-4">
                   {product.image_arr?.map((image: string, index: number) => (
                     <img
+                      id={`product-image-${index}`}
                       key={index}
                       src={image}
                       alt={`Product ${index + 1}`}

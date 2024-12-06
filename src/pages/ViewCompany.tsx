@@ -48,18 +48,20 @@ const ViewCompany: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button 
+            id="back-button-view-company"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft id="back-icon-view-company" className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-medium">View Company</h1>
         </div>
         <button
+          id="edit-button-view-company"
           onClick={() => navigate(`/dashboard/companies/edit/${id}`)}
           className="flex items-center gap-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50"
         >
-          <Edit size={20} />
+          <Edit id="edit-icon-view-company" size={20} />
           Edit
         </button>
       </div>

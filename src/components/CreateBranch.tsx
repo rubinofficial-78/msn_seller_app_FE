@@ -95,6 +95,7 @@ const CreateBranch: React.FC = () => {
           type: 'select',
           key: 'companyName',
           label: 'Company Name',
+          id: "company-name-input",
           required: true,
           value: formData.companyName || '',
           placeholder: 'Select Company',
@@ -111,6 +112,7 @@ const CreateBranch: React.FC = () => {
         {
           type: "text",
           key: "branchName",
+          id: "branch-name-input",
           label: "Branch Name",
           required: true,
           value: formData.branchName,
@@ -119,6 +121,7 @@ const CreateBranch: React.FC = () => {
         {
           type: "text",
           key: "mobileNumber",
+          id: "mobile-number-input",
           label: "Mobile Number",
           required: true,
           value: formData.mobileNumber,
@@ -127,6 +130,7 @@ const CreateBranch: React.FC = () => {
         {
           type: "email",
           key: "email",
+          id: "email-input",
           label: "Email",
           required: true,
           value: formData.email,
@@ -135,6 +139,7 @@ const CreateBranch: React.FC = () => {
         {
           type: "textarea",
           key: "address",
+          id: "address-input",
           label: "Address",
           required: true,
           value: formData.address,
@@ -143,6 +148,7 @@ const CreateBranch: React.FC = () => {
         {
           type: "text",
           key: "state",
+          id: "state-input",
           label: "State",
           required: true,
           value: formData.state,
@@ -151,6 +157,7 @@ const CreateBranch: React.FC = () => {
         {
           type: "text",
           key: "city",
+          id: "city-input",
           label: "City",
           required: true,
           value: formData.city,
@@ -160,6 +167,7 @@ const CreateBranch: React.FC = () => {
           type: "text",
           key: "pincode",
           label: "Pincode",
+          id: "pincode-input",
           required: true,
           value: formData.pincode,
           placeholder: "Enter Pincode",
@@ -173,10 +181,11 @@ const CreateBranch: React.FC = () => {
       {/* Header with Back Button */}
       <div className="flex items-center gap-4 mb-6">
         <button
+          id="back-button-branch"
           onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
-          <ArrowLeft className="w-6 h-6" />
+          <ArrowLeft id="back-button-branch-icon" className="w-6 h-6" />
         </button>
         <h1 className="text-xl font-medium">Create Branch</h1>
       </div>
@@ -193,6 +202,7 @@ const CreateBranch: React.FC = () => {
       {/* Save Button */}
       <div className="flex justify-end mt-6">
         <button
+          id="save-button-branch"
           onClick={handleSave}
           className="px-4 py-2 bg-[#1a237e] text-white rounded-lg hover:bg-opacity-90"
         >

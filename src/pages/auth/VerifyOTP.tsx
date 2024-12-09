@@ -1,16 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { verifyOTP, getUserDetails } from "../../redux/Action/action";
+import { verifyOTP, getUserDetails, loginUser } from "../../redux/Action/action";
 import { RootState } from "../../redux/types";
 import adyaLogo from "../../assests/adya.png";
 import { toast } from "react-toastify";
 import GLOBAL_CONSTANTS from "../../GlobalConstants";
 import { jwtDecode } from "jwt-decode";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function VerifyOTP() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
+  const [showOTP, setShowOTP] = useState(false);
+  const [timer, setTimer] = useState(30); // 30 seconds timer
+  const [canResend, setCanResend] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -24,8 +28,30 @@ export default function VerifyOTP() {
     (state: RootState) => state.data.otpVerification.error
   );
 
+  // Add timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [timer]);
+
   // Handle input change for each OTP digit
   const handleChange = (index: number, value: string) => {
+    // Only allow numbers
+    if (!/^\d*$/.test(value)) return;
+    
     if (value.length > 1) return; // Only allow single digit
 
     const newOtp = [...otp];
@@ -114,9 +140,47 @@ export default function VerifyOTP() {
     }
   };
 
-  const handleResendOTP = () => {
-    // Add resend OTP logic here
-    toast.info("Resending OTP...", { autoClose: 2000 });
+  // Handle resend OTP
+  const handleResendOTP = async () => {
+    if (!canResend) return;
+
+    try {
+      const userId = localStorage.getItem("userid");
+      const email = localStorage.getItem("pendingLoginEmail");
+
+      if (!email) {
+        toast.error("Email not found. Please try logging in again.");
+        navigate("/login");
+        return;
+      }
+
+      // Dispatch login action again to get new OTP
+      const response = await dispatch(loginUser(email) as any);
+
+      if (response?.data) {
+        // Reset timer and disable resend button
+        setTimer(30);
+        setCanResend(false);
+        
+        // Clear existing OTP
+        setOtp(["", "", "", "", "", ""]);
+        
+        // Focus first input
+        const firstInput = document.getElementById("otp-0");
+        firstInput?.focus();
+
+        toast.success("New OTP has been sent to your email");
+      } else {
+        throw new Error("Failed to resend OTP");
+      }
+    } catch (err: any) {
+      console.error("Resend OTP error:", err);
+      toast.error(err?.message || "Failed to resend OTP. Please try again.");
+    }
+  };
+
+  const toggleOTPVisibility = () => {
+    setShowOTP(!showOTP);
   };
 
   return (
@@ -201,38 +265,86 @@ export default function VerifyOTP() {
 
             {/* OTP Form */}
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* OTP Input Grid */}
-              <div className="flex justify-center gap-3">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`otp-${index}`}
-                    type="text"
-                    inputMode="numeric"
-                    pattern="\d*"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-12 text-center text-xl font-semibold 
-                             bg-white/80 border-2 border-[#FFE4C8]/50 rounded-lg 
-                             text-gray-900 
-                             focus:border-[#FFE4C8]/70 focus:ring-0 
-                             transition-all duration-300
-                             hover:border-[#FFE4C8]/60
-                             shadow-sm"
-                  />
-                ))}
+              {/* OTP Input Grid with Eye Icon */}
+              <div className="relative">
+                <div className="flex justify-center gap-3">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      id={`otp-${index}`}
+                      type={showOTP ? "text" : "password"}
+                      inputMode="numeric"
+                      pattern="\d*"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleChange(index, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(index, e)}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedData = e.clipboardData.getData('text');
+                        const numbers = pastedData.replace(/\D/g, '').slice(0, 6).split('');
+                        
+                        // Fill available OTP fields with pasted numbers
+                        const newOtp = [...otp];
+                        numbers.forEach((num, idx) => {
+                          if (idx < 6) newOtp[idx] = num;
+                        });
+                        setOtp(newOtp);
+                        
+                        // Focus on next empty field or last field
+                        const nextEmptyIndex = newOtp.findIndex(val => !val);
+                        const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
+                        document.getElementById(`otp-${focusIndex}`)?.focus();
+                      }}
+                      className="w-12 h-12 text-center text-xl font-semibold 
+                                 bg-white/80 border-2 border-[#FFE4C8]/50 rounded-lg 
+                                 text-gray-900 
+                                 focus:border-[#FFE4C8]/70 focus:ring-0 
+                                 transition-all duration-300
+                                 hover:border-[#FFE4C8]/60
+                                 shadow-sm"
+                    />
+                  ))}
+                </div>
+                
+                {/* Eye Icon Button */}
+                <button
+                  type="button"
+                  onClick={toggleOTPVisibility}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 -right-8
+                           p-2 text-gray-500 hover:text-gray-700
+                           transition-colors duration-200"
+                >
+                  {showOTP ? (
+                    <EyeOff size={20} className="text-gray-500" />
+                  ) : (
+                    <Eye size={20} className="text-gray-500" />
+                  )}
+                </button>
               </div>
 
               {/* Resend OTP Link */}
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <button
                   type="button"
                   onClick={handleResendOTP}
-                  className="text-gray-500 hover:text-gray-700 text-sm transition-colors duration-300"
+                  disabled={!canResend}
+                  className={`text-sm transition-colors duration-300 ${
+                    canResend 
+                      ? "text-blue-600 hover:text-blue-700" 
+                      : "text-gray-400 cursor-not-allowed"
+                  }`}
                 >
-                  Didn't receive code? Resend OTP
+                  {canResend ? (
+                    "Resend OTP"
+                  ) : (
+                    <>
+                      Resend OTP in{" "}
+                      <span className="font-medium text-gray-600">
+                        {timer}s
+                      </span>
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -262,4 +374,13 @@ export default function VerifyOTP() {
       </div>
     </div>
   );
+}
+
+// Add type for JWT token payload
+interface CustomJwtPayload extends JwtPayload {
+  roles?: string[];
+  user_types?: Array<{ name: string }>;
+  affiliate_details?: {
+    user_role: string;
+  };
 }

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   Eye,
@@ -8,12 +9,21 @@ import {
   ToggleLeft,
   ToggleRight,
   X,
-  Save,
-  Copy,
-  Trash2,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import CustomTable, { Column } from "../../components/CustomTable";
+import AddForm from "../../components/AddForm";
+import {
+  getStoreLocations,
+  updateStoreLocationStatus,
+  getLocationTypeLookup,
+  createStoreLocation,
+  getWorkingDaysLookup,
+  updateWorkingHours,
+} from "../../redux/Action/action";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../redux/store";
+import { Slider } from "antd";
+import { toast } from "react-toastify";
 
 type TabType = "stores" | "shipping";
 type ViewType = "table" | "grid";
@@ -33,62 +43,14 @@ interface ShippingDetail {
   shippingFee: string;
 }
 
-const shippingData = [
-  {
-    id: 1,
-    storeName: "Delhi house",
-    address: "sarojini nagar main building",
-    createdDate: "24/10/2024, 03:31 PM",
-    shippingDistance: "Pan India",
-    domain: "Electronics",
-    city: "New Delhi",
-    pincode: "110023",
-    status: "Active",
-  },
-  {
-    id: 2,
-    storeName: "Mumbai Store",
-    address: "Andheri West Main Road",
-    createdDate: "23/10/2024, 02:15 PM",
-    shippingDistance: "Zone",
-    domain: "Fashion",
-    city: "Mumbai",
-    pincode: "400053",
-    status: "Active",
-  },
-  {
-    id: 3,
-    storeName: "Bangalore Hub",
-    address: "Koramangala 4th Block",
-    createdDate: "22/10/2024, 11:45 AM",
-    shippingDistance: "Pan India",
-    domain: "Beauty & Personal Care",
-    city: "Bangalore",
-    pincode: "560034",
-    status: "Active",
-  },
-  {
-    id: 4,
-    storeName: "Chennai Center",
-    address: "T Nagar Shopping District",
-    createdDate: "21/10/2024, 04:20 PM",
-    shippingDistance: "Zone",
-    domain: "Home and Decor",
-    city: "Chennai",
-    pincode: "600017",
-    status: "Active",
-  },
-  {
-    id: 5,
-    storeName: "Kolkata Store",
-    address: "Park Street Area",
-    createdDate: "20/10/2024, 01:30 PM",
-    shippingDistance: "Pan India",
-    domain: "Grocery",
-    city: "Kolkata",
-    pincode: "700016",
-    status: "Active",
-  },
+interface LocationType {
+  id: number;
+  display_name: string;
+  lookup_code: string;
+  is_active: boolean;
+}
+
+const shippingData = [   
   {
     id: 6,
     storeName: "Hyderabad Branch",
@@ -186,96 +148,603 @@ interface ShippingDetailsForm {
   shippingFee: string;
 }
 
-const LocationServices = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>("stores");
-  const [viewType, setViewType] = useState<ViewType>("table");
-  const [showShippingDetails, setShowShippingDetails] = useState(false);
+// Add this interface for the form data
+interface StoreFormData {
+  // Step 1: Store Details
+  storeName: string;
+  contactPersonName: string;
+  phoneNumber: string;
+  storeType: string;
+  gstNumber: string;
+  email: string;
+  address: string;
+  building: string;
+  locality: string;
+  city: string;
+  state: string;
+  postalCode: string;
 
-  const ActionButtons = ({
-    status,
-    onView,
-  }: {
-    status: string;
-    onView: () => void;
-  }) => {
-    const [isActive, setIsActive] = useState(status === "Active");
-
-    const handleToggle = () => {
-      setIsActive(!isActive);
-    };
-
-    return (
-      <div className="flex gap-2">
-        <button
-          id="view-details-button"
-          className="p-1 text-gray-600 hover:text-gray-800"
-          title="View Details"
-          onClick={onView}
-        >
-          <Eye id="view-details-icon" size={18} />
-        </button>
-        <button
-          id="edit-button"
-          className="p-1 text-gray-600 hover:text-gray-800"
-          title="Edit"
-          onClick={() => console.log("Edit clicked")}
-        >
-          <Edit id="edit-icon" size={18} />
-        </button>
-        <button
-          className={`p-1 ${
-            isActive
-              ? "text-green-600 hover:text-green-800"
-              : "text-gray-400 hover:text-gray-600"
-          }`}
-          title={isActive ? "Deactivate" : "Activate"}
-          onClick={handleToggle}
-        >
-          {isActive ? <ToggleRight id="toggle-right-icon" size={18} /> : <ToggleLeft id="toggle-left-icon" size={18} />}
-        </button>
-      </div>
-    );
+  // Working Hours
+  isSameTimings: boolean;
+  storeTimings: {
+    [key: string]: {
+      startTime: string;
+      endTime: string;
+    }[];
+  };
+  storePickupTimings: {
+    [key: string]: {
+      startTime: string;
+      endTime: string;
+    }[];
   };
 
-  const StoresTab = () => (
-    <>
-      {/* Add Store Button and Search */}
-      <div className="flex justify-between items-center mb-6">
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          id="add-new-store-button"
-        >
-          ADD NEW STORE
-        </button>
-        <div className="relative">
-          <input
-            id="search-store-input"
-            type="text"
-            placeholder="Search Store Name"
-            className="border border-gray-300 rounded-lg px-4 py-2 w-64"
-          />
+  // Holidays
+  holidays: string[];
+
+  // Temporary Close
+  isTemporarilyClosed: boolean;
+}
+
+// Add this near your other constants
+const DAYS_OF_WEEK = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+// Add a SectionContainer component for consistent section styling
+const SectionContainer = ({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <div className={`bg-white rounded-lg p-6 shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+// Add the form fields configuration
+const storeDetailsFields = [
+  {
+    type: "section",
+    key: "storeDetailsSection",
+    label: "Store Details",
+    description:
+      "Add a new location that you can serve and provide serviceability.",
+  },
+  {
+    type: "text",
+    key: "storeName",
+    label: "Store Name",
+    required: true,
+    placeholder: "Store Name",
+  },
+  {
+    type: "text",
+    key: "contactPersonName",
+    label: "Contact Person Name",
+    required: true,
+    placeholder: "Contact Person Name",
+  },
+  {
+    type: "text",
+    key: "phoneNumber",
+    label: "Phone Number",
+    required: true,
+    placeholder: "Phone Number",
+  },
+  {
+    type: "select",
+    key: "storeType",
+    label: "Store Type",
+    required: true,
+    placeholder: "Store Type",
+    options: [],
+  },
+];
+
+// Add this interface for the time range
+interface TimeRange {
+  startTime: string;
+  endTime: string;
+}
+
+// Add this interface for the day settings
+interface DaySettings {
+  selected: boolean;
+  timeRanges: TimeRange[];
+}
+
+const WorkingHoursForm = ({
+  handleInputChange,
+  locationId
+}: {
+  handleInputChange: (key: string, value: any) => void;
+  locationId: number;
+}) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [isSameTimings, setIsSameTimings] = useState(false);
+  const [dayRange, setDayRange] = useState<[number, number]>([1, 7]);
+  const [workingDays, setWorkingDays] = useState<Array<{
+    id: number;
+    display_name: string;
+    lookup_code: string;
+  }>>([]);
+  const [storeTime, setStoreTime] = useState({
+    startTime: "",
+    endTime: ""
+  });
+  const [pickupTime, setPickupTime] = useState({
+    startTime: "",
+    endTime: ""
+  });
+
+  // Fetch working days on component mount
+  useEffect(() => {
+    const fetchWorkingDays = async () => {
+      try {
+        const response = await dispatch(getWorkingDaysLookup());
+        if (response?.data) {
+          setWorkingDays(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching working days:', error);
+        toast.error('Failed to fetch working days');
+      }
+    };
+
+    fetchWorkingDays();
+  }, [dispatch]);
+
+  // Create marks from API response
+  const marks = workingDays.reduce((acc, day) => ({
+    ...acc,
+    [day.lookup_code]: day.display_name
+  }), {});
+
+  const handleStoreTimeChange = (type: 'startTime' | 'endTime', value: string) => {
+    setStoreTime(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
+
+  const handlePickupTimeChange = (type: 'startTime' | 'endTime', value: string) => {
+    setPickupTime(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const dayFrom = workingDays.find(day => day.lookup_code === dayRange[0].toString());
+      const dayTo = workingDays.find(day => day.lookup_code === dayRange[1].toString());
+
+      if (!dayFrom || !dayTo) {
+        toast.error('Invalid day range selected');
+        return;
+      }
+
+      // Format the date strings
+      const today = new Date();
+      const formattedStartTime = `${today.getFullYear()}-12-08T${storeTime.startTime}:00.000+05:30`;
+      const formattedEndTime = `${today.getFullYear()}-12-09T${storeTime.endTime}:00.000+05:30`;
+
+      const payload = {
+        is_same_timings: isSameTimings,
+        all_timings: {
+          day_from_id: dayFrom.id,
+          day_from: {
+            id: dayFrom.id,
+            lookup_code: dayFrom.lookup_code,
+            display_name: dayFrom.display_name
+          },
+          day_to_id: dayTo.id,
+          day_to: {
+            id: dayTo.id,
+            lookup_code: dayTo.lookup_code,
+            display_name: dayTo.display_name
+          },
+          timings_arr: [
+            {
+              opening_time: formattedStartTime,
+              closing_time: formattedEndTime
+            }
+          ]
+        }
+      };
+
+      const response = await dispatch(updateWorkingHours(locationId, payload));
+      if (response?.meta?.status) {
+        toast.success('Working hours updated successfully');
+      }
+    } catch (error) {
+      toast.error('Failed to update working hours');
+      console.error('Error updating working hours:', error);
+    }
+  };
+
+  return (
+    <SectionContainer>
+      <div className="space-y-8">
+        {/* Store Timings */}
+        <h1 className="text-2xl font-semibold">Working Hours</h1>
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium text-gray-900">Store Timings</h3>
+          <div className="space-y-6">
+            <div className="w-full">
+              <div className="mx-auto w-[75vw] sm:w-[45vw]">
+                {workingDays.length > 0 && (
+                  <Slider
+                    range
+                    marks={marks}
+                    min={1}
+                    max={7}
+                    step={1}
+                    value={dayRange}
+                    onChange={(val) => {
+                      setDayRange(val as [number, number]);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="flex items-center space-x-4 mt-4">
+              <span className="text-sm font-medium text-gray-700">Store Hours:</span>
+              <div className="flex items-center space-x-2 flex-1">
+                <input
+                  type="time"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                  value={storeTime.startTime}
+                  onChange={(e) => handleStoreTimeChange('startTime', e.target.value)}
+                />
+                <span className="text-gray-500">to</span>
+                <input
+                  type="time"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                  value={storeTime.endTime}
+                  onChange={(e) => handleStoreTimeChange('endTime', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Store Pickup Timings */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">Store Pickup Timings</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Same as store timings</span>
+              <div className="w-[100px]">
+                <Slider
+                  value={isSameTimings ? 1 : 0}
+                  onChange={(value) => {
+                    setIsSameTimings(value === 1);
+                    if (value === 1) {
+                      setPickupTime(storeTime);
+                    }
+                  }}
+                  min={0}
+                  max={1}
+                  step={1}
+                  tooltip={{ formatter: null }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {!isSameTimings && (
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium text-gray-700">Pickup Hours:</span>
+              <div className="flex items-center space-x-2 flex-1">
+                <input
+                  type="time"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                  value={pickupTime.startTime}
+                  onChange={(e) => handlePickupTimeChange('startTime', e.target.value)}
+                />
+                <span className="text-gray-500">to</span>
+                <input
+                  type="time"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                  value={pickupTime.endTime}
+                  onChange={(e) => handlePickupTimeChange('endTime', e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Store List Table */}
-      <CustomTable
-        headCells={storeColumns}
-        data={[
-          {
-            storeName: "Delhi house",
-            address: "sarojini nagar main building",
-            createdDate: "24/09/2024, 01:06 PM",
-            city: "New Delhi",
-            pincode: "110023",
-            status: "Active",
-          },
-        ]}
-        pagination={true}
-      />
-    </>
+      <div className="flex justify-end mt-6">
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          SAVE
+        </button>
+      </div>
+    </SectionContainer>
   );
+};
 
-  const GridView = () => (
+const holidaysFields = [
+  {
+    type: "section",
+    key: "holidaysSection",
+    label: "Holidays",
+    description: "Tell us your holidays",
+  },
+  {
+    type: "date",
+    key: "holidays",
+    label: "Select Holidays",
+    placeholder: "Select Dates",
+    multiple: true,
+  },
+];
+
+const temporaryCloseFields = [
+  {
+    type: "section",
+    key: "temporaryCloseSection",
+    label: "Temporary Close",
+    description: "Tell us if you want to temporarily Close the Store",
+  },
+  {
+    type: "switch",
+    key: "isTemporarilyClosed",
+    label: "Close Store temporarily",
+  },
+];
+
+const serviceabilityFields = [
+  {
+    type: "section",
+    key: "serviceabilitySection",
+    label: "Serviceability Details",
+    description:
+      "Add a new location that you can serve and provide serviceability.",
+  },
+  {
+    type: "select",
+    key: "domain",
+    label: "Domain",
+    required: true,
+    placeholder: "Domain",
+    options: [
+      { label: "F&B", value: "fnb" },
+      { label: "Fashion", value: "fashion" },
+      { label: "Electronics", value: "electronics" },
+      { label: "Beauty & Personal Care", value: "beauty" },
+      { label: "Home & Decor", value: "home" },
+    ],
+  },
+  {
+    type: "select",
+    key: "categories",
+    label: "Categories",
+    required: true,
+    placeholder: "Categories",
+    options: [
+      { label: "Category 1", value: "cat1" },
+      { label: "Category 2", value: "cat2" },
+      { label: "Category 3", value: "cat3" },
+    ],
+  },
+  {
+    type: "select",
+    key: "shippingDistance",
+    label: "Shipping Distance",
+    required: true,
+    placeholder: "Shipping Distance",
+    options: [
+      { label: "Pan India", value: "pan_india" },
+      { label: "Within City", value: "city" },
+      { label: "Custom Zone", value: "custom" },
+    ],
+  },
+];
+
+// Add the ActionButtons component definition before GridView
+const ActionButtons = ({
+  status,
+  onView,
+}: {
+  status: string;
+  onView: () => void;
+}) => {
+  const [isActive, setIsActive] = useState(status === "Active");
+
+  const handleToggle = () => {
+    setIsActive(!isActive);
+  };
+
+  return (
+    <div className="flex gap-2">
+      <button
+        className="p-1 text-gray-600 hover:text-gray-800"
+        title="View Details"
+        onClick={onView}
+      >
+        <Eye size={18} />
+      </button>
+      <button
+        className="p-1 text-gray-600 hover:text-gray-800"
+        title="Edit"
+        onClick={() => console.log("Edit clicked")}
+      >
+        <Edit size={18} />
+      </button>
+      <button
+        className={`p-1 ${
+          isActive
+            ? "text-green-600 hover:text-green-800"
+            : "text-gray-400 hover:text-gray-600"
+        }`}
+        title={isActive ? "Deactivate" : "Activate"}
+        onClick={handleToggle}
+      >
+        {isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+      </button>
+    </div>
+  );
+};
+
+// Update the serviceabilityColumns to use navigate from props
+const ServiceabilityTable = () => {
+  const navigate = useNavigate();
+
+  const columns: Column[] = [
+    {
+      id: "domainServed",
+      key: "domainServed",
+      label: "Domain Served",
+    },
+    {
+      id: "locationName",
+      key: "locationName",
+      label: "Location Name",
+    },
+    {
+      id: "shippingRadius",
+      key: "shippingRadius",
+      label: "Shipping radius",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Action",
+      type: "actions",
+      buttons: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => {
+            navigate(
+              `/dashboard/seller-settings/location-services/shipping-details/${row.id}`
+            );
+          },
+        },
+        {
+          label: "Edit",
+          icon: "edit",
+          onClick: (row: any) => {
+            console.log("Edit", row);
+          },
+        },
+      ],
+    },
+  ];
+
+  return (
+    <CustomTable
+      headCells={columns}
+      data={sampleServiceabilityData}
+      pagination={false}
+    />
+  );
+};
+
+// Update the sample data to match the columns
+const sampleServiceabilityData = [
+  {
+    id: 1,
+    domainServed: "Beauty & Personal Care",
+    locationName: "Sample Store Name",
+    shippingRadius: "Pan India",
+    status: "Active",
+  },
+  {
+    id: 2,
+    domainServed: "Electronics",
+    locationName: "Electronics Store",
+    shippingRadius: "Within City",
+    status: "Active",
+  },
+];
+
+// Add shipping columns definition
+const shippingColumns: Column[] = [
+  {
+    id: "storeName",
+    key: "storeName",
+    label: "Store Name",
+  },
+  {
+    id: "address",
+    key: "address",
+    label: "Address",
+  },
+  {
+    id: "createdDate",
+    key: "createdDate",
+    label: "Created Date & Time",
+  },
+  {
+    id: "shippingDistance",
+    key: "shippingDistance",
+    label: "Shipping Distance",
+  },
+  {
+    id: "domain",
+    key: "domain",
+    label: "Domain",
+  },
+  {
+    id: "city",
+    key: "city",
+    label: "City",
+  },
+  {
+    id: "pincode",
+    key: "pincode",
+    label: "Pincode",
+  },
+  {
+    id: "status",
+    key: "status",
+    label: "Status",
+    type: "status",
+  },
+  {
+    id: "actions",
+    key: "actions",
+    label: "Actions",
+    type: "custom",
+    buttons: [
+      {
+        label: "View",
+        icon: "eye",
+        onClick: (row: any) => console.log("View", row),
+      },
+      {
+        label: "Edit",
+        icon: "edit",
+        onClick: (row: any) => console.log("Edit", row),
+      },
+      {
+        label: "Toggle Status",
+        icon: "toggle",
+        onClick: (row: any) => console.log("Toggle status", row),
+      },
+    ],
+  },
+];
+
+const GridView = () => {
+  const navigate = useNavigate();
+
+  return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {shippingData.map((item) => (
         <div
@@ -312,472 +781,245 @@ const LocationServices = () => {
           <div className="mt-4 flex justify-end">
             <ActionButtons
               status={item.status}
-              onView={() => navigate(`/dashboard/settings/location-services/shipping-details/${item.id}`)}
+              onView={() =>
+                navigate(
+                  `/dashboard/seller-settings/location-services/shipping-details/${item.id}`
+                )
+              }
             />
           </div>
         </div>
       ))}
     </div>
   );
+};
 
-  const TableView = () => (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-blue-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Store Name
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Address
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Created Date & Time
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Shipping Distance
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Domain
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              City
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Pincode
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {shippingData.map((item) => (
-            <tr key={item.id}>
-              <td className="px-6 py-4 whitespace-nowrap">{item.storeName}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{item.address}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {item.createdDate}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {item.shippingDistance}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">{item.domain}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{item.city}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{item.pincode}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                  {item.status}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <ActionButtons
-                  status={item.status}
-                  onView={() => navigate(`/dashboard/settings/location-services/shipping-details/${item.id}`)}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+// Add this type for step management
+type FormStep = 1 | 2;
 
-  const ShippingTab = () => (
-    <>
-      {/* Filter and View Toggle Section */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex gap-4">
-          <div className="w-64">
-            <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
-              <option value="">Filter by Store</option>
-              {shippingData.map((item) => (
-                <option key={item.id} value={item.storeName}>
-                  {item.storeName}
-                </option>
-              ))}
-            </select>
+const Steps = () => {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between relative">
+        <div className="flex items-center text-blue-600">
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center mr-2">
+            1
           </div>
-          <div className="w-64">
-            <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
-              <option value="">Filter by Domain</option>
-              <option value="electronics">Electronics</option>
-              <option value="fashion">Fashion</option>
-              <option value="grocery">Grocery</option>
-              <option value="beauty">Beauty & Personal Care</option>
-              <option value="home">Home and Decor</option>
-            </select>
-          </div>
+          <span className="font-medium">Store Details</span>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewType("table")}
-            className={`p-2 rounded ${
-              viewType === "table"
-                ? "bg-blue-100 text-blue-600"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            title="Table View"
-          >
-            <List size={20} />
-          </button>
-          <button
-            onClick={() => setViewType("grid")}
-            className={`p-2 rounded ${
-              viewType === "grid"
-                ? "bg-blue-100 text-blue-600"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-            title="Grid View"
-          >
-            <LayoutGrid size={20} />
-          </button>
+        <div className="flex items-center text-gray-400">
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+            2
+          </div>
+          <span className="font-medium">Serviceability Details</span>
+        </div>
+        {/* Progress Line */}
+        <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 -z-10">
+          <div 
+            className="h-full bg-blue-600 transition-all duration-300"
+            style={{ width: '0%' }}
+          />
         </div>
       </div>
-
-      {/* Content based on view type */}
-      {viewType === "table" ? (
-        <CustomTable
-          headCells={shippingColumns}
-          data={shippingData}
-          pagination={true}
-        />
-      ) : (
-        <GridView />
-      )}
-    </>
-  );
-
-  // Add form field options
-  const options = {
-    shippingType: ["ONDC Logistics", "Own Shipping"],
-    category: [
-      "F&B",
-      "Fashion",
-      "Electronics",
-      "Beauty & Personal Care",
-      "Home & Decor",
-    ],
-    deliveryType: ["Standard", "Express", "Same Day"],
-    preferences: ["Fast", "Cheap", "Balanced"],
-  };
-
-  // Create columns for the regions table
-  const regionTableColumns = [
-    {
-      id: "regions",
-      key: "regions",
-      label: "Regions",
-      type: "checkboxGroup",
-    },
-    {
-      id: "shippingType",
-      key: "shippingType",
-      label: "Shipping Type",
-      type: "select",
-      options: options.shippingType,
-    },
-    {
-      id: "category",
-      key: "category",
-      label: "Category",
-      type: "select",
-      options: options.category,
-    },
-    {
-      id: "deliveryType",
-      key: "deliveryType",
-      label: "Delivery Type",
-      type: "select",
-      options: options.deliveryType,
-    },
-    {
-      id: "preferences",
-      key: "preferences",
-      label: "Preferences",
-      type: "select",
-      options: options.preferences,
-    },
-    {
-      id: "transitTime",
-      key: "transitTime",
-      label: "Transit Time",
-      type: "text",
-    },
-    {
-      id: "shippingFee",
-      key: "shippingFee",
-      label: "Shipping Fee",
-      type: "number",
-    },
-    {
-      id: "actions",
-      key: "actions",
-      label: "Actions",
-      type: "actions",
-    },
-  ];
-
-  // Add RegionActions component
-  const RegionActions = ({
-    regionZone,
-    onSave,
-    onDuplicate,
-    onDelete,
-  }: {
-    regionZone: string;
-    onSave: () => void;
-    onDuplicate: () => void;
-    onDelete: () => void;
-  }) => (
-    <div className="flex gap-2">
-      <button
-        onClick={onSave}
-        className="p-1 text-blue-600 hover:text-blue-800"
-        title="Save"
-      >
-        <Save size={18} />
-      </button>
-      <button
-        onClick={onDuplicate}
-        className="p-1 text-gray-600 hover:text-gray-800"
-        title="Duplicate"
-      >
-        <Copy size={18} />
-      </button>
-      <button
-        onClick={onDelete}
-        className="p-1 text-red-600 hover:text-red-800"
-        title="Delete"
-      >
-        <Trash2 size={18} />
-      </button>
     </div>
   );
+};
 
-  // Update ShippingDetailsView component
-  const ShippingDetailsView = ({ onClose }: { onClose: () => void }) => {
-    const [formData, setFormData] = useState<ShippingDetailsForm>({
-      store: "Delhi house",
-      domain: "Electronics",
-      shippingDistance: "Pan India",
-      regions: {},
-      shippingType: "",
-      category: "",
-      deliveryType: "",
-      preferences: "",
-      transitTime: "",
-      shippingFee: "",
-    });
+const StoreDetailsStep = ({
+  handleInputChange,
+  locationId,
+  onNext
+}: {
+  handleInputChange: (key: string, value: any) => void;
+  locationId: number;
+  onNext: () => void;
+}) => {
+  return (
+    <div className="space-y-6">
+      <StoreDetailsForm handleInputChange={handleInputChange} />
+      <WorkingHoursForm handleInputChange={handleInputChange} locationId={locationId} />
+      <HolidaysForm handleInputChange={handleInputChange} locationId={locationId} />
+      <TemporaryCloseForm handleInputChange={handleInputChange} locationId={locationId} />
+      
+      <div className="flex justify-end gap-4 mt-8">
+        <button
+          onClick={onNext}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ServiceabilityStep = ({
+  handleInputChange,
+  onBack
+}: {
+  handleInputChange: (key: string, value: any) => void;
+  onBack: () => void;
+}) => {
+  return (
+    <div className="space-y-6">
+      {/* Add your serviceability form components here */}
+      <div className="flex justify-between gap-4 mt-8">
+        <button
+          onClick={onBack}
+          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          Back
+        </button>
+        <button
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const LocationServices = () => {
+  // 1. All hooks at the top
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<TabType>("stores");
+  const [viewType, setViewType] = useState<ViewType>("table");
+  const [showShippingDetails, setShowShippingDetails] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<StoreFormData>({
+    storeName: "",
+    contactPersonName: "",
+    phoneNumber: "",
+    storeType: "",
+    gstNumber: "",
+    email: "",
+    address: "",
+    building: "",
+    locality: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    isSameTimings: false,
+    storeTimings: {},
+    storePickupTimings: {},
+    holidays: [],
+    isTemporarilyClosed: false,
+  });
+
+  // 2. All handlers
+  const handleInputChange = (key: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSubmit = () => {
+    console.log("Form submitted:", formData);
+    navigate("/dashboard/seller-settings/location-services");
+  };
+
+  // 3. Component render logic
+  const renderCreateForm = () => {
+    const handleInputChange = (key: string, value: any) => {
+      setFormData((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-6 w-[95%] max-w-7xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Shipping Details</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Input Fields */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Store
-              </label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                value={formData.store}
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Domain
-              </label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                value={formData.domain}
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Shipping Distance
-              </label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                value={formData.shippingDistance}
-                disabled
-              />
-            </div>
-          </div>
-
-          {/* Regions and Configuration Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-blue-50">
-                <tr>
-                  {regionTableColumns.map((column) => (
-                    <th
-                      key={column.id}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {column.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {regions.map((region) => (
-                  <tr key={region.zone}>
-                    <td className="px-6 py-4">
-                      <div className="space-y-2">
-                        <div className="font-medium">{region.zone}</div>
-                        {region.states.map((state) => (
-                          <label
-                            key={state.name}
-                            className="flex items-center space-x-2"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={
-                                formData.regions[region.zone]?.[state.name] ||
-                                false
-                              }
-                              onChange={(e) => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  regions: {
-                                    ...prev.regions,
-                                    [region.zone]: {
-                                      ...prev.regions[region.zone],
-                                      [state.name]: e.target.checked,
-                                    },
-                                  },
-                                }));
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                            <span className="text-sm">{state.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </td>
-                    {regionTableColumns.slice(1, -1).map((column) => (
-                      <td key={column.id} className="px-6 py-4">
-                        {column.type === "select" ? (
-                          <select
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                            value={
-                              formData[
-                                column.key as keyof ShippingDetailsForm
-                              ] as string
-                            }
-                            onChange={(e) => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                [column.key]: e.target.value,
-                              }));
-                            }}
-                          >
-                            <option value="">Select {column.label}</option>
-                            {column.options?.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type={column.type}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                            value={
-                              formData[
-                                column.key as keyof ShippingDetailsForm
-                              ] as string
-                            }
-                            onChange={(e) => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                [column.key]: e.target.value,
-                              }));
-                            }}
-                            placeholder={`Enter ${column.label}`}
-                          />
-                        )}
-                      </td>
-                    ))}
-                    <td className="px-6 py-4">
-                      <RegionActions
-                        regionZone={region.zone}
-                        onSave={() => {
-                          const regionData = {
-                            zone: region.zone,
-                            states: formData.regions[region.zone],
-                            shippingType: formData.shippingType,
-                            category: formData.category,
-                            deliveryType: formData.deliveryType,
-                            preferences: formData.preferences,
-                            transitTime: formData.transitTime,
-                            shippingFee: formData.shippingFee,
-                          };
-                          console.log("Save configuration for", regionData);
-                          // Add your save logic here
-                        }}
-                        onDuplicate={() => {
-                          console.log(
-                            "Duplicate configuration for",
-                            region.zone
-                          );
-                          // Add your duplicate logic here
-                        }}
-                        onDelete={() => {
-                          if (
-                            window.confirm(
-                              `Are you sure you want to delete the configuration for ${region.zone}?`
-                            )
-                          ) {
-                            console.log(
-                              "Delete configuration for",
-                              region.zone
-                            );
-                            // Add your delete logic here
-                          }
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Only keep the cancel button */}
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Close
-            </button>
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => navigate("/dashboard/seller-settings/location-services")}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-2xl font-bold">Create New Store</h1>
         </div>
+
+        <Steps />
+
+        {currentStep === 1 ? (
+          <StoreDetailsStep 
+            handleInputChange={handleInputChange}
+            locationId={6}
+            onNext={() => setCurrentStep(2)}
+          />
+        ) : (
+          <ServiceabilityStep 
+            handleInputChange={handleInputChange}
+            onBack={() => setCurrentStep(1)}
+          />
+        )}
       </div>
     );
   };
 
-  // Move the column definitions inside the component to access setShowShippingDetails
+  const renderMainView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-gray-100 rounded-lg"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-2xl font-bold">Locations & Serviceability</h1>
+      </div>
+
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab("stores")}
+            className={`py-2 px-1 ${
+              activeTab === "stores"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            } font-medium`}
+          >
+            Your Stores
+          </button>
+          <button
+            onClick={() => setActiveTab("shipping")}
+            className={`py-2 px-1 ${
+              activeTab === "shipping"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            } font-medium`}
+          >
+            Shipping services
+          </button>
+        </nav>
+      </div>
+
+      <div className="space-y-6">
+        {activeTab === "stores" ? (
+          <StoresTab navigate={navigate} />
+        ) : (
+          <ShippingTab viewType={viewType} setViewType={setViewType} />
+        )}
+      </div>
+    </div>
+  );
+
+  // 4. Final render
+  return location.pathname.includes("create-store")
+    ? renderCreateForm()
+    : renderMainView();
+};
+
+// 5. Separate components
+const StoresTab = ({ navigate }: { navigate: any }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [storeData, setStoreData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Define storeColumns here to have access to dispatch
   const storeColumns: Column[] = [
     {
       id: "storeName",
@@ -814,75 +1056,8 @@ const LocationServices = () => {
       id: "actions",
       key: "actions",
       label: "Actions",
-      type: "custom",
-      buttons: [
-        {
-          label: "View",
-          icon: "eye",
-          onClick: (row: any) => navigate(`shipping-details/${row.id}`),
-        },
-        {
-          label: "Toggle Status",
-          icon: "toggle",
-          onClick: (row: any) => console.log("Toggle status", row),
-        },
-      ],
-    },
-  ];
-
-  const shippingColumns: Column[] = [
-    {
-      id: "storeName",
-      key: "storeName",
-      label: "Store Name",
-    },
-    {
-      id: "address",
-      key: "address",
-      label: "Address",
-    },
-    {
-      id: "createdDate",
-      key: "createdDate",
-      label: "Created Date & Time",
-    },
-    {
-      id: "shippingDistance",
-      key: "shippingDistance",
-      label: "Shipping Distance",
-    },
-    {
-      id: "domain",
-      key: "domain",
-      label: "Domain",
-    },
-    {
-      id: "city",
-      key: "city",
-      label: "City",
-    },
-    {
-      id: "pincode",
-      key: "pincode",
-      label: "Pincode",
-    },
-    {
-      id: "status",
-      key: "status",
-      label: "Status",
-      type: "status",
-    },
-    {
-      id: "actions",
-      key: "actions",
-      label: "Actions",
-      type: "custom",
-      buttons: [
-        {
-          label: "View",
-          icon: "eye",
-          onClick: (row: any) => navigate(`shipping-details/${row.id}`),
-        },
+      type: "actions",
+      actions: [
         {
           label: "Edit",
           icon: "edit",
@@ -891,61 +1066,569 @@ const LocationServices = () => {
         {
           label: "Toggle Status",
           icon: "toggle",
-          onClick: (row: any) => console.log("Toggle status", row),
+          onClick: async (row: any) => {
+            try {
+              await dispatch(
+                updateStoreLocationStatus(row.id, row.status !== "Active")
+              );
+              // Refresh the data after toggle
+              const response = await dispatch(
+                getStoreLocations({
+                  page_no: 1,
+                  per_page: 10,
+                })
+              );
+
+              if (response?.data) {
+                const transformedData = response.data.map((location: any) => ({
+                  id: location.id,
+                  storeName: location.name,
+                  address: location.address?.building
+                    ? `${location.address.building}, ${
+                        location.address.locality || ""
+                      }`
+                    : "-",
+                  createdDate: new Date(location.createdAt).toLocaleString(
+                    "en-IN",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    }
+                  ),
+                  city: location.address?.city || "-",
+                  pincode: location.address?.area_code || "-",
+                  status: location.is_active ? "Active" : "Inactive",
+                }));
+                setStoreData(transformedData);
+              }
+            } catch (error) {
+              console.error("Failed to toggle store status:", error);
+            }
+          },
         },
       ],
     },
   ];
 
+  useEffect(() => {
+    const fetchStoreLocations = async () => {
+      setLoading(true);
+      try {
+        const response = await dispatch(
+          getStoreLocations({
+            page_no: 1,
+            per_page: 10,
+          })
+        );
+
+        // Transform API data to match table requirements
+        const transformedData =
+          response?.data?.map((location: any) => ({
+            id: location.id,
+            storeName: location.name,
+            address: location.address?.building
+              ? `${location.address.building}, ${
+                  location.address.locality || ""
+                }`
+              : "-",
+            createdDate: new Date(location.createdAt).toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+            city: location.address?.city || "-",
+            pincode: location.address?.area_code || "-",
+            status: location.is_active ? "Active" : "Inactive",
+          })) || [];
+
+        setStoreData(transformedData);
+      } catch (error) {
+        console.error("Error fetching store locations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStoreLocations();
+  }, [dispatch]);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
+    <>
+      <div className="flex justify-between items-center mb-6">
         <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-lg"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          onClick={() => navigate("create-store")}
         >
-          <ArrowLeft size={20} />
+          ADD NEW STORE
         </button>
-        <h1 className="text-2xl font-bold">Locations & Serviceability</h1>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search Store Name"
+            className="border border-gray-300 rounded-lg px-4 py-2 w-64"
+          />
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab("stores")}
-            className={`py-2 px-1 ${
-              activeTab === "stores"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            } font-medium`}
-          >
-            Your Stores
-          </button>
-          <button
-            onClick={() => setActiveTab("shipping")}
-            className={`py-2 px-1 ${
-              activeTab === "shipping"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            } font-medium`}
-          >
-            Shipping services
-          </button>
-        </nav>
-      </div>
-
-      {/* Content */}
-      <div className="space-y-6">
-        {activeTab === "stores" ? <StoresTab /> : <ShippingTab />}
-      </div>
-
-      {/* Add ShippingDetailsView modal */}
-      {showShippingDetails && (
-        <ShippingDetailsView onClose={() => setShowShippingDetails(false)} />
+      {loading ? (
+        <div className="flex justify-center items-center h-48">
+          <p>Loading...</p>
+        </div>
+      ) : (
+        <CustomTable
+          headCells={storeColumns}
+          data={storeData || []}
+          pagination={true}
+        />
       )}
+    </>
+  );
+};
+
+const ShippingTab = ({
+  viewType,
+  setViewType,
+}: {
+  viewType: ViewType;
+  setViewType: (type: ViewType) => void;
+}) => (
+  <>
+    {/* Filter and View Toggle Section */}
+    <div className="flex justify-between items-center mb-6">
+      <div className="flex gap-4">
+        <div className="w-64">
+          <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
+            <option value="">Filter by Store</option>
+            {shippingData.map((item) => (
+              <option key={item.id} value={item.storeName}>
+                {item.storeName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-64">
+          <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
+            <option value="">Filter by Domain</option>
+            <option value="electronics">Electronics</option>
+            <option value="fashion">Fashion</option>
+            <option value="grocery">Grocery</option>
+            <option value="beauty">Beauty & Personal Care</option>
+            <option value="home">Home and Decor</option>
+          </select>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setViewType("table")}
+          className={`p-2 rounded ${
+            viewType === "table"
+              ? "bg-blue-100 text-blue-600"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+          title="Table View"
+        >
+          <List size={20} />
+        </button>
+        <button
+          onClick={() => setViewType("grid")}
+          className={`p-2 rounded ${
+            viewType === "grid"
+              ? "bg-blue-100 text-blue-600"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+          title="Grid View"
+        >
+          <LayoutGrid size={20} />
+        </button>
+      </div>
     </div>
+
+    {/* Content based on view type */}
+    {viewType === "table" ? (
+      <CustomTable
+        headCells={shippingColumns}
+        data={shippingData}
+        pagination={true}
+      />
+    ) : (
+      <GridView />
+    )}
+  </>
+);
+
+// Add this new component
+const StoreDetailsForm = ({
+  handleInputChange,
+}: {
+  handleInputChange: (key: string, value: any) => void;
+}) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [locationTypes, setLocationTypes] = useState<LocationType[]>([]);
+  const [formData, setFormData] = useState({
+    name: "",
+    address: {
+      name: "",
+      building: "",
+      locality: "",
+      city: "",
+      state: "",
+      country: "India",
+      area_code: ""
+    },
+    location_type_id: 0,
+    email: "",
+    gst_number: "",
+    mobile_number: "",
+    latitude: "23.0283384",
+    longitude: "72.5280284",
+    opening_time: "2023-12-11T01:10:43+05:30",
+    closing_time: "2023-12-11T13:25:49+05:30",
+    contact_name: ""
+  });
+
+  // Fetch location types on component mount
+  useEffect(() => {
+    const fetchLocationTypes = async () => {
+      try {
+        const response = await dispatch(getLocationTypeLookup());
+        if (response?.data) {
+          setLocationTypes(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching location types:', error);
+        toast.error('Failed to fetch store types');
+      }
+    };
+
+    fetchLocationTypes();
+  }, [dispatch]);
+
+  const handleSave = async () => {
+    try {
+      const response = await dispatch(createStoreLocation(formData));
+      if (response?.meta?.status) {
+        toast.success("Store created successfully");
+        console.log("Store created successfully");
+      }
+    } catch (error) {
+      toast.error("Failed to create store");  
+      console.error("Failed to create store:", error);
+    }
+  };
+
+  const handleFormChange = (key: string, value: any) => {
+    if (key.includes('.')) {
+      const [parent, child] = key.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [key]: value
+      }));
+    }
+  };
+
+  return (
+    <SectionContainer>
+      <AddForm
+        data={[
+          {
+            type: "text",
+            key: "name",
+            label: "Store Name",
+            required: true,
+            value: formData.name,
+            onChange: (value) => handleFormChange('name', value)
+          },
+          {
+            type: "select",
+            key: "location_type_id",
+            label: "Store Type",
+            required: true,
+            value: formData.location_type_id,
+            options: locationTypes.map(type => ({
+              label: type.display_name,
+              value: type.id
+            })),
+            onChange: (value) => handleFormChange('location_type_id', value)
+          },
+          {
+            type: "text",
+            key: "address.building",
+            label: "Building",
+            required: true,
+            value: formData.address.building,
+            onChange: (value) => handleFormChange('address.building', value)
+          },
+          {
+            type: "text",
+            key: "address.locality",
+            label: "Locality",
+            required: true,
+            value: formData.address.locality,
+            onChange: (value) => handleFormChange('address.locality', value)
+          },
+          {
+            type: "text",
+            key: "address.city",
+            label: "City",
+            required: true,
+            value: formData.address.city,
+            onChange: (value) => handleFormChange('address.city', value)
+          },
+          {
+            type: "text",
+            key: "address.state",
+            label: "State",
+            required: true,
+            value: formData.address.state,
+            onChange: (value) => handleFormChange('address.state', value)
+          },
+          {
+            type: "text",
+            key: "address.area_code",
+            label: "Postal Code",
+            required: true,
+            value: formData.address.area_code,
+            onChange: (value) => handleFormChange('address.area_code', value)
+          },
+          {
+            type: "text",
+            key: "email",
+            label: "Email",
+            required: true,
+            value: formData.email,
+            onChange: (value) => handleFormChange('email', value)
+          },
+          {
+            type: "text",
+            key: "gst_number",
+            label: "GST Number",
+            required: true,
+            value: formData.gst_number,
+            onChange: (value) => handleFormChange('gst_number', value)
+          },
+          {
+            type: "text",
+            key: "mobile_number",
+            label: "Mobile Number",
+            required: true,
+            value: formData.mobile_number,
+            onChange: (value) => handleFormChange('mobile_number', value)
+          },
+          {
+            type: "text",
+            key: "contact_name",
+            label: "Contact Name",
+            required: true,
+            value: formData.contact_name,
+            onChange: (value) => handleFormChange('contact_name', value)
+          }
+        ]}
+        handleInputonChange={handleFormChange}
+        handleSelectonChange={handleFormChange}
+      />
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          SAVE
+        </button>
+      </div>
+    </SectionContainer>
+  );
+};
+
+// Create HolidaysForm component
+const HolidaysForm = ({
+  handleInputChange,
+  locationId
+}: {
+  handleInputChange: (key: string, value: any) => void;
+  locationId: number;
+}) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [selectedHolidays, setSelectedHolidays] = useState<string[]>([]);
+
+  const handleSave = async () => {
+    try {
+      // Ensure we have an array of dates
+      const holidayArray = Array.isArray(selectedHolidays) ? selectedHolidays : [selectedHolidays];
+      
+      // Format dates to match API requirement
+      const formattedHolidays = holidayArray.filter(Boolean).map(date => 
+        `${date}T00:00:00+05:30`
+      );
+
+      const payload = {
+        holidays: formattedHolidays
+      };
+
+      const response = await dispatch(updateWorkingHours(locationId, payload));
+      if (response?.meta?.status) {
+        toast.success('Holidays updated successfully');
+      }
+    } catch (error) {
+      toast.error('Failed to update holidays');
+      console.error('Error updating holidays:', error);
+    }
+  };
+
+  return (
+    <SectionContainer>
+      <AddForm
+        data={[
+          {
+            type: "section",
+            key: "holidaysSection",
+            label: "Holidays",
+            description: "Tell us your holidays",
+          },
+          {
+            type: "date",
+            key: "holidays",
+            label: "Select Holidays",
+            placeholder: "Select Dates",
+            multiple: true,
+            value: selectedHolidays,
+            onChange: (value) => {
+              // Ensure value is always an array
+              const holidayArray = Array.isArray(value) ? value : [value];
+              setSelectedHolidays(holidayArray);
+            }
+          }
+        ]}
+        handleInputonChange={(key, value) => {
+          // Ensure value is always an array
+          const holidayArray = Array.isArray(value) ? value : [value];
+          setSelectedHolidays(holidayArray);
+          handleInputChange(key, holidayArray);
+        }}
+        handleSelectonChange={handleInputChange}
+      />
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          SAVE
+        </button>
+      </div>
+    </SectionContainer>
+  );
+};
+
+// Create TemporaryCloseForm component
+const TemporaryCloseForm = ({
+  handleInputChange,
+  locationId
+}: {
+  handleInputChange: (key: string, value: any) => void;
+  locationId: number;
+}) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [isTemporarilyClosed, setIsTemporarilyClosed] = useState(false);
+  const [temporaryClose, setTemporaryClose] = useState({
+    startDate: "",
+    endDate: ""
+  });
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        is_temporary_close: isTemporarilyClosed,
+        temporary_close_start_time: isTemporarilyClosed ? `${temporaryClose.startDate}T00:00:00.000Z` : null,
+        temporary_close_end_time: isTemporarilyClosed ? `${temporaryClose.endDate}T00:00:00.000Z` : null
+      };
+
+      const response = await dispatch(updateWorkingHours(locationId, payload));
+      if (response?.meta?.status) {
+        toast.success('Temporary close status updated successfully');
+      }
+    } catch (error) {
+      toast.error('Failed to update temporary close status');
+      console.error('Error updating temporary close status:', error);
+    }
+  };
+
+  return (
+    <SectionContainer>
+      <AddForm
+        data={[
+          {
+            type: "section",
+            key: "temporaryCloseSection",
+            label: "Temporary Close",
+            description: "Tell us if you want to temporarily Close the Store",
+          },
+          {
+            type: "switch",
+            key: "isTemporarilyClosed",
+            label: "Close Store temporarily",
+            value: isTemporarilyClosed,
+            onChange: (value) => setIsTemporarilyClosed(value)
+          }
+        ]}
+        handleInputonChange={(key, value) => {
+          if (key === 'isTemporarilyClosed') {
+            setIsTemporarilyClosed(value);
+          }
+          handleInputChange(key, value);
+        }}
+        handleSelectonChange={handleInputChange}
+      />
+
+      {isTemporarilyClosed && (
+        <div className="mt-6 space-y-4">
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Close From <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              value={temporaryClose.startDate}
+              onChange={(e) => setTemporaryClose(prev => ({ ...prev, startDate: e.target.value }))}
+            />
+          </div>
+
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Close Until <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              value={temporaryClose.endDate}
+              onChange={(e) => setTemporaryClose(prev => ({ ...prev, endDate: e.target.value }))}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end mt-6">
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          SAVE
+        </button>
+      </div>
+    </SectionContainer>
   );
 };
 

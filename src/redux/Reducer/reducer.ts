@@ -154,6 +154,9 @@ import {
   GET_PAYOUTS_REQUEST,
   GET_PAYOUTS_SUCCESS,
   GET_PAYOUTS_FAILURE,
+  GET_STORE_LOCATIONS_REQUEST,
+  GET_STORE_LOCATIONS_SUCCESS,
+  GET_STORE_LOCATIONS_FAILURE,
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -418,6 +421,19 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: {}
+  },
+  storeLocations: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: {
+      pagination: {
+        total_rows: 0,
+        total_pages: 0,
+        page_no: 1,
+        per_page: 10
+      }
+    }
   }
 };
 
@@ -1786,6 +1802,34 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
             error: action.payload
           }
         };
+    case GET_STORE_LOCATIONS_REQUEST:
+      return {
+        ...state,
+        storeLocations: {
+          ...state.storeLocations,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_STORE_LOCATIONS_SUCCESS:
+      return {
+        ...state,
+        storeLocations: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_STORE_LOCATIONS_FAILURE:
+      return {
+        ...state,
+        storeLocations: {
+          ...state.storeLocations,
+          loading: false,
+          error: action.payload
+        }
+      };
     default:
       return state;
   }

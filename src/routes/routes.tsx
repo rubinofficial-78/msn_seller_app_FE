@@ -75,6 +75,7 @@ import Payouts from "../pages/Payouts";
 import CreateTicket from "../pages/support/CreateTicket";
 
 import BulkUploadMasterCatalogue from "../pages/bulkUploadMasterCatalogue";
+import ShippingDetailsPage from "../pages/sellerSettings/ShippingDetailsPage";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -483,6 +484,14 @@ export const routes: RouteObject[] = [
           {
             path: "location-services",
             element: <LocationServices />,
+          },
+          {
+            path: "location-services/create-store",
+            element: <LocationServices />,
+          },
+          {
+            path: "location-services/shipping-details/:id",
+            element: <ShippingDetailsPage />,
           },
         ],
       },

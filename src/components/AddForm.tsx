@@ -7,6 +7,7 @@ import {
   Radio,
   IconButton,
   Button,
+  Switch,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "lucide-react";
 import TailSelect from "./TailSelect";
@@ -38,6 +39,9 @@ interface Field {
   uploadText?: string;
   uploadDescription?: string;
   radioStyle?: string;
+  maxLength?: number;
+  validation?: (value: any) => boolean;
+  error?: string;
 }
 
 interface AddFormProps {
@@ -124,11 +128,6 @@ const AddForm: React.FC<AddFormProps> = ({
               index,
             })}
           </div>
-
-          {/* Field Description */}
-          {field.description && (
-            <p className="text-sm text-gray-500 mt-1">{field.description}</p>
-          )}
         </div>
       ))}
     </div>
@@ -139,36 +138,46 @@ const AddForm: React.FC<AddFormProps> = ({
 const renderField = (field: Field, edit: boolean, handlers: any) => {
   switch (field.type) {
     case "text":
-    case "number":
-    case "email":
       return edit ? (
-        <TailInput
-          fieldKey={field.key}
-          value={field.value || ""}
-          type={field.type}
-          placeholder={field.placeholder}
-          required={field.required}
-          disabled={field.disabled}
-          handleInputonChange={handlers.handleInputonChange}
-          startIcon={field.startIcon}
-          endIcon={field.endIcon}
-          index={handlers.index}
-        />
+        <div>
+          <TailInput
+            fieldKey={field.key}
+            value={field.value || ""}
+            type={field.type}
+            placeholder={field.placeholder}
+            required={field.required}
+            disabled={field.disabled}
+            handleInputonChange={handlers.handleInputonChange}
+            startIcon={field.startIcon}
+            endIcon={field.endIcon}
+            index={handlers.index}
+            maxLength={field.maxLength}
+          />
+          {field.description && (
+            <p className="mt-1 text-sm text-gray-500">{field.description}</p>
+          )}
+        </div>
       ) : (
         field.value ?? "--"
       );
 
     case "textarea":
       return edit ? (
-        <TailTextarea
-          disabled={field.disabled}
-          fieldKey={field.key}
-          label={field.label}
-          value={field.value}
-          description={field.description}
-          handleInputonChange={handlers.handleInputonChange}
-          index={handlers.index}
-        />
+        <div>
+          <TailTextarea
+            disabled={field.disabled}
+            fieldKey={field.key}
+            label={field.label}
+            value={field.value}
+            description={field.description}
+            handleInputonChange={handlers.handleInputonChange}
+            index={handlers.index}
+            maxLength={field.maxLength}
+          />
+          {field.description && (
+            <p className="mt-1 text-sm text-gray-500">{field.description}</p>
+          )}
+        </div>
       ) : (
         field.value ?? "--"
       );
@@ -204,6 +213,59 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
         />
       );
 
+    case "section":
+      return (
+        <div className="border-b border-gray-200 pb-4 mb-6">
+          <h3 className="text-lg font-medium text-gray-900">{field.label}</h3>
+          {field.description && (
+            <p className="mt-1 text-sm text-gray-500">{field.description}</p>
+          )}
+        </div>
+      );
+
+    case "switch":
+      return (
+        <div className="flex items-center justify-between">
+          {/* <span className="text-sm font-medium text-gray-700">{field.label}</span> */}
+          <Switch
+            checked={field.value || false}
+            onChange={(e) =>
+              handlers.handleInputonChange(
+                field.key,
+                e.target.checked,
+                handlers.index
+              )
+            }
+            color="primary"
+          />
+        </div>
+      );
+
+    case "time":
+      return (
+        <div className="relative">
+          <input
+            type="text"
+            value={field.value || ""}
+            onClick={(e) => {
+              const timePickerDialog = document.createElement("input");
+              timePickerDialog.type = "time";
+              timePickerDialog.onchange = (event) => {
+                handlers.handleInputonChange(
+                  field.key,
+                  (event.target as HTMLInputElement).value,
+                  handlers.index
+                );
+              };
+              timePickerDialog.click();
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
+            placeholder={field.placeholder}
+            readOnly
+          />
+        </div>
+      );
+
     case "custom":
       return field.component;
 
@@ -234,7 +296,13 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
         <input
           type="date"
           value={field.value || ""}
-          onChange={(e) => handlers.handleInputonChange(field.key, e.target.value, handlers.index)}
+          onChange={(e) =>
+            handlers.handleInputonChange(
+              field.key,
+              e.target.value,
+              handlers.index
+            )
+          }
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
           placeholder={field.placeholder}
           required={field.required}

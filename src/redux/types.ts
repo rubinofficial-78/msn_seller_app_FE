@@ -95,6 +95,9 @@ export const GET_PAYOUTS_FAILURE = 'GET_PAYOUTS_FAILURE';
 export const GET_MY_LISTING_REQUEST = 'GET_MY_LISTING_REQUEST';
 export const GET_MY_LISTING_SUCCESS = 'GET_MY_LISTING_SUCCESS';
 export const GET_MY_LISTING_FAILURE = 'GET_MY_LISTING_FAILURE';
+export const GET_STORE_LOCATIONS_REQUEST = 'GET_STORE_LOCATIONS_REQUEST';
+export const GET_STORE_LOCATIONS_SUCCESS = 'GET_STORE_LOCATIONS_SUCCESS';
+export const GET_STORE_LOCATIONS_FAILURE = 'GET_STORE_LOCATIONS_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -349,6 +352,19 @@ export interface AuthState {
     data: any[];
     meta: {
       pagination?: {
+        total_rows: number;
+        total_pages: number;
+        page_no: number;
+        per_page: number;
+      }
+    };
+  };
+  storeLocations: {
+    loading: boolean;
+    error: string | null;
+    data: StoreLocation[];
+    meta: {
+      pagination: {
         total_rows: number;
         total_pages: number;
         page_no: number;
@@ -836,6 +852,20 @@ interface GetMyListingFailureAction {
   payload: string;
 }
 
+interface StoreLocation {
+  id: number;
+  name: string;
+  address: {
+    city: string;
+    area_code: string;  // pincode
+    building: string;
+    locality: string;
+    state: string;
+  };
+  is_active: boolean;
+  createdAt: string;
+}
+
 export type AuthActionTypes = 
   | LoginRequestAction 
   | LoginSuccessAction 
@@ -932,7 +962,10 @@ export type AuthActionTypes =
   | GetPayoutsFailureAction
   | GetMyListingRequestAction
   | GetMyListingSuccessAction
-  | GetMyListingFailureAction;
+  | GetMyListingFailureAction
+  | GetStoreLocationsRequestAction
+  | GetStoreLocationsSuccessAction
+  | GetStoreLocationsFailureAction;
 
 
 export interface FileUploadPayload {

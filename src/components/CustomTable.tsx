@@ -22,7 +22,7 @@ const getImageSrc = (path: string) => {
 
 export interface ColumnButton {
   label: string;
-  icon: string;
+  icon: string | React.ReactNode;
   onClick: (row: any) => void;
 }
 
@@ -238,7 +238,21 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                 className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                                 title={action.label}
                               >
-                                {action.icon}
+                                {typeof action.icon === 'string' ? (
+                                  action.icon === 'edit' ? (
+                                    <Edit size={18} />
+                                  ) : action.icon === 'eye' ? (
+                                    <Eye size={18} />
+                                  ) : action.icon === 'toggle' ? (
+                                    row.status === 'Active' ? (
+                                      <ToggleRight size={18} />
+                                    ) : (
+                                      <ToggleLeft size={18} />
+                                    )
+                                  ) : null
+                                ) : (
+                                  action.icon
+                                )}
                               </button>
                             ))}
                           </div>

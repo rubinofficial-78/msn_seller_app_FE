@@ -48,19 +48,64 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    // Validate email or mobile number format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex for email
-    const phoneRegex = /^\d{10}$/; // Regex for 10-digit mobile number
+    // Stricter email regex that prevents multiple TLDs
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,6}$/;
+    const phoneRegex = /^[6-9]\d{9}$/; // Indian mobile number format
 
-    if (!emailRegex.test(email) && !phoneRegex.test(email)) {
-      setError("Please enter a valid email or mobile number.");
-      toast.error("Please enter a valid email or mobile number.");
+    const input = email.trim();
+
+    // Check if input is empty
+    if (!input) {
+      setError("Please enter an email or mobile number");
+      toast.error("Please enter an email or mobile number");
       return;
+    }
+
+    // Validate email format
+    if (input.includes('@')) {
+      // Additional checks for email
+      if (input.split('@').length > 2) {
+        setError("Email cannot contain multiple @ symbols");
+        toast.error("Email cannot contain multiple @ symbols");
+        return;
+      }
+
+      // Check for valid domain format
+      const [localPart, domain] = input.split('@');
+      
+      // Check for multiple dots in domain
+      const domainParts = domain.split('.');
+      if (domainParts.length > 2) {
+        setError("Invalid domain format");
+        toast.error("Invalid domain format");
+        return;
+      }
+
+      // Check for empty parts between dots
+      if (domainParts.some(part => part.length === 0)) {
+        setError("Invalid email format");
+        toast.error("Invalid email format");
+        return;
+      }
+
+      if (!emailRegex.test(input)) {
+        setError("Please enter a valid email address");
+        toast.error("Please enter a valid email address");
+        return;
+      }
+    } 
+    // Validate phone number format
+    else {
+      if (!phoneRegex.test(input)) {
+        setError("Please enter a valid 10-digit mobile number");
+        toast.error("Please enter a valid 10-digit mobile number");
+        return;
+      }
     }
 
     try {
       // Dispatch login action and wait for response
-      const response = await dispatch(loginUser(email) as any);
+      const response = await dispatch(loginUser(input) as any);
 
       if (response?.data) {
         // Store token and user data
@@ -73,7 +118,7 @@ export default function Login() {
         console.log("User Type after login:", userType);
 
         // Login successful - update auth context
-        login(email);
+        login(input);
 
         // Determine redirect path based on user type and new user status
         let redirectPath = "/verify-otp";
@@ -111,6 +156,28 @@ export default function Login() {
       console.error("Login error:", err);
       setError(err?.message || "Login failed. Please try again.");
       toast.error(err?.message || "Login failed. Please try again.");
+    }
+  };
+
+  // Add real-time validation to handleInputChange
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Only remove spaces, preserve other special characters
+    const sanitizedValue = value.replace(/\s/g, '');
+    
+    // If it's a phone number (doesn't contain @ or special chars), limit to 10 digits
+    if (!sanitizedValue.includes('@') && /^\d*$/.test(sanitizedValue)) {
+      if (sanitizedValue.length > 10) {
+        return;
+      }
+    }
+    
+    setEmail(sanitizedValue);
+    
+    // Clear error when user starts typing
+    if (error) {
+      setError("");
     }
   };
 
@@ -164,15 +231,7 @@ export default function Login() {
         {/* Small Rectangles */}
         <div className="absolute left-[25%] top-[40%] w-12 h-16 border border-gray-300 opacity-30" />
         <div className="absolute right-[25%] bottom-[30%] w-12 h-16 border border-gray-300 opacity-30" />
-
-        {/* Illustration - Right */}
-        {/* <div className="absolute right-[15%] top-[30%] w-64 h-64 opacity-80">
-          <img 
-            src="/illustrations/working-girl.svg" 
-            alt="" 
-            className="w-full h-full object-contain"
-          />
-        </div> */}
+ 
       </div>
 
       {/* Content Container */}
@@ -218,7 +277,9 @@ export default function Login() {
                            hover:border-[#FFE4C8]/40"
                   placeholder="Enter Email ID or Phone Number"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleInputChange}
+                  maxLength={50}
+                  autoComplete="off"
                 />
               </div>
 

@@ -37,6 +37,14 @@ interface FormData {
   salesPrice: string;
 }
 
+const MAX_TITLE_CHARS = 50;
+const MAX_SHORT_DESC_CHARS = 150;
+const MAX_PRODUCT_DESC_CHARS = 500;
+
+const countChars = (text: string) => {
+  return text?.trim().length || 0;
+};
+
 const AddProduct = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -301,6 +309,35 @@ const AddProduct = () => {
   const handleInputChange = (key: string, value: any) => {
     console.log("Input/Select changed:", key, value); // Debug log
 
+    // Find the field configuration
+    const fieldConfig = basicInfoFields.find(field => field.key === key);
+
+    // Handle character count validation for specific fields
+    if (key === "productTitle" || key === "shortDescription" || key === "productDescription") {
+      const charCount = countChars(value);
+      let maxChars;
+      
+      switch (key) {
+        case "productTitle":
+          maxChars = MAX_TITLE_CHARS;
+          break;
+        case "shortDescription":
+          maxChars = MAX_SHORT_DESC_CHARS;
+          break;
+        case "productDescription":
+          maxChars = MAX_PRODUCT_DESC_CHARS;
+          break;
+        default:
+          maxChars = 0;
+      }
+
+      if (charCount > maxChars) {
+        toast.error(`${fieldConfig?.label} cannot exceed ${maxChars} characters (currently: ${charCount} characters)`);
+        return;
+      }
+    }
+
+    // Update form data if validation passes
     if (key === "hsnCode") {
       const selectedHsn = hsnCodes?.find((hsn) => hsn.hsn_code === value);
       setFormData((prev) => ({
@@ -317,146 +354,218 @@ const AddProduct = () => {
     }
   };
 
-  // Add loading state
-  const [isSaving, setIsSaving] = useState(false);
+  // Replace single isSaving state with multiple states for each section
+  const [savingStates, setSavingStates] = useState({
+    basicInfo: false,
+    images: false,
+    measurement: false,
+    pricing: false,
+    ondc: false
+  });
 
+  // Helper function to get saving state key
+  const getSavingStateKey = (section: string): keyof typeof savingStates => {
+    switch (section) {
+      case "Basic Information":
+        return "basicInfo";
+      case "Product Images":
+        return "images";
+      case "Unit of Measurement":
+        return "measurement";
+      case "Pricing Details":
+        return "pricing";
+      case "ONDC Details":
+        return "ondc";
+      default:
+        return "basicInfo";
+    }
+  };
+
+  // Update handleSave function to use specific saving state
   const handleSave = async (section: string) => {
     try {
-      setIsSaving(true);
+      // Set saving state for specific section
+      setSavingStates(prev => ({
+        ...prev,
+        [getSavingStateKey(section)]: true
+      }));
 
-      if (section === "Basic Information") {
-        const basicDetails = {
-          section_key: "BASIC_INFORMATION",
-          name: formData.productTitle,
-          sku_id: formData.skuId,
-          level1_category_id: formData.categoryName!,
-          level2_category_id: formData.subCategoryName!,
-          short_desc: formData.shortDescription,
-          long_desc: formData.productDescription,
-          hsn_reference_number: formData.hsnReferenceNumber || "",
-        };
+      switch (section) {
+        case "Basic Information":
+          // Check all character limits before proceeding
+          const titleCharCount = countChars(formData.productTitle);
+          const shortDescCharCount = countChars(formData.shortDescription);
+          const descCharCount = countChars(formData.productDescription);
 
-        await dispatch(saveBasicDetails(basicDetails));
-        toast.success("Basic details saved successfully!");
+          let errorMessage = '';
 
-        // Fetch ONDC details after saving basic details
-        await dispatch(getOndcDetails(formData.skuId));
-        setShowOndcSection(true);
-      } else if (section === "Product Images") {
-        const imageDetails = {
-          section_key: "PRODUCT_IMAGE",
-          sku_id: formData.skuId,
-          image_arr: formData.productImages || [],
-        };
-
-        await dispatch(saveBasicDetails(imageDetails));
-        toast.success("Images saved successfully!");
-      } else if (section === "Unit of Measurement") {
-        const selectedUom = uomTypes?.find(
-          (uom) => uom.lookup_code === formData.uomType
-        );
-
-        if (!selectedUom) {
-          throw new Error("Please select a valid UOM type");
-        }
-
-        const measurementDetails = {
-          section_key: "UOM",
-          sku_id: formData.skuId,
-          uom_id: selectedUom.id,
-          uom_value: formData.uomValue,
-        };
-
-        await dispatch(saveBasicDetails(measurementDetails));
-        toast.success("Measurements saved successfully!");
-      } else if (section === "Pricing Details") {
-        // Get the selected payment mode's ID
-        const selectedPaymentMode = paymentModes?.find(
-          (mode) => mode.lookup_code === formData.paymentMode
-        );
-
-        if (!selectedPaymentMode) {
-          throw new Error("Please select a valid payment mode");
-        }
-
-        const pricingDetails = {
-          section_key: "PRICING_DETAILS",
-          sku_id: formData.skuId,
-          mrp: Number(formData.mrp),
-          sales_price: Number(formData.salesPrice),
-          payment_type_id: selectedPaymentMode.id,
-        };
-
-        await dispatch(saveBasicDetails(pricingDetails));
-        toast.success("Pricing details saved successfully!");
-      } else if (section === "ONDC Details") {
-        if (!ondcDetails) {
-          throw new Error("ONDC details not loaded");
-        }
-
-        // Prepare the bulk update payload
-        const bulkUpdatePayload = ondcDetails.map((field) => {
-          const value = formData[field.field_key];
-          let processedValue = value;
-
-          // Process value based on field type
-          switch (field.type) {
-            case "checkbox":
-              processedValue = Boolean(value);
-              break;
-
-            case "dropdown":
-              if (
-                field.field_name === "Return Within" ||
-                field.field_name === "Time To Ship" ||
-                field.field_name === "Time to Ship" ||
-                field.field_name === "Expected Delivery_time"
-              ) {
-                const selectedOption = timeOptions.find(
-                  (opt) => opt.value === value
-                );
-                if (selectedOption) {
-                  processedValue = {
-                    id: selectedOption.id,
-                    label: selectedOption.label,
-                    lookup_code: selectedOption.value,
-                  };
-                }
-              }
-              break;
-
-            case "decimal":
-              processedValue = value ? Number(value) : null;
-              break;
-
-            case "text":
-            case "textarea":
-              processedValue = value || null;
-              break;
-
-            case "date":
-              processedValue = value || null;
-              break;
-
-            default:
-              processedValue = value || null;
+          if (titleCharCount > MAX_TITLE_CHARS) {
+            errorMessage = `Product title cannot exceed ${MAX_TITLE_CHARS} characters (currently: ${titleCharCount} characters)`;
+          } else if (shortDescCharCount > MAX_SHORT_DESC_CHARS) {
+            errorMessage = `Short description cannot exceed ${MAX_SHORT_DESC_CHARS} characters (currently: ${shortDescCharCount} characters)`;
+          } else if (descCharCount > MAX_PRODUCT_DESC_CHARS) {
+            errorMessage = `Product description cannot exceed ${MAX_PRODUCT_DESC_CHARS} characters (currently: ${descCharCount} characters)`;
           }
 
-          return {
-            id: field.id,
-            value: processedValue,
-          };
-        });
+          if (errorMessage) {
+            toast.error(errorMessage);
+            return;
+          }
 
-        // Call the bulk update API
-        await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
-        toast.success("ONDC details saved successfully!");
+          // Check for required fields
+          if (!formData.productTitle || !formData.shortDescription || !formData.productDescription) {
+            toast.error("Please fill in all required fields");
+            return;
+          }
+
+          const basicDetails = {
+            section_key: "BASIC_INFORMATION",
+            name: formData.productTitle,
+            sku_id: formData.skuId,
+            level1_category_id: formData.categoryName!,
+            level2_category_id: formData.subCategoryName!,
+            short_desc: formData.shortDescription,
+            long_desc: formData.productDescription,
+            hsn_reference_number: formData.hsnReferenceNumber || "",
+          };
+
+          await dispatch(saveBasicDetails(basicDetails));
+          toast.success("Basic details saved successfully!");
+
+          // Fetch ONDC details after saving basic details
+          await dispatch(getOndcDetails(formData.skuId));
+          setShowOndcSection(true);
+          break;
+
+        case "Product Images":
+          const imageDetails = {
+            section_key: "PRODUCT_IMAGE",
+            sku_id: formData.skuId,
+            image_arr: formData.productImages || [],
+          };
+
+          await dispatch(saveBasicDetails(imageDetails));
+          toast.success("Images saved successfully!");
+          break;
+
+        case "Unit of Measurement":
+          const selectedUom = uomTypes?.find(
+            (uom) => uom.lookup_code === formData.uomType
+          );
+
+          if (!selectedUom) {
+            throw new Error("Please select a valid UOM type");
+          }
+
+          const measurementDetails = {
+            section_key: "UOM",
+            sku_id: formData.skuId,
+            uom_id: selectedUom.id,
+            uom_value: formData.uomValue,
+          };
+
+          await dispatch(saveBasicDetails(measurementDetails));
+          toast.success("Measurements saved successfully!");
+          break;
+
+        case "Pricing Details":
+          // Get the selected payment mode's ID
+          const selectedPaymentMode = paymentModes?.find(
+            (mode) => mode.lookup_code === formData.paymentMode
+          );
+
+          if (!selectedPaymentMode) {
+            throw new Error("Please select a valid payment mode");
+          }
+
+          const pricingDetails = {
+            section_key: "PRICING_DETAILS",
+            sku_id: formData.skuId,
+            mrp: Number(formData.mrp),
+            sales_price: Number(formData.salesPrice),
+            payment_type_id: selectedPaymentMode.id,
+          };
+
+          await dispatch(saveBasicDetails(pricingDetails));
+          toast.success("Pricing details saved successfully!");
+          break;
+
+        case "ONDC Details":
+          if (!ondcDetails) {
+            throw new Error("ONDC details not loaded");
+          }
+
+          // Prepare the bulk update payload
+          const bulkUpdatePayload = ondcDetails.map((field) => {
+            const value = formData[field.field_key];
+            let processedValue = value;
+
+            // Process value based on field type
+            switch (field.type) {
+              case "checkbox":
+                processedValue = Boolean(value);
+                break;
+
+              case "dropdown":
+                if (
+                  field.field_name === "Return Within" ||
+                  field.field_name === "Time To Ship" ||
+                  field.field_name === "Time to Ship" ||
+                  field.field_name === "Expected Delivery_time"
+                ) {
+                  const selectedOption = timeOptions.find(
+                    (opt) => opt.value === value
+                  );
+                  if (selectedOption) {
+                    processedValue = {
+                      id: selectedOption.id,
+                      label: selectedOption.label,
+                      lookup_code: selectedOption.value,
+                    };
+                  }
+                }
+                break;
+
+              case "decimal":
+                processedValue = value ? Number(value) : null;
+                break;
+
+              case "text":
+              case "textarea":
+                processedValue = value || null;
+                break;
+
+              case "date":
+                processedValue = value || null;
+                break;
+
+              default:
+                processedValue = value || null;
+            }
+
+            return {
+              id: field.id,
+              value: processedValue,
+            };
+          });
+
+          // Call the bulk update API
+          await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
+          toast.success("ONDC details saved successfully!");
+          break;
+
+        default:
+          break;
       }
     } catch (error) {
       console.error("Failed to save:", error);
-      toast.error(`Failed to save ${section.toLowerCase()}. Please try again.`);
+      toast.error("Failed to save. Please try again.");
     } finally {
-      setIsSaving(false);
+      // Reset saving state for specific section
+      setSavingStates(prev => ({
+        ...prev,
+        [getSavingStateKey(section)]: false
+      }));
     }
   };
 
@@ -622,9 +731,16 @@ const AddProduct = () => {
       key: "productTitle",
       label: "Product Title",
       required: true,
-      placeholder: "Product Title",
+      placeholder: `Product Title (max ${MAX_TITLE_CHARS} characters)`,
       value: formData.productTitle,
       id: "input-product-title",
+      maxLength: MAX_TITLE_CHARS,
+      description: `${countChars(formData.productTitle || '')}/${MAX_TITLE_CHARS} characters`,
+      validation: (value: string) => {
+        const charCount = countChars(value);
+        return charCount <= MAX_TITLE_CHARS;
+      },
+      error: `Product title cannot exceed ${MAX_TITLE_CHARS} characters`,
     },
     {
       type: "text",
@@ -696,16 +812,32 @@ const AddProduct = () => {
       key: "shortDescription",
       label: "Short Description",
       required: true,
-      placeholder: "Short description",
+      placeholder: `Short description (max ${MAX_SHORT_DESC_CHARS} characters)`,
+      value: formData.shortDescription,
       id: "textarea-short-description",
+      maxLength: MAX_SHORT_DESC_CHARS,
+      description: `${countChars(formData.shortDescription || '')}/${MAX_SHORT_DESC_CHARS} characters`,
+      validation: (value: string) => {
+        const charCount = countChars(value);
+        return charCount <= MAX_SHORT_DESC_CHARS;
+      },
+      error: `Short description cannot exceed ${MAX_SHORT_DESC_CHARS} characters`,
     },
     {
       type: "textarea",
       key: "productDescription",
       label: "Product Description",
       required: true,
-      placeholder: "Product Description",
+      placeholder: `Product Description (max ${MAX_PRODUCT_DESC_CHARS} characters)`,
+      value: formData.productDescription,
       id: "textarea-product-description",
+      maxLength: MAX_PRODUCT_DESC_CHARS,
+      description: `${countChars(formData.productDescription || '')}/${MAX_PRODUCT_DESC_CHARS} characters`,
+      validation: (value: string) => {
+        const charCount = countChars(value);
+        return charCount <= MAX_PRODUCT_DESC_CHARS;
+      },
+      error: `Product description cannot exceed ${MAX_PRODUCT_DESC_CHARS} characters`,
     },
   ];
 
@@ -825,20 +957,49 @@ const AddProduct = () => {
   // Add this useEffect to debug button state
   useEffect(() => {
     const isDisabled = Boolean(
-      isSaving ||
+      savingStates.basicInfo ||
         !formData.skuId ||
         !Array.isArray(formData.productImages) ||
         formData.productImages.length === 0
     );
 
     console.log("Button state debug:", {
-      isSaving,
+      basicInfo: savingStates.basicInfo,
       skuId: formData.skuId,
       hasImages: Array.isArray(formData.productImages),
       imagesLength: formData.productImages?.length,
       isDisabled,
     });
-  }, [isSaving, formData.skuId, formData.productImages]);
+  }, [savingStates.basicInfo, formData.skuId, formData.productImages]);
+
+  // Add a helper function to truncate text to max words
+  const truncateToMaxWords = (text: string, maxWords: number) => {
+    const words = text.trim().split(/\s+/);
+    if (words.length > maxWords) {
+      return words.slice(0, maxWords).join(' ');
+    }
+    return text;
+  };
+
+  // Add this helper function to check all word counts
+  const isValidCharCount = () => {
+    if (!formData.productTitle || !formData.shortDescription || !formData.productDescription) {
+      return false;
+    }
+
+    const titleCharCount = countChars(formData.productTitle);
+    const shortDescCharCount = countChars(formData.shortDescription);
+    const descCharCount = countChars(formData.productDescription);
+
+    return (
+      titleCharCount > 0 &&
+      titleCharCount <= MAX_TITLE_CHARS &&
+      shortDescCharCount > 0 &&
+      shortDescCharCount <= MAX_SHORT_DESC_CHARS &&
+      descCharCount > 0 &&
+      descCharCount <= MAX_PRODUCT_DESC_CHARS
+    );
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -870,12 +1031,12 @@ const AddProduct = () => {
           <button
             id="add-button-basic-information"
             onClick={() => handleSave("Basic Information")}
-            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-              isSaving ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            disabled={isSaving}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+              ${(savingStates.basicInfo || !isValidCharCount()) ? "opacity-50 cursor-not-allowed bg-gray-400" : ""}`}
+            disabled={savingStates.basicInfo || !isValidCharCount()}
+            title={!isValidCharCount() ? "Please check character limits and fill all required fields" : ""}
           >
-            {isSaving ? "Saving..." : "Save Basic Information"}
+            {savingStates.basicInfo ? "Saving..." : "Save Basic Information"}
           </button>
         </div>
       </div>
@@ -898,16 +1059,16 @@ const AddProduct = () => {
             id="add-button-product-images"
             onClick={() => handleSave("Product Images")}
             className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-              isSaving ? "opacity-50 cursor-not-allowed" : ""
+              savingStates.images ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={Boolean(
-              isSaving ||
+              savingStates.images ||
                 !formData.skuId ||
                 !Array.isArray(formData.productImages) ||
                 formData.productImages.length === 0
             )}
           >
-            {isSaving ? "Saving..." : "Save Images"}
+            {savingStates.images ? "Saving..." : "Save Images"}
           </button>
         </div>
       </div>
@@ -928,21 +1089,19 @@ const AddProduct = () => {
             id="add-button-uom"
             onClick={() => handleSave("Unit of Measurement")}
             className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-              isSaving ||
-              !formData.skuId ||
+              savingStates.measurement ||
               !formData.uomType ||
               !formData.uomValue
                 ? "opacity-50 cursor-not-allowed"
                 : ""
             }`}
             disabled={
-              isSaving ||
-              !formData.skuId ||
+              savingStates.measurement ||
               !formData.uomType ||
               !formData.uomValue
             }
           >
-            {isSaving ? "Saving..." : "Save Measurements"}
+            {savingStates.measurement ? "Saving..." : "Save Measurements"}
           </button>
         </div>
       </div>
@@ -964,7 +1123,7 @@ const AddProduct = () => {
             id="add-button-pricing-details"
             onClick={() => handleSave("Pricing Details")}
             className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-              isSaving ||
+              savingStates.pricing ||
               !formData.skuId ||
               !formData.mrp ||
               !formData.salesPrice ||
@@ -973,14 +1132,14 @@ const AddProduct = () => {
                 : ""
             }`}
             disabled={
-              isSaving ||
+              savingStates.pricing ||
               !formData.skuId ||
               !formData.mrp ||
               !formData.salesPrice ||
               !formData.paymentMode
             }
           >
-            {isSaving ? "Saving..." : "Save Pricing"}
+            {savingStates.pricing ? "Saving..." : "Save Pricing"}
           </button>
         </div>
       </div>
@@ -1044,11 +1203,11 @@ const AddProduct = () => {
               id="add-button-ondc-details"
               onClick={() => handleSave("ONDC Details")}
               className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-                isSaving ? "opacity-50 cursor-not-allowed" : ""
+                savingStates.ondc ? "opacity-50 cursor-not-allowed" : ""
               }`}
-              disabled={isSaving}
+              disabled={savingStates.ondc}
             >
-              {isSaving ? "Saving..." : "Save ONDC Details"}
+              {savingStates.ondc ? "Saving..." : "Save ONDC Details"}
             </button>
           </div>
         </div>

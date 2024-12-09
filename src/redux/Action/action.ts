@@ -196,10 +196,16 @@ import {
   GET_PAYOUTS_FAILURE,
   GET_MY_LISTING_REQUEST,
   GET_MY_LISTING_SUCCESS,
-  GET_MY_LISTING_FAILURE
+  GET_MY_LISTING_FAILURE,
+  GET_STORE_LOCATIONS_REQUEST,
+  GET_STORE_LOCATIONS_SUCCESS,
+  GET_STORE_LOCATIONS_FAILURE,
+  CREATE_STORE_LOCATION_REQUEST,
+  CREATE_STORE_LOCATION_SUCCESS,
+  CREATE_STORE_LOCATION_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
- 
+import { createAsyncThunk } from "@reduxjs/toolkit";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -3383,6 +3389,249 @@ export const getPayouts = (params: {
         type: GET_PAYOUTS_FAILURE,
         payload: errorMessage
       });
+      throw error;
+    }
+  };
+};
+
+export const getStoreLocations = (params: { 
+  page_no: number; 
+  per_page: number;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_STORE_LOCATIONS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/mdm/location`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_STORE_LOCATIONS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch store locations');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch store locations';
+      dispatch({
+        type: GET_STORE_LOCATIONS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// Add this action creator
+export const updateStoreLocationStatus = (
+  id: number,
+  is_active: boolean
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/location/${id}/update`,
+        { is_active },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        // Refresh the store locations after successful update
+        dispatch(getStoreLocations({ page_no: 1, per_page: 10 }));
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update store status');
+      }
+    } catch (error) {
+      console.error('Error updating store status:', error);
+      throw error;
+    }
+  };
+};
+
+export const getLocationTypeLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/LOCATION_TYPE`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch location types');
+      }
+    } catch (error) {
+      console.error('Error fetching location types:', error);
+      throw error;
+    }
+  };
+};
+
+interface CreateStoreLocationPayload {
+  name: string;
+  address: {
+    name: string;
+    building: string;
+    locality: string;
+    city: string;
+    state: string;
+    country: string;
+    area_code: string;
+  };
+  location_type_id: number;
+  email: string;
+  gst_number: string;
+  mobile_number: string;
+  latitude: string;
+  longitude: string;
+  opening_time: string;
+  closing_time: string;
+  contact_name: string;
+}
+
+export const createStoreLocation = (
+  data: CreateStoreLocationPayload
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: CREATE_STORE_LOCATION_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/location/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: CREATE_STORE_LOCATION_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create store location');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create store location';
+      dispatch({
+        type: CREATE_STORE_LOCATION_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getWorkingDaysLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/WORKING_DAYS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch working days');
+      }
+    } catch (error) {
+      console.error('Error fetching working days:', error);
+      throw error;
+    }
+  };
+};
+
+interface UpdateWorkingHoursPayload {
+  is_same_timings: boolean;
+  all_timings: {
+    day_from_id: number;
+    day_from: {
+      id: number;
+      lookup_code: string;
+      display_name: string;
+    };
+    day_to_id: number;
+    day_to: {
+      id: number;
+      lookup_code: string;
+      display_name: string;
+    };
+    timings_arr: Array<{
+      opening_time: string;
+      closing_time: string;
+    }>;
+  };
+}
+
+export const updateWorkingHours = (
+  locationId: number,
+  data: UpdateWorkingHoursPayload
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/location/${locationId}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update working hours');
+      }
+    } catch (error) {
+      console.error('Error updating working hours:', error);
       throw error;
     }
   };

@@ -1,3 +1,5 @@
+@import 'antd/dist/reset.css'; /* If using antd v5 */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

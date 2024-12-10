@@ -7,6 +7,7 @@ import { getSellerDashboardCounts } from '../../redux/Action/action';
 import { AppDispatch } from '../../redux/store';
 import { RootState } from '../../redux/types';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 // Sample data for the category pie chart
 const categoryData = [
@@ -32,6 +33,7 @@ const COLORS = ['#4F46E5', '#EC4899', '#8B5CF6', '#10B981', '#F59E0B', '#6366F1'
 const SellerDashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   
   const { 
     data: dashboardCounts,
@@ -74,7 +76,7 @@ const SellerDashboard = () => {
                 : "Fill-up your important data and get started with ONDC"}
             </p>
           </div>
-          <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base">
+          <button onClick={() => navigate('/dashboard/seller-settings')} className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base">
             <Settings size={18} />
             <span>SETTINGS</span>
           </button>

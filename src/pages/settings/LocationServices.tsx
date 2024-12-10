@@ -19,6 +19,11 @@ import {
   createStoreLocation,
   getWorkingDaysLookup,
   updateWorkingHours,
+  getCategories,
+  getSubCategories,
+  createServiceability,
+  getServiceability,
+  updateServiceability,
 } from "../../redux/Action/action";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
@@ -50,103 +55,16 @@ interface LocationType {
   is_active: boolean;
 }
 
-const shippingData = [   
-  {
-    id: 6,
-    storeName: "Hyderabad Branch",
-    address: "Hitech City Main Road",
-    createdDate: "19/10/2024, 10:00 AM",
-    shippingDistance: "Zone",
-    domain: "Electronics",
-    city: "Hyderabad",
-    pincode: "500081",
-    status: "Active",
-  },
-];
-
-const regions: Region[] = [
-  {
-    zone: "North",
-    states: [
-      { name: "Jammu and Kashmir", checked: false },
-      { name: "Himachal Pradesh", checked: false },
-      { name: "Punjab", checked: false },
-      { name: "Uttarakhand", checked: false },
-      { name: "Haryana", checked: false },
-      { name: "Delhi", checked: false },
-      { name: "Rajasthan", checked: false },
-    ],
-  },
-  {
-    zone: "South",
-    states: [
-      { name: "Kerala", checked: false },
-      { name: "Tamil Nadu", checked: false },
-      { name: "Karnataka", checked: false },
-      { name: "Andhra Pradesh", checked: false },
-      { name: "Telangana", checked: false },
-    ],
-  },
-  {
-    zone: "East",
-    states: [
-      { name: "West Bengal", checked: false },
-      { name: "Bihar", checked: false },
-      { name: "Odisha", checked: false },
-      { name: "Jharkhand", checked: false },
-    ],
-  },
-  {
-    zone: "West",
-    states: [
-      { name: "Gujarat", checked: false },
-      { name: "Maharashtra", checked: false },
-      { name: "Goa", checked: false },
-    ],
-  },
-  {
-    zone: "North East",
-    states: [
-      { name: "Assam", checked: false },
-      { name: "Sikkim", checked: false },
-      { name: "Nagaland", checked: false },
-      { name: "Meghalaya", checked: false },
-      { name: "Manipur", checked: false },
-      { name: "Mizoram", checked: false },
-      { name: "Arunachal Pradesh", checked: false },
-      { name: "Tripura", checked: false },
-    ],
-  },
-  {
-    zone: "Union Territories",
-    states: [
-      { name: "Andaman and Nicobar Islands", checked: false },
-      { name: "Chandigarh", checked: false },
-      { name: "Dadra and Nagar Haveli", checked: false },
-      { name: "Daman and Diu", checked: false },
-      { name: "Lakshadweep", checked: false },
-      { name: "Puducherry", checked: false },
-    ],
-  },
-];
-
-// Add new interface for the shipping details form
-interface ShippingDetailsForm {
-  store: string;
-  domain: string;
-  shippingDistance: string;
-  regions: {
-    [key: string]: {
-      [key: string]: boolean;
-    };
-  };
-  shippingType: string;
+interface CreateServiceabilityPayload {
+  location_id: number;
+  shipping_radius: number | null;
   category: string;
-  deliveryType: string;
-  preferences: string;
-  transitTime: string;
-  shippingFee: string;
-}
+  sub_categories: string[];
+  pan_india?: boolean;
+  zone?: boolean;
+} 
+ 
+ 
 
 // Add this interface for the form data
 interface StoreFormData {
@@ -187,15 +105,15 @@ interface StoreFormData {
 }
 
 // Add this near your other constants
-const DAYS_OF_WEEK = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+// const DAYS_OF_WEEK = [
+//   "Monday",
+//   "Tuesday",
+//   "Wednesday",
+//   "Thursday",
+//   "Friday",
+//   "Saturday",
+//   "Sunday",
+// ];
 
 // Add a SectionContainer component for consistent section styling
 const SectionContainer = ({
@@ -209,6 +127,12 @@ const SectionContainer = ({
     {children}
   </div>
 );
+const shippingData = [
+  {
+    id: 1,
+    name: "Shipping",
+  },
+];
 
 // Add the form fields configuration
 const storeDetailsFields = [
@@ -264,7 +188,7 @@ interface DaySettings {
 
 const WorkingHoursForm = ({
   handleInputChange,
-  locationId
+  locationId,
 }: {
   handleInputChange: (key: string, value: any) => void;
   locationId: number;
@@ -272,18 +196,20 @@ const WorkingHoursForm = ({
   const dispatch = useDispatch<AppDispatch>();
   const [isSameTimings, setIsSameTimings] = useState(false);
   const [dayRange, setDayRange] = useState<[number, number]>([1, 7]);
-  const [workingDays, setWorkingDays] = useState<Array<{
-    id: number;
-    display_name: string;
-    lookup_code: string;
-  }>>([]);
+  const [workingDays, setWorkingDays] = useState<
+    Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+    }>
+  >([]);
   const [storeTime, setStoreTime] = useState({
     startTime: "",
-    endTime: ""
+    endTime: "",
   });
   const [pickupTime, setPickupTime] = useState({
     startTime: "",
-    endTime: ""
+    endTime: "",
   });
 
   // Fetch working days on component mount
@@ -295,8 +221,8 @@ const WorkingHoursForm = ({
           setWorkingDays(response.data);
         }
       } catch (error) {
-        console.error('Error fetching working days:', error);
-        toast.error('Failed to fetch working days');
+        console.error("Error fetching working days:", error);
+        toast.error("Failed to fetch working days");
       }
     };
 
@@ -304,39 +230,56 @@ const WorkingHoursForm = ({
   }, [dispatch]);
 
   // Create marks from API response
-  const marks = workingDays.reduce((acc, day) => ({
-    ...acc,
-    [day.lookup_code]: day.display_name
-  }), {});
+  const marks = workingDays.reduce(
+    (acc, day) => ({
+      ...acc,
+      [day.lookup_code]: day.display_name,
+    }),
+    {}
+  );
 
-  const handleStoreTimeChange = (type: 'startTime' | 'endTime', value: string) => {
-    setStoreTime(prev => ({
+  const handleStoreTimeChange = (
+    type: "startTime" | "endTime",
+    value: string
+  ) => {
+    setStoreTime((prev) => ({
       ...prev,
-      [type]: value
+      [type]: value,
     }));
   };
 
-  const handlePickupTimeChange = (type: 'startTime' | 'endTime', value: string) => {
-    setPickupTime(prev => ({
+  const handlePickupTimeChange = (
+    type: "startTime" | "endTime",
+    value: string
+  ) => {
+    setPickupTime((prev) => ({
       ...prev,
-      [type]: value
+      [type]: value,
     }));
   };
 
   const handleSave = async () => {
     try {
-      const dayFrom = workingDays.find(day => day.lookup_code === dayRange[0].toString());
-      const dayTo = workingDays.find(day => day.lookup_code === dayRange[1].toString());
+      const dayFrom = workingDays.find(
+        (day) => day.lookup_code === dayRange[0].toString()
+      );
+      const dayTo = workingDays.find(
+        (day) => day.lookup_code === dayRange[1].toString()
+      );
 
       if (!dayFrom || !dayTo) {
-        toast.error('Invalid day range selected');
+        toast.error("Invalid day range selected");
         return;
       }
 
       // Format the date strings
       const today = new Date();
-      const formattedStartTime = `${today.getFullYear()}-12-08T${storeTime.startTime}:00.000+05:30`;
-      const formattedEndTime = `${today.getFullYear()}-12-09T${storeTime.endTime}:00.000+05:30`;
+      const formattedStartTime = `${today.getFullYear()}-12-08T${
+        storeTime.startTime
+      }:00.000+05:30`;
+      const formattedEndTime = `${today.getFullYear()}-12-09T${
+        storeTime.endTime
+      }:00.000+05:30`;
 
       const payload = {
         is_same_timings: isSameTimings,
@@ -345,30 +288,30 @@ const WorkingHoursForm = ({
           day_from: {
             id: dayFrom.id,
             lookup_code: dayFrom.lookup_code,
-            display_name: dayFrom.display_name
+            display_name: dayFrom.display_name,
           },
           day_to_id: dayTo.id,
           day_to: {
             id: dayTo.id,
             lookup_code: dayTo.lookup_code,
-            display_name: dayTo.display_name
+            display_name: dayTo.display_name,
           },
           timings_arr: [
             {
               opening_time: formattedStartTime,
-              closing_time: formattedEndTime
-            }
-          ]
-        }
+              closing_time: formattedEndTime,
+            },
+          ],
+        },
       };
 
       const response = await dispatch(updateWorkingHours(locationId, payload));
       if (response?.meta?.status) {
-        toast.success('Working hours updated successfully');
+        toast.success("Working hours updated successfully");
       }
     } catch (error) {
-      toast.error('Failed to update working hours');
-      console.error('Error updating working hours:', error);
+      toast.error("Failed to update working hours");
+      console.error("Error updating working hours:", error);
     }
   };
 
@@ -398,20 +341,26 @@ const WorkingHoursForm = ({
               </div>
             </div>
             <div className="flex items-center space-x-4 mt-4">
-              <span className="text-sm font-medium text-gray-700">Store Hours:</span>
+              <span className="text-sm font-medium text-gray-700">
+                Store Hours:
+              </span>
               <div className="flex items-center space-x-2 flex-1">
                 <input
                   type="time"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                   value={storeTime.startTime}
-                  onChange={(e) => handleStoreTimeChange('startTime', e.target.value)}
+                  onChange={(e) =>
+                    handleStoreTimeChange("startTime", e.target.value)
+                  }
                 />
                 <span className="text-gray-500">to</span>
                 <input
                   type="time"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                   value={storeTime.endTime}
-                  onChange={(e) => handleStoreTimeChange('endTime', e.target.value)}
+                  onChange={(e) =>
+                    handleStoreTimeChange("endTime", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -421,9 +370,13 @@ const WorkingHoursForm = ({
         {/* Store Pickup Timings */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">Store Pickup Timings</h3>
+            <h3 className="text-lg font-medium text-gray-900">
+              Store Pickup Timings
+            </h3>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Same as store timings</span>
+              <span className="text-sm text-gray-600">
+                Same as store timings
+              </span>
               <div className="w-[100px]">
                 <Slider
                   value={isSameTimings ? 1 : 0}
@@ -444,20 +397,26 @@ const WorkingHoursForm = ({
 
           {!isSameTimings && (
             <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700">Pickup Hours:</span>
+              <span className="text-sm font-medium text-gray-700">
+                Pickup Hours:
+              </span>
               <div className="flex items-center space-x-2 flex-1">
                 <input
                   type="time"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                   value={pickupTime.startTime}
-                  onChange={(e) => handlePickupTimeChange('startTime', e.target.value)}
+                  onChange={(e) =>
+                    handlePickupTimeChange("startTime", e.target.value)
+                  }
                 />
                 <span className="text-gray-500">to</span>
                 <input
                   type="time"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                   value={pickupTime.endTime}
-                  onChange={(e) => handlePickupTimeChange('endTime', e.target.value)}
+                  onChange={(e) =>
+                    handlePickupTimeChange("endTime", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -815,9 +774,9 @@ const Steps = () => {
         </div>
         {/* Progress Line */}
         <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 -z-10">
-          <div 
+          <div
             className="h-full bg-blue-600 transition-all duration-300"
-            style={{ width: '0%' }}
+            style={{ width: "0%" }}
           />
         </div>
       </div>
@@ -828,19 +787,30 @@ const Steps = () => {
 const StoreDetailsStep = ({
   handleInputChange,
   locationId,
-  onNext
+  onNext,
+  onStoreCreated
 }: {
   handleInputChange: (key: string, value: any) => void;
   locationId: number;
   onNext: () => void;
+  onStoreCreated: (locationId: number) => void;
 }) => {
   return (
     <div className="space-y-6">
-      <StoreDetailsForm handleInputChange={handleInputChange} />
-      <WorkingHoursForm handleInputChange={handleInputChange} locationId={locationId} />
-      <HolidaysForm handleInputChange={handleInputChange} locationId={locationId} />
-      <TemporaryCloseForm handleInputChange={handleInputChange} locationId={locationId} />
-      
+      <StoreDetailsForm handleInputChange={handleInputChange} onStoreCreated={onStoreCreated} />
+      <WorkingHoursForm
+        handleInputChange={handleInputChange}
+        locationId={locationId}
+      />
+      <HolidaysForm
+        handleInputChange={handleInputChange}
+        locationId={locationId}
+      />
+      <TemporaryCloseForm
+        handleInputChange={handleInputChange}
+        locationId={locationId}
+      />
+
       <div className="flex justify-end gap-4 mt-8">
         <button
           onClick={onNext}
@@ -855,14 +825,433 @@ const StoreDetailsStep = ({
 
 const ServiceabilityStep = ({
   handleInputChange,
-  onBack
+  onBack,
+  locationId
 }: {
   handleInputChange: (key: string, value: any) => void;
   onBack: () => void;
+  locationId: number | null;
 }) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { data: categories, loading: categoriesLoading } = useSelector(
+    (state: RootState) => state.data.productCategories
+  );
+  const [selectedDomain, setSelectedDomain] = useState<number | null>(null);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
+  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedShippingDistance, setSelectedShippingDistance] = useState("");
+  const [radiusDistance, setRadiusDistance] = useState("");
+  const [serviceabilityData, setServiceabilityData] = useState<any[]>([]);
+  const [loadingServiceability, setLoadingServiceability] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingServiceability, setEditingServiceability] = useState<any>(null);
+  const [selectedDomainName, setSelectedDomainName] = useState<string>('');
+  const [selectedSubCategoryNames, setSelectedSubCategoryNames] = useState<string[]>([]);
+
+  // Fetch categories when component mounts
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        await dispatch(getCategories());
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("Failed to fetch categories");
+      }
+    };
+
+    fetchCategories();
+  }, [dispatch]);
+
+  // Fetch serviceability data when component mounts
+  useEffect(() => {
+    const fetchServiceability = async () => {
+      setLoadingServiceability(true);
+      try {
+        console.log('Fetching serviceability with locationId (before API call):', locationId);
+        if (!locationId) {
+          console.warn('No locationId available for getServiceability API call');
+          return;
+        }
+        const response = await dispatch(getServiceability(locationId));
+        console.log('Fetching serviceability with locationId (after API call):', locationId);
+        console.log('Serviceability API response:', response);
+        
+        if (response?.data) {
+          const transformedData = response.data.map((item: any) => ({
+            domainServed: item.category,
+            locationName: item.location?.name || "",
+            shippingRadius: item.pan_india
+              ? "Pan India"
+              : item.zone
+              ? "Zone"
+              : item.shipping_radius
+              ? `${item.shipping_radius} KM`
+              : "-",
+          }));
+          setServiceabilityData(transformedData);
+        }
+      } catch (error) {
+        console.error("Error fetching serviceability:", error);
+        toast.error("Failed to fetch serviceability data");
+      } finally {
+        setLoadingServiceability(false);
+      }
+    };
+
+    fetchServiceability();
+  }, [dispatch, locationId]);
+
+  const handleDomainChange = async (value: string) => {
+    const domainId = parseInt(value);
+    setSelectedDomain(domainId);
+    
+    // Find and store the domain name
+    const selectedCategory = categories?.find(cat => cat.id.toString() === value);
+    if (selectedCategory) {
+      setSelectedDomainName(selectedCategory.name);
+    }
+
+    handleInputChange('domain', value);
+
+    if (domainId) {
+      setLoadingSubCategories(true);
+      try {
+        const response = await dispatch(getSubCategories(domainId));
+        if (response?.data) {
+          setSubCategories(response.data);
+          setSelectedCategories([]);
+          setSelectedSubCategoryNames([]);
+        }
+      } catch (error) {
+        console.error('Error fetching subcategories:', error);
+        toast.error('Failed to fetch subcategories');
+      } finally {
+        setLoadingSubCategories(false);
+      }
+    } else {
+      setSubCategories([]);
+      setSelectedCategories([]);
+      setSelectedSubCategoryNames([]);
+    }
+  };
+
+  const handleCategoryChange = (values: string[]) => {
+    setSelectedCategories(values);
+    
+    // Store the names of selected subcategories
+    const names = values.map(value => {
+      const subCategory = subCategories.find(cat => cat.id.toString() === value);
+      return subCategory?.name || '';
+    }).filter(name => name !== '');
+    
+    setSelectedSubCategoryNames(names);
+    handleInputChange('categories', values);
+  };
+
+  const handleShippingDistanceChange = (value: string) => {
+    setSelectedShippingDistance(value);
+    handleInputChange("shippingDistance", value);
+  };
+
+  const handleCreateStoreLocation = async (data: any) => {
+    try {
+      const response = await dispatch(createStoreLocation(data));
+      if (response?.meta?.status && response?.data?.id) {
+        toast.success("Store location created successfully");
+        // Store the location ID
+        setLocationId(response.data.id);
+      }
+    } catch (error) {
+      console.error('Error creating store location:', error);
+      toast.error('Failed to create store location');
+    }
+  };
+
+  const handleSaveAndNext = async () => {
+    try {
+      if (!selectedDomain || selectedCategories.length === 0 || !selectedShippingDistance) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+
+      if (!locationId) {
+        toast.error("Please create store location first");
+        onBack(); // Go back to store creation step
+        return;
+      }
+
+      console.log('Creating serviceability with locationId:', locationId);
+
+      let payload: CreateServiceabilityPayload = {
+        location_id: locationId,
+        category: selectedDomainName,
+        sub_categories: selectedSubCategoryNames,
+        shipping_radius: null
+      };
+
+      console.log('Serviceability payload:', payload);
+
+      // Add shipping type specific fields
+      switch (selectedShippingDistance) {
+        case "Pan India":
+          payload.pan_india = true;
+          break;
+        case "Zone":
+          payload.zone = true;
+          break;
+        case "Radius":
+          if (!radiusDistance) {
+            toast.error("Please enter radius distance");
+            return;
+          }
+          payload.shipping_radius = parseInt(radiusDistance);
+          break;
+        default:
+          toast.error("Please select shipping distance type");
+          return;
+      }
+
+      console.log('Final payload with shipping type:', payload);
+
+      const response = await dispatch(createServiceability(payload));
+      console.log('Serviceability creation response:', response);
+
+      if (response?.meta?.status && response?.data?.id) {
+        toast.success("Serviceability created successfully");
+        navigate(`/dashboard/seller-settings/location-services/shipping-details/${response.data.id}`);
+      } else {
+        toast.error("Failed to get serviceability ID");
+      }
+    } catch (error) {
+      console.error("Error creating serviceability:", error);
+      toast.error("Failed to create serviceability");
+    }
+  };
+
+  const handleEditClick = async (row: any) => {
+    try {
+      // Get the original serviceability data from the API response
+      const response = await dispatch(getServiceability(locationId));
+      const serviceabilityItem = response.data.find(
+        (item: any) => item.category === row.domainServed
+      );
+
+      if (serviceabilityItem) {
+        // Set domain
+        setSelectedDomain(parseInt(serviceabilityItem.category));
+
+        // Fetch and set subcategories for the selected domain
+        const subCategoriesResponse = await dispatch(
+          getSubCategories(parseInt(serviceabilityItem.category))
+        );
+        if (subCategoriesResponse?.data) {
+          setSubCategories(subCategoriesResponse.data);
+          // Set selected subcategories
+          setSelectedCategories(serviceabilityItem.sub_categories || []);
+        }
+
+        // Set shipping distance based on the type
+        let shippingType = "";
+        if (serviceabilityItem.pan_india) {
+          shippingType = "Pan India";
+        } else if (serviceabilityItem.zone) {
+          shippingType = "Zone";
+        } else if (serviceabilityItem.shipping_radius) {
+          shippingType = "Radius";
+          setRadiusDistance(serviceabilityItem.shipping_radius.toString());
+        }
+        setSelectedShippingDistance(shippingType);
+
+        // Store the original item ID for updating
+        setEditingServiceability({
+          ...serviceabilityItem,
+          id: serviceabilityItem.id,
+        });
+      }
+
+      setShowEditModal(true);
+    } catch (error) {
+      console.error("Error fetching serviceability details:", error);
+      toast.error("Failed to load serviceability details");
+    }
+  };
+
+  // Columns for the serviceability table
+  const serviceabilityColumns: Column[] = [
+    {
+      id: "domainServed",
+      key: "domainServed",
+      label: "Domain Served",
+    },
+    {
+      id: "locationName",
+      key: "locationName",
+      label: "Location Name",
+    },
+    {
+      id: "shippingRadius",
+      key: "shippingRadius",
+      label: "Shipping radius",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Action",
+      type: "actions",
+      actions: [
+        {
+          label: "Edit",
+          icon: "edit",
+          onClick: handleEditClick,
+        },
+      ],
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Add your serviceability form components here */}
+    <div className="space-y-8">
+      <SectionContainer>
+        <div className="space-y-6">
+          <h2 className="text-lg font-medium text-gray-900">
+            Serviceability Details
+          </h2>
+          <p className="text-sm text-gray-500">
+            Add a new location that you can serve and provide serviceability.
+          </p>
+
+          <AddForm
+            data={[
+              {
+                type: "select",
+                key: "domain",
+                label: "Domain",
+                required: true,
+                placeholder: "Select Domain",
+                value: selectedDomain?.toString() || "",
+                options: categoriesLoading
+                  ? []
+                  : (categories || []).map((category: any) => ({
+                      label: category.name,
+                      value: category.id.toString(),
+                    })),
+                onChange: handleDomainChange,
+                handleSelectonChange: handleDomainChange,
+              },
+              {
+                type: "select",
+                key: "categories",
+                label: "Categories",
+                required: true,
+                placeholder: "Select Categories",
+                multiple: true,
+                value: selectedCategories,
+                options: loadingSubCategories
+                  ? []
+                  : subCategories.map((subCat: any) => ({
+                      label: subCat.name,
+                      value: subCat.id.toString(),
+                    })),
+                onChange: handleCategoryChange,
+              },
+              {
+                type: "select",
+                key: "shippingDistance",
+                label: "Shipping Distance",
+                required: true,
+                placeholder: "Shipping Distance",
+                value: selectedShippingDistance,
+                options: [
+                  {
+                    label: "Pan India",
+                    value: "Pan India",
+                    lookup_code: "PAN_INDIA",
+                  },
+                  { label: "Zone", value: "Zone", lookup_code: "ZONE" },
+                  { label: "Radius", value: "Radius", lookup_code: "RADIUS" },
+                ],
+                onChange: handleShippingDistanceChange,
+              },
+              ...(selectedShippingDistance === "Radius"
+                ? [
+                    {
+                      type: "text",
+                      key: "radiusDistance",
+                      label: "Radius Distance (in KM)",
+                      required: true,
+                      placeholder: "Enter radius in kilometers",
+                      value: radiusDistance,
+                      onChange: (value: string) => {
+                        // Allow only numbers
+                        const numericValue = value.replace(/[^0-9]/g, "");
+                        setRadiusDistance(numericValue);
+                        handleInputChange("radiusDistance", numericValue);
+                      },
+                    },
+                  ]
+                : []),
+            ]}
+            handleInputonChange={(key, value) => {
+              if (key === "shippingDistance") {
+                handleShippingDistanceChange(value);
+              } else if (key === "radiusDistance") {
+                const numericValue = value.replace(/[^0-9]/g, "");
+                setRadiusDistance(numericValue);
+                handleInputChange(key, numericValue);
+              }
+            }}
+            handleSelectonChange={(key, value) => {
+              console.log("Select onChange:", key, value);
+              if (key === "domain") {
+                handleDomainChange(value);
+              } else if (key === "categories") {
+                handleCategoryChange(value);
+              } else if (key === "shippingDistance") {
+                handleShippingDistanceChange(value);
+              }
+            }}
+          />
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSaveAndNext}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              disabled={
+                !selectedDomain ||
+                selectedCategories.length === 0 ||
+                !selectedShippingDistance
+              }
+            >
+              SAVE & NEXT
+            </button>
+          </div>
+        </div>
+      </SectionContainer>
+
+      {/* Added Serviceability Section */}
+      <SectionContainer>
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium text-gray-900">
+            Added Serviceability
+          </h2>
+          <p className="text-sm text-gray-500">
+            List of all the existing serviceable area
+          </p>
+
+          {loadingServiceability ? (
+            <div className="text-center py-4">Loading...</div>
+          ) : (
+            <CustomTable
+              headCells={serviceabilityColumns}
+              data={serviceabilityData}
+              pagination={false}
+            />
+          )}
+        </div>
+      </SectionContainer>
+
+      {/* Navigation Buttons */}
       <div className="flex justify-between gap-4 mt-8">
         <button
           onClick={onBack}
@@ -871,11 +1260,149 @@ const ServiceabilityStep = ({
           Back
         </button>
         <button
+          onClick={handleSaveAndNext}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          disabled={
+            !selectedDomain ||
+            selectedCategories.length === 0 ||
+            !selectedShippingDistance
+          }
         >
-          Save
+          SAVE & NEXT
         </button>
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Edit Serviceability</h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  // Reset states when closing
+                  setSelectedDomain(null);
+                  setSelectedCategories([]);
+                  setSelectedShippingDistance("");
+                  setRadiusDistance("");
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <AddForm
+              data={[
+                {
+                  type: "select",
+                  key: "domain",
+                  label: "Domain",
+                  required: true,
+                  placeholder: "Select Domain",
+                  value: selectedDomain?.toString() || "",
+                  options: categoriesLoading
+                    ? []
+                    : (categories || []).map((category: any) => ({
+                        label: category.name,
+                        value: category.id.toString(),
+                      })),
+                  onChange: handleDomainChange,
+                },
+                {
+                  type: "select",
+                  key: "categories",
+                  label: "Categories",
+                  required: true,
+                  placeholder: "Select Categories",
+                  multiple: true,
+                  value: selectedCategories,
+                  options: loadingSubCategories
+                    ? []
+                    : subCategories.map((subCat: any) => ({
+                        label: subCat.name,
+                        value: subCat.id.toString(),
+                      })),
+                  onChange: handleCategoryChange,
+                  disabled: !selectedDomain,
+                },
+                {
+                  type: "select",
+                  key: "shippingDistance",
+                  label: "Shipping Distance",
+                  required: true,
+                  placeholder: "Shipping Distance",
+                  value: selectedShippingDistance,
+                  options: [
+                    {
+                      label: "Pan India",
+                      value: "Pan India",
+                      lookup_code: "PAN_INDIA",
+                    },
+                    { label: "Zone", value: "Zone", lookup_code: "ZONE" },
+                    { label: "Radius", value: "Radius", lookup_code: "RADIUS" },
+                  ],
+                  onChange: handleShippingDistanceChange,
+                },
+                ...(selectedShippingDistance === "Radius"
+                  ? [
+                      {
+                        type: "text",
+                        key: "radiusDistance",
+                        label: "Radius Distance (in KM)",
+                        required: true,
+                        placeholder: "Enter radius in kilometers",
+                        value: radiusDistance,
+                        onChange: (value: string) => {
+                          const numericValue = value.replace(/[^0-9]/g, "");
+                          setRadiusDistance(numericValue);
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
+              handleInputonChange={(key, value) => {
+                if (key === "radiusDistance") {
+                  const numericValue = value.replace(/[^0-9]/g, "");
+                  setRadiusDistance(numericValue);
+                }
+              }}
+              handleSelectonChange={(key, value) => {
+                if (key === "domain") {
+                  handleDomainChange(value);
+                } else if (key === "categories") {
+                  handleCategoryChange(value);
+                } else if (key === "shippingDistance") {
+                  handleShippingDistanceChange(value);
+                }
+              }}
+            />
+
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  // Reset states when closing
+                  setSelectedDomain(null);
+                  setSelectedCategories([]);
+                  setSelectedShippingDistance("");
+                  setRadiusDistance("");
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveAndNext}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -907,6 +1434,7 @@ const LocationServices = () => {
     holidays: [],
     isTemporarilyClosed: false,
   });
+  const [createdLocationId, setCreatedLocationId] = useState<number | null>(null);
 
   // 2. All handlers
   const handleInputChange = (key: string, value: any) => {
@@ -919,6 +1447,11 @@ const LocationServices = () => {
   const handleSubmit = () => {
     console.log("Form submitted:", formData);
     navigate("/dashboard/seller-settings/location-services");
+  };
+
+  const handleStoreCreated = (locationId: number) => {
+    console.log('Store created with ID:', locationId);
+    setCreatedLocationId(locationId);
   };
 
   // 3. Component render logic
@@ -934,7 +1467,9 @@ const LocationServices = () => {
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/dashboard/seller-settings/location-services")}
+            onClick={() =>
+              navigate("/dashboard/seller-settings/location-services")
+            }
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
             <ArrowLeft size={20} />
@@ -945,15 +1480,17 @@ const LocationServices = () => {
         <Steps />
 
         {currentStep === 1 ? (
-          <StoreDetailsStep 
+          <StoreDetailsStep
             handleInputChange={handleInputChange}
-            locationId={6}
+            locationId={createdLocationId || 0}
             onNext={() => setCurrentStep(2)}
+            onStoreCreated={handleStoreCreated}
           />
         ) : (
-          <ServiceabilityStep 
+          <ServiceabilityStep
             handleInputChange={handleInputChange}
             onBack={() => setCurrentStep(1)}
+            locationId={createdLocationId}
           />
         )}
       </div>
@@ -1266,8 +1803,10 @@ const ShippingTab = ({
 // Add this new component
 const StoreDetailsForm = ({
   handleInputChange,
+  onStoreCreated
 }: {
   handleInputChange: (key: string, value: any) => void;
+  onStoreCreated: (locationId: number) => void;
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [locationTypes, setLocationTypes] = useState<LocationType[]>([]);
@@ -1280,7 +1819,7 @@ const StoreDetailsForm = ({
       city: "",
       state: "",
       country: "India",
-      area_code: ""
+      area_code: "",
     },
     location_type_id: 0,
     email: "",
@@ -1290,7 +1829,7 @@ const StoreDetailsForm = ({
     longitude: "72.5280284",
     opening_time: "2023-12-11T01:10:43+05:30",
     closing_time: "2023-12-11T13:25:49+05:30",
-    contact_name: ""
+    contact_name: "",
   });
 
   // Fetch location types on component mount
@@ -1302,8 +1841,8 @@ const StoreDetailsForm = ({
           setLocationTypes(response.data);
         }
       } catch (error) {
-        console.error('Error fetching location types:', error);
-        toast.error('Failed to fetch store types');
+        console.error("Error fetching location types:", error);
+        toast.error("Failed to fetch store types");
       }
     };
 
@@ -1313,30 +1852,39 @@ const StoreDetailsForm = ({
   const handleSave = async () => {
     try {
       const response = await dispatch(createStoreLocation(formData));
+      console.log('Store creation response:', response);
+      
       if (response?.meta?.status) {
         toast.success("Store created successfully");
-        console.log("Store created successfully");
+        if (response.data?.id) {
+          const createdLocationId = response.data.id;
+          console.log('Created store location ID (before passing to onStoreCreated):', createdLocationId);
+          onStoreCreated(createdLocationId);
+          console.log('Created store location ID (after passing to onStoreCreated):', createdLocationId);
+        } else {
+          console.warn('Store created but no ID received in response');
+        }
       }
     } catch (error) {
-      toast.error("Failed to create store");  
       console.error("Failed to create store:", error);
+      toast.error("Failed to create store");
     }
   };
 
   const handleFormChange = (key: string, value: any) => {
-    if (key.includes('.')) {
-      const [parent, child] = key.split('.');
-      setFormData(prev => ({
+    if (key.includes(".")) {
+      const [parent, child] = key.split(".");
+      setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [key]: value
+        [key]: value,
       }));
     }
   };
@@ -1351,7 +1899,7 @@ const StoreDetailsForm = ({
             label: "Store Name",
             required: true,
             value: formData.name,
-            onChange: (value) => handleFormChange('name', value)
+            onChange: (value) => handleFormChange("name", value),
           },
           {
             type: "select",
@@ -1359,11 +1907,11 @@ const StoreDetailsForm = ({
             label: "Store Type",
             required: true,
             value: formData.location_type_id,
-            options: locationTypes.map(type => ({
+            options: locationTypes.map((type) => ({
               label: type.display_name,
-              value: type.id
+              value: type.id,
             })),
-            onChange: (value) => handleFormChange('location_type_id', value)
+            onChange: (value) => handleFormChange("location_type_id", value),
           },
           {
             type: "text",
@@ -1371,7 +1919,7 @@ const StoreDetailsForm = ({
             label: "Building",
             required: true,
             value: formData.address.building,
-            onChange: (value) => handleFormChange('address.building', value)
+            onChange: (value) => handleFormChange("address.building", value),
           },
           {
             type: "text",
@@ -1379,7 +1927,7 @@ const StoreDetailsForm = ({
             label: "Locality",
             required: true,
             value: formData.address.locality,
-            onChange: (value) => handleFormChange('address.locality', value)
+            onChange: (value) => handleFormChange("address.locality", value),
           },
           {
             type: "text",
@@ -1387,7 +1935,7 @@ const StoreDetailsForm = ({
             label: "City",
             required: true,
             value: formData.address.city,
-            onChange: (value) => handleFormChange('address.city', value)
+            onChange: (value) => handleFormChange("address.city", value),
           },
           {
             type: "text",
@@ -1395,7 +1943,7 @@ const StoreDetailsForm = ({
             label: "State",
             required: true,
             value: formData.address.state,
-            onChange: (value) => handleFormChange('address.state', value)
+            onChange: (value) => handleFormChange("address.state", value),
           },
           {
             type: "text",
@@ -1403,7 +1951,7 @@ const StoreDetailsForm = ({
             label: "Postal Code",
             required: true,
             value: formData.address.area_code,
-            onChange: (value) => handleFormChange('address.area_code', value)
+            onChange: (value) => handleFormChange("address.area_code", value),
           },
           {
             type: "text",
@@ -1411,7 +1959,7 @@ const StoreDetailsForm = ({
             label: "Email",
             required: true,
             value: formData.email,
-            onChange: (value) => handleFormChange('email', value)
+            onChange: (value) => handleFormChange("email", value),
           },
           {
             type: "text",
@@ -1419,7 +1967,7 @@ const StoreDetailsForm = ({
             label: "GST Number",
             required: true,
             value: formData.gst_number,
-            onChange: (value) => handleFormChange('gst_number', value)
+            onChange: (value) => handleFormChange("gst_number", value),
           },
           {
             type: "text",
@@ -1427,7 +1975,7 @@ const StoreDetailsForm = ({
             label: "Mobile Number",
             required: true,
             value: formData.mobile_number,
-            onChange: (value) => handleFormChange('mobile_number', value)
+            onChange: (value) => handleFormChange("mobile_number", value),
           },
           {
             type: "text",
@@ -1435,8 +1983,8 @@ const StoreDetailsForm = ({
             label: "Contact Name",
             required: true,
             value: formData.contact_name,
-            onChange: (value) => handleFormChange('contact_name', value)
-          }
+            onChange: (value) => handleFormChange("contact_name", value),
+          },
         ]}
         handleInputonChange={handleFormChange}
         handleSelectonChange={handleFormChange}
@@ -1456,7 +2004,7 @@ const StoreDetailsForm = ({
 // Create HolidaysForm component
 const HolidaysForm = ({
   handleInputChange,
-  locationId
+  locationId,
 }: {
   handleInputChange: (key: string, value: any) => void;
   locationId: number;
@@ -1467,24 +2015,26 @@ const HolidaysForm = ({
   const handleSave = async () => {
     try {
       // Ensure we have an array of dates
-      const holidayArray = Array.isArray(selectedHolidays) ? selectedHolidays : [selectedHolidays];
-      
+      const holidayArray = Array.isArray(selectedHolidays)
+        ? selectedHolidays
+        : [selectedHolidays];
+
       // Format dates to match API requirement
-      const formattedHolidays = holidayArray.filter(Boolean).map(date => 
-        `${date}T00:00:00+05:30`
-      );
+      const formattedHolidays = holidayArray
+        .filter(Boolean)
+        .map((date) => `${date}T00:00:00+05:30`);
 
       const payload = {
-        holidays: formattedHolidays
+        holidays: formattedHolidays,
       };
 
       const response = await dispatch(updateWorkingHours(locationId, payload));
       if (response?.meta?.status) {
-        toast.success('Holidays updated successfully');
+        toast.success("Holidays updated successfully");
       }
     } catch (error) {
-      toast.error('Failed to update holidays');
-      console.error('Error updating holidays:', error);
+      toast.error("Failed to update holidays");
+      console.error("Error updating holidays:", error);
     }
   };
 
@@ -1509,8 +2059,8 @@ const HolidaysForm = ({
               // Ensure value is always an array
               const holidayArray = Array.isArray(value) ? value : [value];
               setSelectedHolidays(holidayArray);
-            }
-          }
+            },
+          },
         ]}
         handleInputonChange={(key, value) => {
           // Ensure value is always an array
@@ -1535,7 +2085,7 @@ const HolidaysForm = ({
 // Create TemporaryCloseForm component
 const TemporaryCloseForm = ({
   handleInputChange,
-  locationId
+  locationId,
 }: {
   handleInputChange: (key: string, value: any) => void;
   locationId: number;
@@ -1544,24 +2094,28 @@ const TemporaryCloseForm = ({
   const [isTemporarilyClosed, setIsTemporarilyClosed] = useState(false);
   const [temporaryClose, setTemporaryClose] = useState({
     startDate: "",
-    endDate: ""
+    endDate: "",
   });
 
   const handleSave = async () => {
     try {
       const payload = {
         is_temporary_close: isTemporarilyClosed,
-        temporary_close_start_time: isTemporarilyClosed ? `${temporaryClose.startDate}T00:00:00.000Z` : null,
-        temporary_close_end_time: isTemporarilyClosed ? `${temporaryClose.endDate}T00:00:00.000Z` : null
+        temporary_close_start_time: isTemporarilyClosed
+          ? `${temporaryClose.startDate}T00:00:00.000Z`
+          : null,
+        temporary_close_end_time: isTemporarilyClosed
+          ? `${temporaryClose.endDate}T00:00:00.000Z`
+          : null,
       };
 
       const response = await dispatch(updateWorkingHours(locationId, payload));
       if (response?.meta?.status) {
-        toast.success('Temporary close status updated successfully');
+        toast.success("Temporary close status updated successfully");
       }
     } catch (error) {
-      toast.error('Failed to update temporary close status');
-      console.error('Error updating temporary close status:', error);
+      toast.error("Failed to update temporary close status");
+      console.error("Error updating temporary close status:", error);
     }
   };
 
@@ -1580,11 +2134,11 @@ const TemporaryCloseForm = ({
             key: "isTemporarilyClosed",
             label: "Close Store temporarily",
             value: isTemporarilyClosed,
-            onChange: (value) => setIsTemporarilyClosed(value)
-          }
+            onChange: (value) => setIsTemporarilyClosed(value),
+          },
         ]}
         handleInputonChange={(key, value) => {
-          if (key === 'isTemporarilyClosed') {
+          if (key === "isTemporarilyClosed") {
             setIsTemporarilyClosed(value);
           }
           handleInputChange(key, value);
@@ -1602,7 +2156,12 @@ const TemporaryCloseForm = ({
               type="date"
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
               value={temporaryClose.startDate}
-              onChange={(e) => setTemporaryClose(prev => ({ ...prev, startDate: e.target.value }))}
+              onChange={(e) =>
+                setTemporaryClose((prev) => ({
+                  ...prev,
+                  startDate: e.target.value,
+                }))
+              }
             />
           </div>
 
@@ -1614,7 +2173,12 @@ const TemporaryCloseForm = ({
               type="date"
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
               value={temporaryClose.endDate}
-              onChange={(e) => setTemporaryClose(prev => ({ ...prev, endDate: e.target.value }))}
+              onChange={(e) =>
+                setTemporaryClose((prev) => ({
+                  ...prev,
+                  endDate: e.target.value,
+                }))
+              }
             />
           </div>
         </div>

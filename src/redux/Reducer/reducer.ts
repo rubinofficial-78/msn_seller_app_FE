@@ -157,6 +157,9 @@ import {
   GET_STORE_LOCATIONS_REQUEST,
   GET_STORE_LOCATIONS_SUCCESS,
   GET_STORE_LOCATIONS_FAILURE,
+  UPDATE_SHIPPING_SERVICES_REQUEST,
+  UPDATE_SHIPPING_SERVICES_SUCCESS,
+  UPDATE_SHIPPING_SERVICES_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -1829,6 +1832,24 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           loading: false,
           error: action.payload
         }
+      };
+    case UPDATE_SHIPPING_SERVICES_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case UPDATE_SHIPPING_SERVICES_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        error: null
+      };
+    case UPDATE_SHIPPING_SERVICES_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
       };
     default:
       return state;

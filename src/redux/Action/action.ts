@@ -202,7 +202,13 @@ import {
   GET_STORE_LOCATIONS_FAILURE,
   CREATE_STORE_LOCATION_REQUEST,
   CREATE_STORE_LOCATION_SUCCESS,
-  CREATE_STORE_LOCATION_FAILURE
+  CREATE_STORE_LOCATION_FAILURE,
+  GET_SHIPPING_TYPE_LOOKUP_REQUEST,
+  GET_SHIPPING_TYPE_LOOKUP_SUCCESS,
+  GET_SHIPPING_TYPE_LOOKUP_FAILURE,
+  UPDATE_SHIPPING_SERVICES_REQUEST,
+  UPDATE_SHIPPING_SERVICES_SUCCESS,
+  UPDATE_SHIPPING_SERVICES_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -2694,15 +2700,18 @@ export const getCategories = (): ThunkAction<Promise<any>, RootState, unknown, A
   };
 };
 
-export const getSubCategories = (parentId: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+export const getSubCategories = (
+  parentCategoryId: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
-    dispatch({ type: GET_PRODUCT_CATEGORIES_REQUEST });
-
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_BASE_URL}/backend_master/catalog/product_category/?parent_category_id=${parentId}`,
+        `${API_BASE_URL}/backend_master/catalog/product_category/`,
         {
+          params: {
+            parent_category_id: parentCategoryId // Pass the selected domain ID as parent_category_id
+          },
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -2711,23 +2720,12 @@ export const getSubCategories = (parentId: number): ThunkAction<Promise<any>, Ro
       );
 
       if (response.data?.meta?.status) {
-        dispatch({
-          type: GET_PRODUCT_CATEGORIES_SUCCESS,
-          payload: {
-            data: response.data.data,
-            isSubCategory: true
-          }
-        });
         return response.data;
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch subcategories');
       }
     } catch (error) {
       console.error('Error fetching subcategories:', error);
-      dispatch({
-        type: GET_PRODUCT_CATEGORIES_FAILURE,
-        payload: error instanceof Error ? error.message : 'Failed to fetch subcategories'
-      });
       throw error;
     }
   };
@@ -3632,6 +3630,289 @@ export const updateWorkingHours = (
       }
     } catch (error) {
       console.error('Error updating working hours:', error);
+      throw error;
+    }
+  };
+};
+
+interface CreateServiceabilityPayload {
+  location_id: number;
+  shipping_radius: number | null;
+  category: string;
+  sub_categories: string[];
+  pan_india?: boolean;
+  zone?: boolean;
+}
+
+export const createServiceability = (
+  data: CreateServiceabilityPayload
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/serviceability_v1_2/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create serviceability');
+      }
+    } catch (error) {
+      console.error('Error creating serviceability:', error);
+      throw error;
+    }
+  };
+};
+
+export const getServiceability = (
+  locationId: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/mdm/serviceability_v1_2`,
+        {
+          params: {
+            location_id: locationId
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch serviceability');
+      }
+    } catch (error) {
+      console.error('Error fetching serviceability:', error);
+      throw error;
+    }
+  };
+};
+
+interface UpdateServiceabilityPayload {
+  shipping_radius: number | null;
+  category: string;
+  sub_categories: string[];
+  pan_india?: boolean;
+  zone?: boolean;
+}
+
+export const updateServiceability = (
+  serviceabilityId: number,
+  data: UpdateServiceabilityPayload
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/serviceability_v1_2/${serviceabilityId}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update serviceability');
+      }
+    } catch (error) {
+      console.error('Error updating serviceability:', error);
+      throw error;
+    }
+  };
+};
+
+interface GetShippingServicesParams {
+  serviceability_id: number;
+  per_page?: number;
+  page_no?: number;
+}
+
+export const getShippingServices = (
+  params: GetShippingServicesParams
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/mdm/shipping_services`,
+        {
+          params: {
+            serviceability_id: params.serviceability_id,
+            per_page: params.per_page || -1,
+            page_no: params.page_no || 1
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch shipping services');
+      }
+    } catch (error) {
+      console.error('Error fetching shipping services:', error);
+      throw error;
+    }
+  };
+};
+
+export const getShippingTypeLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/SHIPPING_TYPE`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch shipping types');
+      }
+    } catch (error) {
+      console.error('Error fetching shipping types:', error);
+      throw error;
+    }
+  };
+};
+
+export const getDeliveryTypeLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/ONDC_LOGISTICS_DELIVERY_TYPE`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch delivery types');
+      }
+    } catch (error) {
+      console.error('Error fetching delivery types:', error);
+      throw error;
+    }
+  };
+};
+
+export const getPreferencesLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/DELIVERY_TYPE_PREFERENCES`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch preferences');
+      }
+    } catch (error) {
+      console.error('Error fetching preferences:', error);
+      throw error;
+    }
+  };
+};
+
+export const updateShippingServices = (
+  id: number,
+  data: {
+    shipping_charge: number;
+    categories: string[];
+    transmit_time: number;
+    shipping_type: {
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+      createdAt: string;
+      updatedAt: string | null;
+      label: string;
+    } | null;
+    states: Array<{
+      name: string;
+      selected: boolean;
+    }>;
+    delivery_type: any;
+    shipping_preferences: any;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_SHIPPING_SERVICES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/shipping_services/${id}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_SHIPPING_SERVICES_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update shipping services');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update shipping services';
+      dispatch({
+        type: UPDATE_SHIPPING_SERVICES_FAILURE,
+        payload: errorMessage
+      });
       throw error;
     }
   };

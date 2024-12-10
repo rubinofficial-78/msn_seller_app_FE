@@ -567,6 +567,12 @@ const AddProductSeller = () => {
             return;
           }
 
+          // Add MRP validation
+          if (Number(formData.mrp) < Number(formData.salesPrice)) {
+            toast.error("MRP should be greater than or equal to sales price");
+            return;
+          }
+
           const selectedPaymentMode = paymentModes?.find(
             (mode) => mode.lookup_code === formData.paymentMode
           );

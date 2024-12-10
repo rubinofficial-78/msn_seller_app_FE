@@ -238,13 +238,13 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                 className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                                 title={action.label}
                               >
-                                {typeof action.icon === 'string' ? (
-                                  action.icon === 'edit' ? (
+                                {typeof action.icon === "string" ? (
+                                  action.icon === "edit" ? (
                                     <Edit size={18} />
-                                  ) : action.icon === 'eye' ? (
+                                  ) : action.icon === "eye" ? (
                                     <Eye size={18} />
-                                  ) : action.icon === 'toggle' ? (
-                                    row.status === 'Active' ? (
+                                  ) : action.icon === "toggle" ? (
+                                    row.status === "Active" ? (
                                       <ToggleRight size={18} />
                                     ) : (
                                       <ToggleLeft size={18} />

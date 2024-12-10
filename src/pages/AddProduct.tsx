@@ -469,7 +469,17 @@ const AddProduct = () => {
           break;
 
         case "Pricing Details":
-          // Get the selected payment mode's ID
+          if (!formData.mrp || !formData.salesPrice || !formData.paymentMode) {
+            toast.error("Please fill all pricing fields");
+            return;
+          }
+
+          // Add MRP validation
+          if (Number(formData.mrp) < Number(formData.salesPrice)) {
+            toast.error("MRP should be greater than or equal to sales price");
+            return;
+          }
+
           const selectedPaymentMode = paymentModes?.find(
             (mode) => mode.lookup_code === formData.paymentMode
           );

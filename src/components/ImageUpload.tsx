@@ -148,11 +148,13 @@ export default function ImageUpload({
 }) {
   const dispatch = useDispatch();
   const [images, setImages] = useState([]);
-  const [uploadedImage, setUploadedImage] = useState(value);
+  const [uploadedImage, setUploadedImage] = useState(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
   useEffect(() => {
-    setUploadedImage(value);
+    if (value && typeof value === 'string' && value.trim() !== '') {
+      setUploadedImage(value);
+    }
   }, [value]);
 
   useEffect(() => {

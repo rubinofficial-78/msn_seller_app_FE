@@ -266,8 +266,8 @@ export default function VerifyOTP() {
             {/* OTP Form */}
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* OTP Input Grid with Eye Icon */}
-              <div className="relative">
-                <div className="flex justify-center gap-3">
+              <div className="relative w-full max-w-md mx-auto">
+                <div className="flex justify-center gap-3 mb-2">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -297,21 +297,21 @@ export default function VerifyOTP() {
                         document.getElementById(`otp-${focusIndex}`)?.focus();
                       }}
                       className="w-12 h-12 text-center text-xl font-semibold 
-                                 bg-white/80 border-2 border-[#FFE4C8]/50 rounded-lg 
-                                 text-gray-900 
-                                 focus:border-[#FFE4C8]/70 focus:ring-0 
-                                 transition-all duration-300
-                                 hover:border-[#FFE4C8]/60
-                                 shadow-sm"
+                                bg-white/80 border-2 border-[#FFE4C8]/50 rounded-lg 
+                                text-gray-900 
+                                focus:border-[#FFE4C8]/70 focus:ring-0 
+                                transition-all duration-300
+                                hover:border-[#FFE4C8]/60
+                                shadow-sm"
                     />
                   ))}
                 </div>
                 
-                {/* Eye Icon Button */}
+                {/* Eye Icon Button - Moved below the OTP inputs */}
                 <button
                   type="button"
                   onClick={toggleOTPVisibility}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 -right-8
+                  className="absolute right-0 -bottom-8
                            p-2 text-gray-500 hover:text-gray-700
                            transition-colors duration-200"
                 >

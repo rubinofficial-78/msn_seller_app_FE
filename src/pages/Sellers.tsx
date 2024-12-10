@@ -24,7 +24,7 @@ const columns = [
   },
   {
     id: "storeName",
-    key: "store_details[0].name",
+    key: "store_details.0.name",
     label: "Store Name",
     minWidth: 150,
   },
@@ -38,7 +38,7 @@ const columns = [
   },
   {
     id: "address",
-    key: "default_address",
+    key: "store_details.0.default_address.city",
     label: "Address",
     minWidth: 200,
     format: (address: any) =>
@@ -51,17 +51,19 @@ const columns = [
     key: "business_details.gstin",
     label: "GST No",
     minWidth: 150,
+    format: (gstin: string) => gstin || "--",
   },
   {
     id: "productCounts",
-    key: "product_counts",
+    key: "store_details.0.product_counts",
     label: "Product Counts",
     minWidth: 120,
     type: "number",
+    format: (count: number) => count || 0,
   },
   {
     id: "ondc_live_date",
-    key: "ondc_live_date",
+    key: "store_details.0.activated_date",
     label: "ONDC Live Date",
     minWidth: 150,
     format: (date: string) =>
@@ -92,16 +94,17 @@ const columns = [
   },
   {
     id: "catalog_status",
-    key: "store_details[0].catalog_status",
+    key: "store_details.0.is_active",
     label: "Catalog Status",
     minWidth: 150,
-    format: (status: string) => status || "Not Available",
+    format: (isActive: boolean) => isActive ? "Active" : "Inactive",
   },
   {
     id: "company_status",
     key: "company_payment_status",
     label: "Company Status",
     minWidth: 150,
+    format: (status: string) => status || "Not Available",
   },
   {
     id: "store_status",
@@ -115,7 +118,7 @@ const columns = [
           status === "APPROVED"
             ? "bg-green-100 text-green-800"
             : status === "PENDING"
-            ? "bg-gray-100 text-gray-800"
+            ? "bg-yellow-100 text-yellow-800"
             : status === "REJECTED"
             ? "bg-red-100 text-red-800"
             : "bg-gray-100 text-gray-800"
@@ -130,18 +133,21 @@ const columns = [
     key: "parent.name",
     label: "Partner Name",
     minWidth: 150,
+    format: (name: string) => name || "-",
   },
   {
     id: "branchName",
     key: "parent.parent.name",
     label: "Branch Name",
     minWidth: 150,
+    format: (name: string) => name || "-",
   },
   {
     id: "companyName",
-    key: "parent.parent.parent.name",
+    key: "company_details.name",
     label: "Company Name",
     minWidth: 150,
+    format: (name: string) => name || "-",
   },
 ];
 

@@ -400,6 +400,7 @@ const AddSeller = () => {
         error?.response?.data?.meta?.message || error?.message;
       toast.error(errorMessage);
     }
+    navigate("/dashboard/sellers");
   };
 
   // Add image handling function

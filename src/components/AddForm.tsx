@@ -160,6 +160,29 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
       ) : (
         field.value ?? "--"
       );
+    case "email":
+      return edit ? (
+        <div>
+          <TailInput
+            fieldKey={field.key}
+            value={field.value || ""}
+            type={field.type}
+            placeholder={field.placeholder}
+            required={field.required}
+            disabled={field.disabled}
+            handleInputonChange={handlers.handleInputonChange}
+            startIcon={field.startIcon}
+            endIcon={field.endIcon}
+            index={handlers.index}
+            maxLength={field.maxLength}
+          />
+          {field.description && (
+            <p className="mt-1 text-sm text-gray-500">{field.description}</p>
+          )}
+        </div>
+      ) : (
+        field.value ?? "--"
+      );
 
     case "textarea":
       return edit ? (

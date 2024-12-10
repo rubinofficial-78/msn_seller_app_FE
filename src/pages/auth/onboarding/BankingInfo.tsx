@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
 import AddForm from "../../../components/AddForm";
@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const [isFormValid, setIsFormValid] = useState(false);
   
   const [formValues, setFormValues] = useState({
     bankName: "",
@@ -18,10 +19,73 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
     cancelledCheque: "",
   });
 
+  const validateForm = () => {
+    let isValid = true;
+
+    // Bank Name validation (max 10 characters)
+    if (!formValues.bankName.trim()) {
+      isValid = false;
+    } else if (formValues.bankName.length > 10) {
+      toast.error("Bank name should not exceed 10 characters");
+      isValid = false;
+    }
+
+    // IFSC Code validation (IFSC format: 4 characters followed by 0 and 6 characters)
+    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    if (!formValues.ifscCode.trim()) {
+      isValid = false;
+    } else if (!ifscRegex.test(formValues.ifscCode)) {
+      toast.error("Invalid IFSC code format (e.g., HDFC0123456)");
+      isValid = false;
+    }
+
+    // Account Number validation (12-16 digits)
+    const accountRegex = /^\d{12,16}$/;
+    if (!formValues.accountNumber.trim()) {
+      isValid = false;
+    } else if (!accountRegex.test(formValues.accountNumber)) {
+      toast.error("Account number should be 12-16 digits");
+      isValid = false;
+    }
+
+    // Beneficiary Name validation (max 10 characters)
+    if (!formValues.beneficiaryName.trim()) {
+      isValid = false;
+    } else if (formValues.beneficiaryName.length > 10) {
+      toast.error("Beneficiary name should not exceed 10 characters");
+      isValid = false;
+    }
+
+    // Cancelled Cheque validation
+    if (!formValues.cancelledCheque) {
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  useEffect(() => {
+    setIsFormValid(validateForm());
+  }, [formValues]);
+
   const handleInputChange = (key: string, value: any) => {
+    let processedValue = value;
+
+    // Format input based on field type
+    switch (key) {
+      case 'ifscCode':
+        processedValue = value.toUpperCase(); // Convert IFSC to uppercase
+        break;
+      case 'accountNumber':
+        processedValue = value.replace(/\D/g, ''); // Only allow digits
+        break;
+      default:
+        break;
+    }
+
     setFormValues((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: processedValue,
     }));
   };
 
@@ -132,7 +196,8 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               type="text"
               value={formValues.bankName}
               onChange={(e) => handleInputChange("bankName", e.target.value)}
-              placeholder="Bank Name"
+              placeholder="Bank Name (max 10 characters)"
+              maxLength={10}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -145,7 +210,8 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               type="text"
               value={formValues.ifscCode}
               onChange={(e) => handleInputChange("ifscCode", e.target.value)}
-              placeholder="IFSC Code"
+              placeholder="IFSC Code (e.g., HDFC0123456)"
+              maxLength={11}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -165,10 +231,9 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               id="account-number-input"
               type="text"
               value={formValues.accountNumber}
-              onChange={(e) =>
-                handleInputChange("accountNumber", e.target.value)
-              }
-              placeholder="Account number"
+              onChange={(e) => handleInputChange("accountNumber", e.target.value)}
+              placeholder="Account number (12-16 digits)"
+              maxLength={16}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -181,10 +246,9 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
               id="beneficiary-name-input"
               type="text"
               value={formValues.beneficiaryName}
-              onChange={(e) =>
-                handleInputChange("beneficiaryName", e.target.value)
-              }
-              placeholder="Name Of Beneficiary Account holder"
+              onChange={(e) => handleInputChange("beneficiaryName", e.target.value)}
+              placeholder="Beneficiary name (max 10 characters)"
+              maxLength={10}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -202,7 +266,7 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
       description:
         "Upload your canceled Cheque which is required for banking verifications and penny drop",
       showLable: false,
-      required: true
+      required: false
     },
   ];
 
@@ -226,7 +290,12 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
         <button
           id="go-to-dashboard-button"
           type="submit"
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={!isFormValid}
+          className={`px-6 py-2.5 rounded-lg transition-colors ${
+            isFormValid 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+          }`}
         >
           Go to Dashboard
         </button>

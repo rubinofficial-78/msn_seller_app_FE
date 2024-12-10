@@ -2,11 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../redux/store";
-import { getSellerById, updateSellerStatus, updateSellerDetails, activateSeller } from "../redux/Action/action";
+import {
+  getSellerById,
+  updateSellerStatus,
+  updateSellerDetails,
+  activateSeller,
+} from "../redux/Action/action";
 import { toast } from "react-toastify";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { format } from "date-fns";
-import axios from "axios";
+
 
 const ViewSeller = () => {
   const { id } = useParams();
@@ -20,8 +25,8 @@ const ViewSeller = () => {
     const fetchSellerDetails = async () => {
       try {
         const response = await dispatch(getSellerById(Number(id)));
-        if (response?.meta?.status) {
-          setSellerData(response.data);
+        if (response?.payload) {
+          setSellerData(response.payload);
         } else {
           toast.error("Failed to fetch seller details");
         }
@@ -128,7 +133,7 @@ const ViewSeller = () => {
       if (response?.meta?.status) {
         setSellerData({
           ...sellerData,
-          company_payment_status: "Active"
+          company_payment_status: "Active",
         });
         toast.success("Seller activated successfully");
       } else {
@@ -147,14 +152,12 @@ const ViewSeller = () => {
 
     setUpdating(true);
     try {
-      const response = await dispatch(
-        updateSellerStatus(Number(id), statusId)
-      );
-      
+      const response = await dispatch(updateSellerStatus(Number(id), statusId));
+
       if (response?.meta?.status) {
         setSellerData({
           ...sellerData,
-          activation_status: statusId === 96 ? "APPROVED" : "REJECTED"
+          activation_status: statusId === 96 ? "APPROVED" : "REJECTED",
         });
         toast.success(
           `Seller ${statusId === 96 ? "approved" : "rejected"} successfully`
@@ -213,57 +216,50 @@ const ViewSeller = () => {
         },
         {
           label: "Seller Activation Status",
-          value: sellerData?.activation_status || "--",
+          value: sellerData?.seller_activation_status  ,
         },
         {
           label: "Seller Onboarding Date",
-          value: formatDate(sellerData?.onboarding_date),
+          value: formatDate(sellerData?.createdAt),
         },
         {
           label: "Seller Activation Date",
-          value: formatDate(sellerData?.activation_date),
+          value: formatDate(sellerData?.seller_activation_datetime),
         },
         {
           label: "Seller Approval Date",
-          value: formatDate(sellerData?.approval_date),
+          value: formatDate(sellerData?.seller_approval_datetime),
         },
         {
           label: "Seller Activation Remarks",
-          value: sellerData?.activation_remarks || "--",
+          value: sellerData?.seller_activation_remarks_by_partner,
         },
         {
           label: "Store Description",
-          value: sellerData?.store_details?.[0]?.description || "--",
+          value: sellerData?.store_details?.[0]?.long_desc || "--",
         },
         {
           label: "Address",
-          value: sellerData?.store_details?.[0]?.address || "--",
+          value: sellerData?.store_details?.[0]?.default_address.address_line_1 || "--",
         },
         {
           label: "City",
-          value: sellerData?.store_details?.[0]?.city || "--",
+          value: sellerData?.store_details?.[0]?.default_address.city,
         },
         {
           label: "State",
-          value: sellerData?.store_details?.[0]?.state || "--",
+          value: sellerData?.store_details?.[0]?.default_address.state || "--",
         },
         {
           label: "Postal code",
-          value: sellerData?.store_details?.[0]?.postal_code || "--",
+          value: sellerData?.store_details?.[0]?.default_address.pin_code,
         },
         {
           label: "Fulfillment Type",
-          value: sellerData?.fulfillment_type || "--",
+          value: sellerData?.[0]?.fulfillment_type.display_name,
         },
-        { label: "FSSAI Number", value: sellerData?.fssai_number || "--" },
-        {
-          label: "Store Logo",
-          value: sellerData?.store_details?.[0]?.logo || "--",
-        },
-        {
-          label: "Store banner",
-          value: sellerData?.store_details?.[0]?.banner || "--",
-        },
+        { label: "FSSAI Number", value: sellerData?.[0]?.fssai_number },
+        
       ],
     },
     {
@@ -281,7 +277,7 @@ const ViewSeller = () => {
         },
         {
           label: "Seller Time Slot to Contact",
-          value: sellerData?.contact_time_slot || "Invalid Date - Invalid Date",
+          value: sellerData?.contact_from_time ,
         },
         { label: "Seller Address", value: sellerData?.address || "--" },
         { label: "City", value: sellerData?.city || "--" },

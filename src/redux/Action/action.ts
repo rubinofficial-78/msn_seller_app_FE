@@ -1826,7 +1826,11 @@ export const getSellerById = (
           type: GET_SELLER_BY_ID_SUCCESS,
           payload: response.data.data
         });
-        return response.data.data;
+        // Return an object with type and payload to match Redux action structure
+        return {
+          type: GET_SELLER_BY_ID_SUCCESS,
+          payload: response.data.data
+        };
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch seller details');
       }

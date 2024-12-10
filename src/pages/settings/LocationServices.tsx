@@ -24,11 +24,12 @@ import {
   createServiceability,
   getServiceability,
   updateServiceability,
+  getAllServiceability,
 } from "../../redux/Action/action";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import { Slider } from "antd";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
 type TabType = "stores" | "shipping";
 type ViewType = "table" | "grid";
@@ -62,9 +63,7 @@ interface CreateServiceabilityPayload {
   sub_categories: string[];
   pan_india?: boolean;
   zone?: boolean;
-} 
- 
- 
+}
 
 // Add this interface for the form data
 interface StoreFormData {
@@ -103,17 +102,6 @@ interface StoreFormData {
   // Temporary Close
   isTemporarilyClosed: boolean;
 }
-
-// Add this near your other constants
-// const DAYS_OF_WEEK = [
-//   "Monday",
-//   "Tuesday",
-//   "Wednesday",
-//   "Thursday",
-//   "Friday",
-//   "Saturday",
-//   "Sunday",
-// ];
 
 // Add a SectionContainer component for consistent section styling
 const SectionContainer = ({
@@ -466,54 +454,6 @@ const temporaryCloseFields = [
   },
 ];
 
-const serviceabilityFields = [
-  {
-    type: "section",
-    key: "serviceabilitySection",
-    label: "Serviceability Details",
-    description:
-      "Add a new location that you can serve and provide serviceability.",
-  },
-  {
-    type: "select",
-    key: "domain",
-    label: "Domain",
-    required: true,
-    placeholder: "Domain",
-    options: [
-      { label: "F&B", value: "fnb" },
-      { label: "Fashion", value: "fashion" },
-      { label: "Electronics", value: "electronics" },
-      { label: "Beauty & Personal Care", value: "beauty" },
-      { label: "Home & Decor", value: "home" },
-    ],
-  },
-  {
-    type: "select",
-    key: "categories",
-    label: "Categories",
-    required: true,
-    placeholder: "Categories",
-    options: [
-      { label: "Category 1", value: "cat1" },
-      { label: "Category 2", value: "cat2" },
-      { label: "Category 3", value: "cat3" },
-    ],
-  },
-  {
-    type: "select",
-    key: "shippingDistance",
-    label: "Shipping Distance",
-    required: true,
-    placeholder: "Shipping Distance",
-    options: [
-      { label: "Pan India", value: "pan_india" },
-      { label: "Within City", value: "city" },
-      { label: "Custom Zone", value: "custom" },
-    ],
-  },
-];
-
 // Add the ActionButtons component definition before GridView
 const ActionButtons = ({
   status,
@@ -679,18 +619,13 @@ const shippingColumns: Column[] = [
     id: "actions",
     key: "actions",
     label: "Actions",
-    type: "custom",
-    buttons: [
+    type: "actions",
+    actions: [
       {
         label: "View",
         icon: "eye",
         onClick: (row: any) => console.log("View", row),
-      },
-      {
-        label: "Edit",
-        icon: "edit",
-        onClick: (row: any) => console.log("Edit", row),
-      },
+      },       
       {
         label: "Toggle Status",
         icon: "toggle",
@@ -700,58 +635,54 @@ const shippingColumns: Column[] = [
   },
 ];
 
-const GridView = () => {
-  const navigate = useNavigate();
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {shippingData.map((item) => (
-        <div
-          key={item.id}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-        >
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {item.storeName}
-            </h3>
-            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-              {item.status}
-            </span>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Address:</span> {item.address}
-            </p>
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Domain:</span> {item.domain}
-            </p>
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Shipping:</span>{" "}
-              {item.shippingDistance}
-            </p>
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Location:</span> {item.city},{" "}
-              {item.pincode}
-            </p>
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Created:</span> {item.createdDate}
-            </p>
-          </div>
-          <div className="mt-4 flex justify-end">
-            <ActionButtons
-              status={item.status}
-              onView={() =>
-                navigate(
-                  `/dashboard/seller-settings/location-services/shipping-details/${item.id}`
-                )
-              }
-            />
-          </div>
+const GridView = ({ data }: { data: any[] }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {data.map((item) => (
+      <div
+        key={item.id}
+        className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+      >
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {item.storeName}
+          </h3>
+          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+            {item.status}
+          </span>
         </div>
-      ))}
-    </div>
-  );
-};
+        <div className="space-y-2">
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Address:</span> {item.address}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Domain:</span> {item.domain}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Shipping:</span>{" "}
+            {item.shippingDistance}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Location:</span> {item.city},{" "}
+            {item.pincode}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Created:</span> {item.createdDate}
+          </p>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <ActionButtons
+            status={item.status}
+            onView={() =>
+              navigate(
+                `/dashboard/seller-settings/location-services/shipping-details/${item.id}`
+              )
+            }
+          />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 // Add this type for step management
 type FormStep = 1 | 2;
@@ -788,7 +719,7 @@ const StoreDetailsStep = ({
   handleInputChange,
   locationId,
   onNext,
-  onStoreCreated
+  onStoreCreated,
 }: {
   handleInputChange: (key: string, value: any) => void;
   locationId: number;
@@ -797,7 +728,10 @@ const StoreDetailsStep = ({
 }) => {
   return (
     <div className="space-y-6">
-      <StoreDetailsForm handleInputChange={handleInputChange} onStoreCreated={onStoreCreated} />
+      <StoreDetailsForm
+        handleInputChange={handleInputChange}
+        onStoreCreated={onStoreCreated}
+      />
       <WorkingHoursForm
         handleInputChange={handleInputChange}
         locationId={locationId}
@@ -826,7 +760,7 @@ const StoreDetailsStep = ({
 const ServiceabilityStep = ({
   handleInputChange,
   onBack,
-  locationId
+  locationId,
 }: {
   handleInputChange: (key: string, value: any) => void;
   onBack: () => void;
@@ -847,8 +781,10 @@ const ServiceabilityStep = ({
   const [loadingServiceability, setLoadingServiceability] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingServiceability, setEditingServiceability] = useState<any>(null);
-  const [selectedDomainName, setSelectedDomainName] = useState<string>('');
-  const [selectedSubCategoryNames, setSelectedSubCategoryNames] = useState<string[]>([]);
+  const [selectedDomainName, setSelectedDomainName] = useState<string>("");
+  const [selectedSubCategoryNames, setSelectedSubCategoryNames] = useState<
+    string[]
+  >([]);
 
   // Fetch categories when component mounts
   useEffect(() => {
@@ -869,15 +805,23 @@ const ServiceabilityStep = ({
     const fetchServiceability = async () => {
       setLoadingServiceability(true);
       try {
-        console.log('Fetching serviceability with locationId (before API call):', locationId);
+        console.log(
+          "Fetching serviceability with locationId (before API call):",
+          locationId
+        );
         if (!locationId) {
-          console.warn('No locationId available for getServiceability API call');
+          console.warn(
+            "No locationId available for getServiceability API call"
+          );
           return;
         }
         const response = await dispatch(getServiceability(locationId));
-        console.log('Fetching serviceability with locationId (after API call):', locationId);
-        console.log('Serviceability API response:', response);
-        
+        console.log(
+          "Fetching serviceability with locationId (after API call):",
+          locationId
+        );
+        console.log("Serviceability API response:", response);
+
         if (response?.data) {
           const transformedData = response.data.map((item: any) => ({
             domainServed: item.category,
@@ -906,14 +850,16 @@ const ServiceabilityStep = ({
   const handleDomainChange = async (value: string) => {
     const domainId = parseInt(value);
     setSelectedDomain(domainId);
-    
+
     // Find and store the domain name
-    const selectedCategory = categories?.find(cat => cat.id.toString() === value);
+    const selectedCategory = categories?.find(
+      (cat) => cat.id.toString() === value
+    );
     if (selectedCategory) {
       setSelectedDomainName(selectedCategory.name);
     }
 
-    handleInputChange('domain', value);
+    handleInputChange("domain", value);
 
     if (domainId) {
       setLoadingSubCategories(true);
@@ -925,8 +871,8 @@ const ServiceabilityStep = ({
           setSelectedSubCategoryNames([]);
         }
       } catch (error) {
-        console.error('Error fetching subcategories:', error);
-        toast.error('Failed to fetch subcategories');
+        console.error("Error fetching subcategories:", error);
+        toast.error("Failed to fetch subcategories");
       } finally {
         setLoadingSubCategories(false);
       }
@@ -939,15 +885,19 @@ const ServiceabilityStep = ({
 
   const handleCategoryChange = (values: string[]) => {
     setSelectedCategories(values);
-    
+
     // Store the names of selected subcategories
-    const names = values.map(value => {
-      const subCategory = subCategories.find(cat => cat.id.toString() === value);
-      return subCategory?.name || '';
-    }).filter(name => name !== '');
-    
+    const names = values
+      .map((value) => {
+        const subCategory = subCategories.find(
+          (cat) => cat.id.toString() === value
+        );
+        return subCategory?.name || "";
+      })
+      .filter((name) => name !== "");
+
     setSelectedSubCategoryNames(names);
-    handleInputChange('categories', values);
+    handleInputChange("categories", values);
   };
 
   const handleShippingDistanceChange = (value: string) => {
@@ -964,14 +914,18 @@ const ServiceabilityStep = ({
         setLocationId(response.data.id);
       }
     } catch (error) {
-      console.error('Error creating store location:', error);
-      toast.error('Failed to create store location');
+      console.error("Error creating store location:", error);
+      toast.error("Failed to create store location");
     }
   };
 
   const handleSaveAndNext = async () => {
     try {
-      if (!selectedDomain || selectedCategories.length === 0 || !selectedShippingDistance) {
+      if (
+        !selectedDomain ||
+        selectedCategories.length === 0 ||
+        !selectedShippingDistance
+      ) {
         toast.error("Please fill all required fields");
         return;
       }
@@ -982,16 +936,16 @@ const ServiceabilityStep = ({
         return;
       }
 
-      console.log('Creating serviceability with locationId:', locationId);
+      console.log("Creating serviceability with locationId:", locationId);
 
       let payload: CreateServiceabilityPayload = {
         location_id: locationId,
         category: selectedDomainName,
         sub_categories: selectedSubCategoryNames,
-        shipping_radius: null
+        shipping_radius: null,
       };
 
-      console.log('Serviceability payload:', payload);
+      console.log("Serviceability payload:", payload);
 
       // Add shipping type specific fields
       switch (selectedShippingDistance) {
@@ -1013,14 +967,16 @@ const ServiceabilityStep = ({
           return;
       }
 
-      console.log('Final payload with shipping type:', payload);
+      console.log("Final payload with shipping type:", payload);
 
       const response = await dispatch(createServiceability(payload));
-      console.log('Serviceability creation response:', response);
+      console.log("Serviceability creation response:", response);
 
       if (response?.meta?.status && response?.data?.id) {
         toast.success("Serviceability created successfully");
-        navigate(`/dashboard/seller-settings/location-services/shipping-details/${response.data.id}`);
+        navigate(
+          `/dashboard/seller-settings/location-services/shipping-details/${response.data.id}`
+        );
       } else {
         toast.error("Failed to get serviceability ID");
       }
@@ -1434,7 +1390,9 @@ const LocationServices = () => {
     holidays: [],
     isTemporarilyClosed: false,
   });
-  const [createdLocationId, setCreatedLocationId] = useState<number | null>(null);
+  const [createdLocationId, setCreatedLocationId] = useState<number | null>(
+    null
+  );
 
   // 2. All handlers
   const handleInputChange = (key: string, value: any) => {
@@ -1450,7 +1408,7 @@ const LocationServices = () => {
   };
 
   const handleStoreCreated = (locationId: number) => {
-    console.log('Store created with ID:', locationId);
+    console.log("Store created with ID:", locationId);
     setCreatedLocationId(locationId);
   };
 
@@ -1735,75 +1693,130 @@ const ShippingTab = ({
 }: {
   viewType: ViewType;
   setViewType: (type: ViewType) => void;
-}) => (
-  <>
-    {/* Filter and View Toggle Section */}
-    <div className="flex justify-between items-center mb-6">
-      <div className="flex gap-4">
-        <div className="w-64">
-          <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
-            <option value="">Filter by Store</option>
-            {shippingData.map((item) => (
-              <option key={item.id} value={item.storeName}>
-                {item.storeName}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="w-64">
-          <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
-            <option value="">Filter by Domain</option>
-            <option value="electronics">Electronics</option>
-            <option value="fashion">Fashion</option>
-            <option value="grocery">Grocery</option>
-            <option value="beauty">Beauty & Personal Care</option>
-            <option value="home">Home and Decor</option>
-          </select>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={() => setViewType("table")}
-          className={`p-2 rounded ${
-            viewType === "table"
-              ? "bg-blue-100 text-blue-600"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          title="Table View"
-        >
-          <List size={20} />
-        </button>
-        <button
-          onClick={() => setViewType("grid")}
-          className={`p-2 rounded ${
-            viewType === "grid"
-              ? "bg-blue-100 text-blue-600"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-          title="Grid View"
-        >
-          <LayoutGrid size={20} />
-        </button>
-      </div>
-    </div>
+}) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const [loading, setLoading] = useState(false);
+  const [serviceabilityData, setServiceabilityData] = useState<any[]>([]);
 
-    {/* Content based on view type */}
-    {viewType === "table" ? (
-      <CustomTable
-        headCells={shippingColumns}
-        data={shippingData}
-        pagination={true}
-      />
-    ) : (
-      <GridView />
-    )}
-  </>
-);
+  useEffect(() => {
+    const fetchServiceability = async () => {
+      try {
+        setLoading(true);
+        const response = await dispatch(getAllServiceability());
+        if (response?.data) {
+          // Transform the data for the table
+          const transformedData = response.data.map((item: any) => ({
+            id: item.id,
+            storeName: item.location?.name || "-",
+            address: `${item.location?.address?.building || ""}, ${
+              item.location?.address?.locality || ""
+            }`,
+            createdDate: new Date(item.createdAt).toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+            shippingDistance: item.pan_india
+              ? "Pan India"
+              : item.shipping_radius
+              ? `${item.shipping_radius} KM`
+              : "Zone",
+            domain: item.category || "-",
+            city: item.location?.address?.city || "-",
+            pincode: item.location?.address?.area_code || "-",
+            status: item.is_active ? "Active" : "Inactive",
+          }));
+          setServiceabilityData(transformedData);
+        }
+      } catch (error) {
+        console.error("Error fetching serviceability:", error);
+        toast.error("Failed to fetch serviceability data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServiceability();
+  }, [dispatch]);
+
+  return (
+    <>
+      {/* Filter and View Toggle Section */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex gap-4">
+          <div className="w-64">
+            <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
+              <option value="">Filter by Store</option>
+              {serviceabilityData.map((item) => (
+                <option key={item.id} value={item.storeName}>
+                  {item.storeName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-64">
+            <select className="w-full border border-gray-300 rounded-lg px-4 py-2">
+              <option value="">Filter by Domain</option>
+              {Array.from(
+                new Set(serviceabilityData.map((item) => item.domain))
+              ).map((domain) => (
+                <option key={domain} value={domain}>
+                  {domain}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewType("table")}
+            className={`p-2 rounded ${
+              viewType === "table"
+                ? "bg-blue-100 text-blue-600"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            title="Table View"
+          >
+            <List size={20} />
+          </button>
+          <button
+            onClick={() => setViewType("grid")}
+            className={`p-2 rounded ${
+              viewType === "grid"
+                ? "bg-blue-100 text-blue-600"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            title="Grid View"
+          >
+            <LayoutGrid size={20} />
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      ) : viewType === "table" ? (
+        <CustomTable
+          headCells={shippingColumns}
+          data={serviceabilityData}
+          pagination={true}
+        />
+      ) : (
+        <GridView data={serviceabilityData} />
+      )}
+    </>
+  );
+};
 
 // Add this new component
 const StoreDetailsForm = ({
   handleInputChange,
-  onStoreCreated
+  onStoreCreated,
 }: {
   handleInputChange: (key: string, value: any) => void;
   onStoreCreated: (locationId: number) => void;
@@ -1852,17 +1865,23 @@ const StoreDetailsForm = ({
   const handleSave = async () => {
     try {
       const response = await dispatch(createStoreLocation(formData));
-      console.log('Store creation response:', response);
-      
+      console.log("Store creation response:", response);
+
       if (response?.meta?.status) {
         toast.success("Store created successfully");
         if (response.data?.id) {
           const createdLocationId = response.data.id;
-          console.log('Created store location ID (before passing to onStoreCreated):', createdLocationId);
+          console.log(
+            "Created store location ID (before passing to onStoreCreated):",
+            createdLocationId
+          );
           onStoreCreated(createdLocationId);
-          console.log('Created store location ID (after passing to onStoreCreated):', createdLocationId);
+          console.log(
+            "Created store location ID (after passing to onStoreCreated):",
+            createdLocationId
+          );
         } else {
-          console.warn('Store created but no ID received in response');
+          console.warn("Store created but no ID received in response");
         }
       }
     } catch (error) {

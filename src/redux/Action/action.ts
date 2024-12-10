@@ -3917,3 +3917,33 @@ export const updateShippingServices = (
     }
   };
 };
+
+// Add this action creator
+export const getAllServiceability = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/mdm/serviceability_v1_2`,
+        {
+          params: {
+            per_page: -1
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch serviceability data');
+      }
+    } catch (error) {
+      console.error('Error fetching serviceability:', error);
+      throw error;
+    }
+  };
+};

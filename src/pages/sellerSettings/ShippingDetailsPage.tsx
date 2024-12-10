@@ -7,10 +7,12 @@ import {
   getShippingServices,
   getServiceability,
   updateShippingServices,
+  getShippingTypeLookup,
+  getDeliveryTypeLookup,
+  getPreferencesLookup,
 } from "../../redux/Action/action";
 import { toast } from "react-hot-toast";
-import { Save, Trash2 } from "lucide-react";
-import ServiceabilityTable from "../../components/ServiceabilityTable";
+import { Save, Trash2, Copy } from "lucide-react";
 
 interface RegionState {
   [key: string]: boolean;
@@ -19,6 +21,15 @@ interface RegionState {
 interface RegionGroup {
   name: string;
   states: string[];
+}
+
+interface ShippingFormData {
+  shippingType: string;
+  categories: string[];
+  deliveryType: string;
+  preferences: string;
+  transitTime: string;
+  shippingFee: string;
 }
 
 interface ShippingService {
@@ -53,6 +64,17 @@ interface ShippingService {
   };
   transmit_time?: string;
   shipping_charge?: string;
+  formData?: ShippingFormData;
+}
+
+// Add this interface for radius view
+interface RadiusServiceability {
+  shipping_radius: number;
+  category: string;
+  sub_categories: string[];
+  location?: {
+    name: string;
+  };
 }
 
 const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
@@ -78,32 +100,58 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
   const [categories, setCategories] = useState<
     Array<{
       category: string;
+      sub_categories: string[];
     }>
   >([]);
 
+  const [shippingTypes, setShippingTypes] = useState<
+    Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+    }>
+  >([]);
+
+  const [deliveryTypes, setDeliveryTypes] = useState<
+    Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+    }>
+  >([]);
+
+  const [preferences, setPreferences] = useState<
+    Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+    }>
+  >([]);
+
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
   const handleInputChange = (key: string, value: any, rowId: number) => {
-    console.log('Input change:', { key, value, rowId }); // Add this for debugging
+    console.log("Input change:", { key, value, rowId });
 
-    setZoneSettings(prev => ({
-      ...prev,
-      [rowId]: {
-        ...(prev[rowId] || {}),
-        [key]: value
-      }
-    }));
-
-    // Also update the shippingServices state to reflect changes immediately
-    setShippingServices(prev => 
-      prev?.map(service => 
-        service.id === rowId 
-          ? { ...service, [key]: value }
-          : service
-      ) || null
+    setShippingServices(
+      (prev) =>
+        prev?.map((service) =>
+          service.id === rowId
+            ? {
+                ...service,
+                formData: {
+                  ...(service.formData || {}),
+                  [key]: value,
+                },
+              }
+            : service
+        ) || null
     );
   };
 
   const handleSaveZoneSettings = async (
-    row: any,
+    service: ShippingService,
     lookupData: {
       shippingTypes: Array<{
         id: number;
@@ -124,33 +172,36 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
     }
   ) => {
     try {
+      if (!service.formData) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+
       const payload = {
-        shipping_charge: Number(row.shippingFee) || 0,
-        categories: row.category,
-        transmit_time: Number(row.transitTime) || 0,
-        shipping_type:
-          lookupData.shippingTypes.find(
-            (type) => type.lookup_code === row.shippingType
-          ) || null,
-        states: selectedStates[row.zone?.display_name]
-          ? Object.entries(selectedStates[row.zone?.display_name]).map(
-              ([name, selected]) => ({
-                name,
-                selected,
-              })
-            )
+        shipping_charge: Number(service.formData.shippingFee) || 0,
+        categories: service.formData.categories,
+        transmit_time: Number(service.formData.transitTime) || 0,
+        shipping_type: lookupData.shippingTypes.find(
+          (type) => type.lookup_code === service.formData?.shippingType
+        ),
+        states: selectedStates[service.zone?.display_name || ""]
+          ? Object.entries(
+              selectedStates[service.zone?.display_name || ""]
+            ).map(([name, selected]) => ({
+              name,
+              selected,
+            }))
           : [],
-        delivery_type:
-          lookupData.deliveryTypes.find(
-            (type) => type.lookup_code === row.deliveryType
-          ) || null,
-        shipping_preferences:
-          lookupData.preferences.find(
-            (pref) => pref.lookup_code === row.preferences
-          ) || null,
+        delivery_type: lookupData.deliveryTypes.find(
+          (type) => type.lookup_code === service.formData?.deliveryType
+        ),
+        shipping_preferences: lookupData.preferences.find(
+          (pref) => pref.lookup_code === service.formData?.preferences
+        ),
       };
 
-      await dispatch(updateShippingServices(row.id, payload));
+      await dispatch(updateShippingServices(service.id, payload));
+      toast.success("Settings saved successfully");
     } catch (error) {
       console.error("Error saving zone settings:", error);
       toast.error("Failed to save settings");
@@ -170,7 +221,6 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch shipping services and serviceability data
         const [shippingResponse, serviceabilityResponse] = await Promise.all([
           dispatch(
             getShippingServices({
@@ -180,21 +230,32 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
           dispatch(getServiceability(locationId)),
         ]);
 
-        // Extract unique categories from serviceability data
-        if (serviceabilityResponse?.data) {
-          const uniqueCategories = Array.from(
-            new Set(
-              serviceabilityResponse.data.map((item: any) => item.category)
-            )
-          ).map((category) => ({ category }));
-          setCategories(uniqueCategories);
-        }
-
-        // Set store details
         if (shippingResponse?.data) {
           const serviceability = shippingResponse.data[0]?.serviceability;
 
+          if (serviceabilityResponse?.data) {
+            const uniqueCategories = Array.from(
+              new Set(
+                serviceabilityResponse.data.map((item: any) => ({
+                  category: item.category,
+                  sub_categories: item.sub_categories
+                }))
+              )
+            );
+            setCategories(uniqueCategories);
+            
+            if (serviceability?.category) {
+              const currentDomainData = uniqueCategories.find(
+                (cat) => cat.category === serviceability.category
+              );
+              if (currentDomainData?.sub_categories) {
+                setAvailableCategories(currentDomainData.sub_categories);
+              }
+            }
+          }
+
           if (serviceability) {
+            // Set store details
             setStoreDetails({
               storeName: serviceability.location?.name || "",
               domain: serviceability.category || "",
@@ -207,52 +268,51 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
                 : "",
             });
 
-            // If shipping type is radius, don't show zones
+            // Handle different shipping types
             if (serviceability.shipping_radius) {
-              setShippingServices(null);
-              return;
-            }
+              // For radius type, don't show zones
+              const radiusService = {
+                id: shippingResponse.data[0].id,
+                formData: {
+                  shippingType: shippingResponse.data[0].shipping_type?.lookup_code || "",
+                  categories: serviceability.sub_categories || [],
+                  deliveryType: shippingResponse.data[0].delivery_type?.lookup_code || "",
+                  preferences: shippingResponse.data[0].shipping_preferences?.lookup_code || "",
+                  transitTime: shippingResponse.data[0].transmit_time || "",
+                  shippingFee: shippingResponse.data[0].shipping_charge || "",
+                }
+              };
+              setShippingServices([radiusService]);
+            } else {
+              // For Pan India or Zone
+              const servicesWithFormData = shippingResponse.data.map((service: ShippingService) => ({
+                ...service,
+                formData: {
+                  shippingType: service.shipping_type?.lookup_code || "",
+                  categories: service.categories || [],
+                  deliveryType: service.delivery_type?.lookup_code || "",
+                  preferences: service.shipping_preferences?.lookup_code || "",
+                  transitTime: service.transmit_time || "",
+                  shippingFee: service.shipping_charge || "",
+                },
+                isDisabled: serviceability.pan_india // Disable state selection for pan India
+              }));
+              setShippingServices(servicesWithFormData);
 
-            // For Pan India, select all states by default and disable changes
-            if (serviceability.pan_india) {
+              // Set initial states
               const initialStates: { [key: string]: RegionState } = {};
               shippingResponse.data.forEach((service: any) => {
                 if (service.zone?.display_name) {
-                  initialStates[service.zone.display_name] =
-                    service.states.reduce(
-                      (acc: RegionState, state: any) => ({
-                        ...acc,
-                        [state.name]: true, // Force all states to be selected
-                      }),
-                      {}
-                    );
+                  initialStates[service.zone.display_name] = service.states.reduce(
+                    (acc: RegionState, state: any) => ({
+                      ...acc,
+                      [state.name]: serviceability.pan_india ? true : state.selected,
+                    }),
+                    {}
+                  );
                 }
               });
               setSelectedStates(initialStates);
-              setShippingServices(
-                shippingResponse.data.map((service: any) => ({
-                  ...service,
-                  isDisabled: true, // Add disabled flag for pan india
-                }))
-              );
-            }
-            // For Zone, start with unchecked states
-            else if (serviceability.zone) {
-              const initialStates: { [key: string]: RegionState } = {};
-              shippingResponse.data.forEach((service: any) => {
-                if (service.zone?.display_name) {
-                  initialStates[service.zone.display_name] =
-                    service.states.reduce(
-                      (acc: RegionState, state: any) => ({
-                        ...acc,
-                        [state.name]: false, // Start with unchecked states
-                      }),
-                      {}
-                    );
-                }
-              });
-              setSelectedStates(initialStates);
-              setShippingServices(shippingResponse.data);
             }
           }
         }
@@ -268,6 +328,34 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
       fetchData();
     }
   }, [dispatch, id]);
+
+  useEffect(() => {
+    const fetchLookupData = async () => {
+      try {
+        const [shippingResponse, deliveryResponse, preferencesResponse] =
+          await Promise.all([
+            dispatch(getShippingTypeLookup()),
+            dispatch(getDeliveryTypeLookup()),
+            dispatch(getPreferencesLookup()),
+          ]);
+
+        if (shippingResponse?.data) {
+          setShippingTypes(shippingResponse.data);
+        }
+        if (deliveryResponse?.data) {
+          setDeliveryTypes(deliveryResponse.data);
+        }
+        if (preferencesResponse?.data) {
+          setPreferences(preferencesResponse.data);
+        }
+      } catch (error) {
+        console.error("Error fetching lookup data:", error);
+        toast.error("Failed to fetch lookup data");
+      }
+    };
+
+    fetchLookupData();
+  }, [dispatch]);
 
   const handleSelectAll = (regionName: string) => {
     // Don't allow changes if pan india
@@ -303,6 +391,13 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
         ...prev,
         domain: value,
       }));
+
+      const selectedDomain = categories.find((cat) => cat.category === value);
+      if (selectedDomain?.sub_categories) {
+        setAvailableCategories(selectedDomain.sub_categories);
+      } else {
+        setAvailableCategories([]);
+      }
 
       // Only proceed if a domain is selected
       if (value) {
@@ -368,13 +463,34 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
         setShippingServices(null);
       }
     } catch (error) {
-      console.error("Error fetching data for domain:", error);
-      toast.error("Failed to fetch shipping services for selected domain");
-      setSelectedStates({});
-      setShippingServices(null);
+      console.error("Error handling domain change:", error);
+      toast.error("Failed to update domain");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Add this helper function to check if shipping type is own shipping
+  const isOwnShipping = (shippingType: string | undefined) => {
+    return shippingType === "OWN_SHIPPING";
+  };
+
+  // Add this helper function to check if shipping type is ONDC logistics
+  const isOndcLogistics = (shippingType: string | undefined) => {
+    return shippingType === "ONDC_LOGISTICS";
+  };
+
+  // Add the duplicate zone function
+  const handleDuplicateZone = (service: ShippingService) => {
+    setShippingServices((prev) => {
+      if (!prev) return prev;
+      const newService = {
+        ...service,
+        id: Date.now(), // Temporary ID for new service
+        formData: { ...service.formData },
+      };
+      return [...prev, newService];
+    });
   };
 
   return (
@@ -431,7 +547,183 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
         </div>
       </div>
 
-      {storeDetails.shippingDistance !== "Radius" &&
+      {storeDetails.shippingDistance.includes("KM") ? (
+        // Radius View
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="mb-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Shipping Radius
+                </label>
+                <div className="text-gray-900">
+                  {storeDetails.shippingDistance}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Shipping Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Shipping Type
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                value={shippingServices?.[0]?.formData?.shippingType || ""}
+                onChange={(e) =>
+                  handleInputChange("shippingType", e.target.value, shippingServices?.[0]?.id || 0)
+                }
+              >
+                <option value="">Select Shipping Type</option>
+                {shippingTypes.map((type) => (
+                  <option key={type.id} value={type.lookup_code}>
+                    {type.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Categories */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Categories
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                multiple
+                value={shippingServices?.[0]?.formData?.categories || []}
+                onChange={(e) => {
+                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                  handleInputChange('categories', selectedOptions, shippingServices?.[0]?.id || 0);
+                }}
+              >
+                {availableCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Hold Ctrl (Windows) or Command (Mac) to select multiple categories
+              </p>
+            </div>
+
+            {/* Delivery Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Delivery Type
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                value={shippingServices?.[0]?.formData?.deliveryType || ""}
+                onChange={(e) =>
+                  handleInputChange("deliveryType", e.target.value, shippingServices?.[0]?.id || 0)
+                }
+                disabled={isOwnShipping(shippingServices?.[0]?.formData?.shippingType)}
+              >
+                <option value="">Select Delivery Type</option>
+                {deliveryTypes.map((type) => (
+                  <option key={type.id} value={type.lookup_code}>
+                    {type.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Preferences */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Preferences
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                value={shippingServices?.[0]?.formData?.preferences || ""}
+                onChange={(e) =>
+                  handleInputChange("preferences", e.target.value, shippingServices?.[0]?.id || 0)
+                }
+                disabled={isOwnShipping(shippingServices?.[0]?.formData?.shippingType)}
+              >
+                <option value="">Select Preferences</option>
+                {preferences.map((pref) => (
+                  <option key={pref.id} value={pref.lookup_code}>
+                    {pref.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Transit Time */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Transit Time (in days)
+              </label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                value={shippingServices?.[0]?.formData?.transitTime || ""}
+                onChange={(e) =>
+                  handleInputChange("transitTime", e.target.value, shippingServices?.[0]?.id || 0)
+                }
+                min="0"
+                step="1"
+                disabled={isOndcLogistics(shippingServices?.[0]?.formData?.shippingType)}
+              />
+            </div>
+
+            {/* Shipping Fee */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Shipping Fee
+              </label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                value={shippingServices?.[0]?.formData?.shippingFee || ""}
+                onChange={(e) =>
+                  handleInputChange("shippingFee", e.target.value, shippingServices?.[0]?.id || 0)
+                }
+                min="0"
+                step="0.01"
+                disabled={isOndcLogistics(shippingServices?.[0]?.formData?.shippingType)}
+              />
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={() =>
+                handleSaveZoneSettings(shippingServices?.[0] as ShippingService, {
+                  shippingTypes,
+                  deliveryTypes,
+                  preferences,
+                })
+              }
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Save size={16} />
+              Save
+            </button>
+            <button
+              onClick={() => handleDuplicateZone(shippingServices?.[0] as ShippingService)}
+              className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+            >
+              <Copy size={16} />
+              Duplicate
+            </button> 
+            <button
+              onClick={() => handleDeleteZoneSettings(shippingServices?.[0] as ShippingService)}
+              className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 flex items-center gap-2"
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Pan India or Zone View with regions
         shippingServices &&
         Array.isArray(shippingServices) && (
           <div className="space-y-6">
@@ -485,10 +777,10 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
                           ) {
                             setSelectedStates((prev) => ({
                               ...prev,
-                              [service.zone.display_name]: {
-                                ...(prev[service.zone.display_name] || {}),
+                              [service.zone!.display_name]: {
+                                ...(prev[service.zone!.display_name] || {}),
                                 [state.name]:
-                                  !prev[service.zone.display_name]?.[
+                                  !prev[service.zone!.display_name]?.[
                                     state.name
                                   ],
                               },
@@ -505,32 +797,196 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
                   ))}
                 </div>
 
-                <div className="mt-4">
-                  <ServiceabilityTable
-                    data={[
-                      {
-                        id: service.id,
-                        shippingType: service.shipping_type?.display_name || '',
-                        category: service.sub_categorie || [],
-                        serviceability: {
-                          sub_categories: service.serviceability?.sub_categories || []
-                        },
-                        deliveryType: service.delivery_type?.display_name || '',
-                        preferences: service.shipping_preferences?.display_name || '',
-                        transitTime: service.transmit_time || '',
-                        shippingFee: service.shipping_charge || '',
-                        zoneId: service.zone_id,
+                <div className="mt-6 space-y-4 border-t pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Shipping Type
+                      </label>
+                      <select
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={service.formData?.shippingType || ""}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "shippingType",
+                            e.target.value,
+                            service.id
+                          )
+                        }
+                      >
+                        <option value="">Select Shipping Type</option>
+                        {shippingTypes.map((type) => (
+                          <option key={type.id} value={type.lookup_code}>
+                            {type.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Categories
+                      </label>
+                      <select
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        multiple
+                        value={service.formData?.categories || []}
+                        onChange={(e) => {
+                          const selectedOptions = Array.from(
+                            e.target.selectedOptions,
+                            (option) => option.value
+                          );
+                          handleInputChange(
+                            "categories",
+                            selectedOptions,
+                            service.id
+                          );
+                        }}
+                      >
+                        {availableCategories.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Hold Ctrl (Windows) or Command (Mac) to select multiple
+                        categories
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Delivery Type
+                      </label>
+                      <select
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={service.formData?.deliveryType || ""}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "deliveryType",
+                            e.target.value,
+                            service.id
+                          )
+                        }
+                        disabled={isOwnShipping(service.formData?.shippingType)}
+                      >
+                        <option value="">Select Delivery Type</option>
+                        {deliveryTypes.map((type) => (
+                          <option key={type.id} value={type.lookup_code}>
+                            {type.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Preferences
+                      </label>
+                      <select
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={service.formData?.preferences || ""}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "preferences",
+                            e.target.value,
+                            service.id
+                          )
+                        }
+                        disabled={isOwnShipping(service.formData?.shippingType)}
+                      >
+                        <option value="">Select Preferences</option>
+                        {preferences.map((pref) => (
+                          <option key={pref.id} value={pref.lookup_code}>
+                            {pref.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Transit Time (in days)
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={service.formData?.transitTime || ""}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "transitTime",
+                            e.target.value,
+                            service.id
+                          )
+                        }
+                        min="0"
+                        step="1"
+                        disabled={isOndcLogistics(
+                          service.formData?.shippingType
+                        )}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Shipping Fee
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        value={service.formData?.shippingFee || ""}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "shippingFee",
+                            e.target.value,
+                            service.id
+                          )
+                        }
+                        min="0"
+                        step="0.01"
+                        disabled={isOndcLogistics(
+                          service.formData?.shippingType
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => handleDuplicateZone(service)}
+                      className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+                    >
+                      <Copy size={16} />
+                      Duplicate
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleSaveZoneSettings(service, {
+                          shippingTypes,
+                          deliveryTypes,
+                          preferences,
+                        })
                       }
-                    ]}
-                    onSave={handleSaveZoneSettings}
-                    onDelete={handleDeleteZoneSettings}
-                    onChange={handleInputChange}
-                  />
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    >
+                      <Save size={16} />
+                      Save
+                    </button>
+                    <button
+                      onClick={() => handleDeleteZoneSettings(service)}
+                      className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 flex items-center gap-2"
+                    >
+                      <Trash2 size={16} />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        )
+      )}
     </div>
   );
 };

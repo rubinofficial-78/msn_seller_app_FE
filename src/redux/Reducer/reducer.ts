@@ -159,7 +159,19 @@ import {
   GET_STORE_LOCATIONS_FAILURE,
   UPDATE_SHIPPING_SERVICES_REQUEST,
   UPDATE_SHIPPING_SERVICES_SUCCESS,
-  UPDATE_SHIPPING_SERVICES_FAILURE
+  UPDATE_SHIPPING_SERVICES_FAILURE,
+  GET_ACCOUNT_DETAILS_REQUEST,
+  GET_ACCOUNT_DETAILS_SUCCESS,
+  GET_ACCOUNT_DETAILS_FAILURE,
+  UPDATE_ACCOUNT_DETAILS_REQUEST,
+  UPDATE_ACCOUNT_DETAILS_SUCCESS,
+  UPDATE_ACCOUNT_DETAILS_FAILURE,
+  GET_BANKING_DETAILS_REQUEST,
+  GET_BANKING_DETAILS_SUCCESS,
+  GET_BANKING_DETAILS_FAILURE,
+  UPDATE_BANKING_DETAILS_REQUEST,
+  UPDATE_BANKING_DETAILS_SUCCESS,
+  UPDATE_BANKING_DETAILS_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -437,6 +449,16 @@ const initialState: AuthState = {
         per_page: 10
       }
     }
+  },
+  accountDetails: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  bankingDetails: {
+    loading: false,
+    data: null,
+    error: null
   }
 };
 
@@ -1846,6 +1868,101 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         error: null
       };
     case UPDATE_SHIPPING_SERVICES_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+    case GET_ACCOUNT_DETAILS_REQUEST:
+      return {
+        ...state,
+        accountDetails: {
+          ...state.accountDetails,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ACCOUNT_DETAILS_SUCCESS:
+      return {
+        ...state,
+        accountDetails: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ACCOUNT_DETAILS_FAILURE:
+      return {
+        ...state,
+        accountDetails: {
+          ...state.accountDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case UPDATE_ACCOUNT_DETAILS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case UPDATE_ACCOUNT_DETAILS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        data: action.payload.data
+      };
+    case UPDATE_ACCOUNT_DETAILS_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+    case GET_BANKING_DETAILS_REQUEST:
+      return {
+        ...state,
+        bankingDetails: {
+          ...state.bankingDetails,
+          loading: true,
+          error: null
+        }
+      };
+
+    case GET_BANKING_DETAILS_SUCCESS:
+      return {
+        ...state,
+        bankingDetails: {
+          loading: false,
+          data: action.payload,
+          error: null
+        }
+      };
+
+    case GET_BANKING_DETAILS_FAILURE:
+      return {
+        ...state,
+        bankingDetails: {
+          ...state.bankingDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+
+    case UPDATE_BANKING_DETAILS_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+
+    case UPDATE_BANKING_DETAILS_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        data: action.payload
+      };
+
+    case UPDATE_BANKING_DETAILS_FAILURE:
       return {
         ...state,
         loading: false,

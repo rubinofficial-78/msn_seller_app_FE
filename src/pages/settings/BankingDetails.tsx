@@ -1,126 +1,143 @@
-import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import AddForm from '../../components/AddForm';
+import React, { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from 'react-redux';
+import AddForm from "../../components/AddForm";
+import { getBankingDetails, updateBankingDetails } from '../../redux/Action/action';
+import { RootState } from '../../redux/types';
+import { toast } from 'react-hot-toast';
 
 const BankingDetails = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    gstnumber: '',
-    panNumber: '',
-    tanNumber: '',
-    currentBankName: '',
-    currentAccountNumber: '',
-    currentIfscCode: '',
-    currentBankHolderName: '',
-  });
+  const dispatch = useDispatch();
+  const { data: bankingData, loading } = useSelector((state: RootState) => state.data.bankingDetails);
+  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  const formFields = [
-    {
-      type: 'text',
-      key: 'gstnumber',
-      label: 'GST No',
-      value: formData.gstnumber,
-      required: true,
-      placeholder: 'Enter your GST number',
-      id: 'gst-number-input'
-    },
-    {
-      type: 'text',
-      key: 'pannumber',
-      label: 'Pan No',
-      value: formData.panNumber,
-      required: true,
-      placeholder: 'Enter your PAN number',
-      id: 'pan-number-input'
-    },
-    {
-      type: 'text',
-      key: 'tanNumber',
-      label: 'Tan No',
-      value: formData.tanNumber,
-      required: true,
-      placeholder: 'Enter TAN number',
-      id: 'tan-number-input'
-    },
-    {
-      type: 'text',
-      key: 'currentBankName',
-      label: 'Current Bank Name',
-      value: formData.currentBankName,
-      required: true,
-      placeholder: 'Enter current bank name',
-      id: 'current-bank-name-input'
-    },
-    {
-      type: 'text',
-      key: 'currentAccountNumber',
-      label: 'Current Account Number',
-      value: formData.currentAccountNumber,
-      required: true,
-      placeholder: 'Enter current account number',
-      id: 'current-account-number-input'
-    },
-    {
-      type: 'text',
-      key: 'currentIfscCode',
-      label: 'Current IFSC Code',
-      value: formData.currentIfscCode,
-      required: true,
-      placeholder: 'Enter current IFSC code',
-      id: 'current-ifsc-code-input'
-    },
-    {
-      type: 'text',
-      key: 'currentBankHolderName',
-      label: 'Current Bank Holder Name',
-      value: formData.currentBankHolderName,
-      required: true,
-        placeholder: 'Enter current bank holder name',
-      id: 'current-bank-holder-name-input'
-    } 
-  ];
+  useEffect(() => {
+    dispatch(getBankingDetails());
+  }, [dispatch]);
 
-  const handleInputChange = (key: string, value: any) => {
-    setFormData(prev => ({
+  useEffect(() => {
+    if (bankingData?.sections) {
+      const initialValues: Record<string, any> = {};
+      bankingData.sections.forEach(section => {
+        section.fields.forEach(field => {
+          initialValues[field.field_key] = field.value;
+        });
+      });
+      setFormValues(initialValues);
+    }
+  }, [bankingData]);
+
+  const handleInputonChange = (key: string, value: any) => {
+    setFormValues(prev => ({
       ...prev,
       [key]: value
     }));
   };
 
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      
+      const updatedData = {
+        ...bankingData,
+        sections: bankingData.sections.map(section => ({
+          ...section,
+          fields: section.fields.map(field => ({
+            ...field,
+            value: formValues[field.field_key] || field.value
+          }))
+        }))
+      };
+
+      const id = bankingData?.id;
+      if (!id) {
+        throw new Error('Banking Details ID not found');
+      }
+
+      await dispatch(updateBankingDetails(id, updatedData));
+      toast.success('Banking details updated successfully');
+    } catch (error) {
+      console.error('Error updating banking details:', error);
+      toast.error('Failed to update banking details');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const transformFieldsToFormData = () => {
+    const formFields: any[] = [];
+    
+    bankingData?.sections?.forEach(section => {
+      section.fields.forEach(field => {
+        formFields.push({
+          type: field.field_type,
+          key: field.field_key,
+          label: field.field_name,
+          value: formValues[field.field_key] || field.value,
+          required: field.is_mandatory,
+          disabled: false,
+          placeholder: field.placeholder,
+        });
+      });
+    });
+
+    return formFields;
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            id="back-button"
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold">Bank Details</h1>
-            <p className="text-sm text-gray-600">
-              This information will help us to setup your transactions and payments with the ONDC network.
-            </p>
+    <div className="relative min-h-screen pb-20">
+      <div className="space-y-8 p-6 bg-gray-50">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h2 className="text-sm text-gray-600">Application Settings</h2>
+              <h1 className="text-2xl font-bold">GST, PAN and Bank Settings</h1>
+            </div>
           </div>
         </div>
-        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          id="save-and-update-button"
-        >
-          Save and Update
-        </button>
+
+        {/* Form Sections */}
+        <div className="space-y-6">
+          {bankingData?.sections?.map((section) => (
+            <div key={section.section_key} className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold mb-6">{section.section_name}</h2>
+              <AddForm
+                data={transformFieldsToFormData().filter(field => 
+                  section.fields.some(sectionField => sectionField.field_key === field.key)
+                )}
+                handleInputonChange={handleInputonChange}
+                edit={true}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg p-6">
-         
-        
-        <AddForm
-          data={formFields}
-          handleInputonChange={handleInputChange}
-          handleImageLink={(value) => handleInputChange('cancelledCheque', value)}
-        />
+      {/* Save Button */}
+      <div className="sticky bottom-0 bg-white border-t shadow-md">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-end">
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:bg-blue-400"
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -372,6 +372,16 @@ export interface AuthState {
       }
     };
   };
+  accountDetails: {
+    loading: boolean;
+    error: string | null;
+    data: AccountDetails | null;
+  };
+  bankingDetails: {
+    loading: boolean;
+    data: any | null;
+    error: string | null;
+  };
 }
 
 export interface RootState {
@@ -1242,4 +1252,33 @@ interface BasicDetailsPayload {
   location_id?: number;
   on_hand_quantity?: number;
   alert_quantity?: number;
+}
+
+export interface AccountDetails {
+  id: number;
+  code: string;
+  logo: string | null;
+  name: string;
+  sections: Array<{
+    fields: Array<{
+      value: string;
+      env_key: string;
+      field_key: string;
+      attributes: any;
+      field_name: string;
+      field_type: string;
+      is_editable: boolean;
+      placeholder: string;
+      is_mandatory: boolean;
+      allowed_values: any[];
+      field_sequence: number;
+    }>;
+    section_key: string;
+    section_name: string;
+    section_sequence: number;
+    section_description: string;
+  }>;
+  company_id: number;
+  is_active: boolean;
+  status: string;
 }

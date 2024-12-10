@@ -209,6 +209,18 @@ import {
   UPDATE_SHIPPING_SERVICES_REQUEST,
   UPDATE_SHIPPING_SERVICES_SUCCESS,
   UPDATE_SHIPPING_SERVICES_FAILURE,
+  GET_ACCOUNT_DETAILS_REQUEST,
+  GET_ACCOUNT_DETAILS_SUCCESS,
+  GET_ACCOUNT_DETAILS_FAILURE,
+  UPDATE_ACCOUNT_DETAILS_REQUEST,
+  UPDATE_ACCOUNT_DETAILS_SUCCESS,
+  UPDATE_ACCOUNT_DETAILS_FAILURE,
+  GET_BANKING_DETAILS_REQUEST,
+  GET_BANKING_DETAILS_SUCCESS,
+  GET_BANKING_DETAILS_FAILURE,
+  UPDATE_BANKING_DETAILS_REQUEST,
+  UPDATE_BANKING_DETAILS_SUCCESS,
+  UPDATE_BANKING_DETAILS_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -3950,4 +3962,166 @@ export const getAllServiceability = (): ThunkAction<Promise<any>, RootState, unk
       throw error;
     }
   };
+};
+
+export const getAccountDetails = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ACCOUNT_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/settings/user_server_settings/get/NP_ACCOUNT_DETAILS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.meta.status) {
+        dispatch({
+          type: GET_ACCOUNT_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data.meta.message);
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.meta?.message || error?.message || 'Failed to fetch account details';
+      dispatch({
+        type: GET_ACCOUNT_DETAILS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const updateAccountDetails = (id: number, formData: any): ThunkAction<Promise<any>, RootState, unknown, any> => {
+  return async (dispatch: Dispatch) => {
+    dispatch({ type: UPDATE_ACCOUNT_DETAILS_REQUEST });
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/settings/user_server_settings/${id}/update`,
+        {
+          sections: transformFormDataToApiFormat(formData)
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.meta.status) {
+        dispatch({
+          type: UPDATE_ACCOUNT_DETAILS_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data.meta.message);
+      }
+    } catch (error: any) {
+      dispatch({
+        type: UPDATE_ACCOUNT_DETAILS_FAILURE,
+        payload: error.message
+      });
+      throw error;
+    }
+  };
+};
+
+// Get Banking Details
+export const getBankingDetails = (): ThunkAction<Promise<any>, RootState, unknown, any> => {
+  return async (dispatch: Dispatch) => {
+    dispatch({ type: GET_BANKING_DETAILS_REQUEST });
+
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/settings/user_server_settings/get/GST_AND_PAN`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      if (response.data.meta.status) {
+        dispatch({
+          type: GET_BANKING_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      }
+    } catch (error: any) {
+      dispatch({
+        type: GET_BANKING_DETAILS_FAILURE,
+        payload: error.message
+      });
+      throw error;
+    }
+  };
+};
+
+// Update Banking Details
+export const updateBankingDetails = (id: number, data: any): ThunkAction<Promise<any>, RootState, unknown, any> => {
+  return async (dispatch: Dispatch) => {
+    dispatch({ type: UPDATE_BANKING_DETAILS_REQUEST });
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/settings/user_server_settings/${id}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.meta.status) {
+        dispatch({
+          type: UPDATE_BANKING_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      }
+    } catch (error: any) {
+      dispatch({
+        type: UPDATE_BANKING_DETAILS_FAILURE,
+        payload: error.message
+      });
+      throw error;
+    }
+  };
+};
+
+// Helper function to transform form data to API format
+const transformFormDataToApiFormat = (accountData: any) => {
+  return accountData.sections.map((section: any) => ({
+    section_key: section.section_key,
+    section_name: section.section_name,
+    section_sequence: section.section_sequence,
+    section_description: section.section_description || "",
+    fields: section.fields.map((field: any) => ({
+      value: field.value,
+      env_key: field.env_key,
+      field_key: field.field_key,
+      attributes: field.attributes || {},
+      field_name: field.field_name,
+      field_type: field.field_type,
+      is_editable: field.is_editable,
+      placeholder: field.placeholder,
+      is_mandatory: field.is_mandatory,
+      allowed_values: field.allowed_values || [],
+      field_sequence: field.field_sequence
+    }))
+  }));
 };

@@ -645,6 +645,7 @@ const AddproductMasterCatalogue = () => {
           // Call the bulk update API
           await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
           toast.success("ONDC details saved successfully!");
+          navigate("/dashboard/master-catalog");
           break;
 
         default:

@@ -42,7 +42,7 @@ import AddMenu from "../pages/AddMenu";
 // Settings Related Pages
 import AccountDetails from "../pages/sellerSettings/AccountDetails";
 import LocationServices from "../pages/settings/LocationServices";
-import BankingDetails from "../pages/settings/BankingDetails";
+import BankingDetails from "../pages/sellerSettings/BankingDetails";
 import AccessManagement from "../pages/settings/AccessManagement";
 import CreateRole from "../pages/settings/CreateRole";
 import CreateUser from "../pages/settings/CreateUser";

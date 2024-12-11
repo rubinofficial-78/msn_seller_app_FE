@@ -45,6 +45,16 @@ const countChars = (text: string) => {
   return text?.trim().length || 0;
 };
 
+const isTimeRelatedField = (fieldName: string): boolean => {
+  const timeFields = [
+    "Return Within",
+    "Time To Ship",
+    "Time to Ship",
+    "Expected Delivery_time",
+  ];
+  return timeFields.includes(fieldName);
+};
+
 const AddProduct = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -310,13 +320,17 @@ const AddProduct = () => {
     console.log("Input/Select changed:", key, value); // Debug log
 
     // Find the field configuration
-    const fieldConfig = basicInfoFields.find(field => field.key === key);
+    const fieldConfig = basicInfoFields.find((field) => field.key === key);
 
     // Handle character count validation for specific fields
-    if (key === "productTitle" || key === "shortDescription" || key === "productDescription") {
+    if (
+      key === "productTitle" ||
+      key === "shortDescription" ||
+      key === "productDescription"
+    ) {
       const charCount = countChars(value);
       let maxChars;
-      
+
       switch (key) {
         case "productTitle":
           maxChars = MAX_TITLE_CHARS;
@@ -332,7 +346,9 @@ const AddProduct = () => {
       }
 
       if (charCount > maxChars) {
-        toast.error(`${fieldConfig?.label} cannot exceed ${maxChars} characters (currently: ${charCount} characters)`);
+        toast.error(
+          `${fieldConfig?.label} cannot exceed ${maxChars} characters (currently: ${charCount} characters)`
+        );
         return;
       }
     }
@@ -360,7 +376,7 @@ const AddProduct = () => {
     images: false,
     measurement: false,
     pricing: false,
-    ondc: false
+    ondc: false,
   });
 
   // Helper function to get saving state key
@@ -385,9 +401,9 @@ const AddProduct = () => {
   const handleSave = async (section: string) => {
     try {
       // Set saving state for specific section
-      setSavingStates(prev => ({
+      setSavingStates((prev) => ({
         ...prev,
-        [getSavingStateKey(section)]: true
+        [getSavingStateKey(section)]: true,
       }));
 
       switch (section) {
@@ -397,7 +413,7 @@ const AddProduct = () => {
           const shortDescCharCount = countChars(formData.shortDescription);
           const descCharCount = countChars(formData.productDescription);
 
-          let errorMessage = '';
+          let errorMessage = "";
 
           if (titleCharCount > MAX_TITLE_CHARS) {
             errorMessage = `Product title cannot exceed ${MAX_TITLE_CHARS} characters (currently: ${titleCharCount} characters)`;
@@ -413,7 +429,11 @@ const AddProduct = () => {
           }
 
           // Check for required fields
-          if (!formData.productTitle || !formData.shortDescription || !formData.productDescription) {
+          if (
+            !formData.productTitle ||
+            !formData.shortDescription ||
+            !formData.productDescription
+          ) {
             toast.error("Please fill in all required fields");
             return;
           }
@@ -517,36 +537,22 @@ const AddProduct = () => {
                 break;
 
               case "dropdown":
-                if (
-                  field.field_name === "Return Within" ||
-                  field.field_name === "Time To Ship" ||
-                  field.field_name === "Time to Ship" ||
-                  field.field_name === "Expected Delivery_time"
-                ) {
+                if (isTimeRelatedField(field.field_name)) {
                   const selectedOption = timeOptions.find(
                     (opt) => opt.value === value
                   );
-                  if (selectedOption) {
-                    processedValue = {
-                      id: selectedOption.id,
-                      label: selectedOption.label,
-                      lookup_code: selectedOption.value,
-                    };
-                  }
+                  processedValue = selectedOption
+                    ? {
+                        id: selectedOption.id,
+                        label: selectedOption.label,
+                        lookup_code: selectedOption.value,
+                      }
+                    : null;
                 }
                 break;
 
               case "decimal":
                 processedValue = value ? Number(value) : null;
-                break;
-
-              case "text":
-              case "textarea":
-                processedValue = value || null;
-                break;
-
-              case "date":
-                processedValue = value || null;
                 break;
 
               default:
@@ -562,6 +568,7 @@ const AddProduct = () => {
           // Call the bulk update API
           await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
           toast.success("ONDC details saved successfully!");
+          navigate("/dashboard/products");
           break;
 
         default:
@@ -572,9 +579,9 @@ const AddProduct = () => {
       toast.error("Failed to save. Please try again.");
     } finally {
       // Reset saving state for specific section
-      setSavingStates(prev => ({
+      setSavingStates((prev) => ({
         ...prev,
-        [getSavingStateKey(section)]: false
+        [getSavingStateKey(section)]: false,
       }));
     }
   };
@@ -633,7 +640,7 @@ const AddProduct = () => {
     }
   }, [ondcDetails]);
 
-  // Update the getOndcFieldsBySection function
+  // Replace the existing getOndcFieldsBySection function with this updated version
   const getOndcFieldsBySection = () => {
     if (!ondcDetails) return {};
 
@@ -642,91 +649,99 @@ const AddProduct = () => {
         acc[field.section_name] = [];
       }
 
+      // Base field object with common properties
       let fieldObject: any = {
         type: field.type,
         key: field.field_key,
         label: field.field_name,
         required: field.category_id.is_mandatory,
         placeholder: field.placeholder || field.field_name,
-        value: formData[field.field_key] || field.value || "", // Use formData value if exists
+        value: formData[field.field_key] || field.value || "",
         data_type: field.data_type,
       };
 
-      // Special handling for time-related fields
-      if (
-        field.field_name === "Return Within" ||
-        field.field_name === "Time To Ship" ||
-        field.field_name === "Time to Ship" ||
-        field.field_name === "Expected Delivery_time"
-      ) {
+      // Package Dimensions section fields
+      if (field.section_name === "Package Dimensions") {
         fieldObject = {
           ...fieldObject,
-          type: "select",
-          options: timeOptions,
-          data_source: null,
+          type: "text",
+          endAdornment: field.field_name.toLowerCase().includes("weight")
+            ? "gm"
+            : "cm",
         };
-      } else {
-        // Handle other field types
-        switch (field.type) {
-          case "checkbox":
-            fieldObject = {
-              ...fieldObject,
-              type: "checkbox",
-              checked: Boolean(formData[field.field_key] || field.value),
-            };
-            break;
+      }
 
-          case "dropdown":
-            fieldObject = {
-              ...fieldObject,
-              type: "select",
-              options: formData[`${field.key}_options`] || [],
-              data_source: field.data_source,
-              data_source_params: field.data_source_params,
-            };
-            break;
+      // Packaged Commodities section fields
+      if (field.section_name === "Packaged Commodities") {
+        fieldObject = {
+          ...fieldObject,
+          type: "text",
+        };
+      }
 
-          case "decimal":
-            fieldObject = {
-              ...fieldObject,
-              type: "number",
-              step: "0.01",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+      // Handle specific field types
+      switch (field.type) {
+        case "text":
+        case "number":
+        case "decimal":
+          fieldObject.type = "text";
+          break;
 
-          case "textarea":
-            fieldObject = {
-              ...fieldObject,
-              type: "textarea",
-              rows: 3,
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+        case "dropdown":
+          fieldObject = {
+            ...fieldObject,
+            type: "select",
+            // Check if it's a time-related field
+            options: isTimeRelatedField(field.field_name)
+              ? timeOptions // Use timeOptions for time-related fields
+              : formData[`${field.key}_options`] || [],
+            data_source: !isTimeRelatedField(field.field_name)
+              ? field.data_source
+              : null,
+            data_source_params: !isTimeRelatedField(field.field_name)
+              ? field.data_source_params
+              : null,
+          };
+          break;
 
-          case "date":
-            fieldObject = {
-              ...fieldObject,
-              type: "date",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+        case "checkbox":
+          fieldObject = {
+            ...fieldObject,
+            type: "checkbox",
+            checked: Boolean(formData[field.field_key] || field.value),
+          };
+          break;
 
-          case "text":
-            fieldObject = {
-              ...fieldObject,
-              type: "text",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+        case "textarea":
+          fieldObject = {
+            ...fieldObject,
+            type: "textarea",
+            rows: 3,
+          };
+          break;
 
-          default:
-            fieldObject = {
-              ...fieldObject,
-              type: "text",
-              value: formData[field.field_key] || field.value || "",
-            };
-        }
+        case "date":
+          fieldObject = {
+            ...fieldObject,
+            type: "date",
+            value: formData[field.field_key] || field.value || "",
+          };
+          break;
+
+        case "text":
+          fieldObject = {
+            ...fieldObject,
+            type: "text",
+            value: formData[field.field_key] || field.value || "",
+          };
+          break;
+
+        default:
+          fieldObject = {
+            ...fieldObject,
+            type: "text",
+            value: formData[field.field_key] || field.value || "",
+          };
       }
 
       acc[field.section_name].push(fieldObject);
@@ -745,7 +760,9 @@ const AddProduct = () => {
       value: formData.productTitle,
       id: "input-product-title",
       maxLength: MAX_TITLE_CHARS,
-      description: `${countChars(formData.productTitle || '')}/${MAX_TITLE_CHARS} characters`,
+      description: `${countChars(
+        formData.productTitle || ""
+      )}/${MAX_TITLE_CHARS} characters`,
       validation: (value: string) => {
         const charCount = countChars(value);
         return charCount <= MAX_TITLE_CHARS;
@@ -826,7 +843,9 @@ const AddProduct = () => {
       value: formData.shortDescription,
       id: "textarea-short-description",
       maxLength: MAX_SHORT_DESC_CHARS,
-      description: `${countChars(formData.shortDescription || '')}/${MAX_SHORT_DESC_CHARS} characters`,
+      description: `${countChars(
+        formData.shortDescription || ""
+      )}/${MAX_SHORT_DESC_CHARS} characters`,
       validation: (value: string) => {
         const charCount = countChars(value);
         return charCount <= MAX_SHORT_DESC_CHARS;
@@ -842,7 +861,9 @@ const AddProduct = () => {
       value: formData.productDescription,
       id: "textarea-product-description",
       maxLength: MAX_PRODUCT_DESC_CHARS,
-      description: `${countChars(formData.productDescription || '')}/${MAX_PRODUCT_DESC_CHARS} characters`,
+      description: `${countChars(
+        formData.productDescription || ""
+      )}/${MAX_PRODUCT_DESC_CHARS} characters`,
       validation: (value: string) => {
         const charCount = countChars(value);
         return charCount <= MAX_PRODUCT_DESC_CHARS;
@@ -986,14 +1007,18 @@ const AddProduct = () => {
   const truncateToMaxWords = (text: string, maxWords: number) => {
     const words = text.trim().split(/\s+/);
     if (words.length > maxWords) {
-      return words.slice(0, maxWords).join(' ');
+      return words.slice(0, maxWords).join(" ");
     }
     return text;
   };
 
   // Add this helper function to check all word counts
   const isValidCharCount = () => {
-    if (!formData.productTitle || !formData.shortDescription || !formData.productDescription) {
+    if (
+      !formData.productTitle ||
+      !formData.shortDescription ||
+      !formData.productDescription
+    ) {
       return false;
     }
 
@@ -1042,9 +1067,17 @@ const AddProduct = () => {
             id="add-button-basic-information"
             onClick={() => handleSave("Basic Information")}
             className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-              ${(savingStates.basicInfo || !isValidCharCount()) ? "opacity-50 cursor-not-allowed bg-gray-400" : ""}`}
+              ${
+                savingStates.basicInfo || !isValidCharCount()
+                  ? "opacity-50 cursor-not-allowed bg-gray-400"
+                  : ""
+              }`}
             disabled={savingStates.basicInfo || !isValidCharCount()}
-            title={!isValidCharCount() ? "Please check character limits and fill all required fields" : ""}
+            title={
+              !isValidCharCount()
+                ? "Please check character limits and fill all required fields"
+                : ""
+            }
           >
             {savingStates.basicInfo ? "Saving..." : "Save Basic Information"}
           </button>

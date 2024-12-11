@@ -221,6 +221,9 @@ import {
   UPDATE_BANKING_DETAILS_REQUEST,
   UPDATE_BANKING_DETAILS_SUCCESS,
   UPDATE_BANKING_DETAILS_FAILURE,
+  UPDATE_STORE_LOCATION_SUCCESS,
+  UPDATE_STORE_LOCATION_REQUEST,
+  UPDATE_STORE_LOCATION_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -3411,6 +3414,10 @@ export const getPayouts = (params: {
 export const getStoreLocations = (params: { 
   page_no: number; 
   per_page: number;
+  filters?: {
+    id?: number;
+    // Add other possible filter parameters here
+  };
 }): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_STORE_LOCATIONS_REQUEST });
@@ -3420,7 +3427,10 @@ export const getStoreLocations = (params: {
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/mdm/location`,
         {
-          params,
+          params: {
+            ...params,
+            ...(params.filters && { filters: JSON.stringify(params.filters) })
+          },
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -4124,4 +4134,45 @@ const transformFormDataToApiFormat = (accountData: any) => {
       field_sequence: field.field_sequence
     }))
   }));
+};
+
+export const updateStoreLocation = (
+  id: number,
+  data: any
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_STORE_LOCATION_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/mdm/location/${id}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_STORE_LOCATION_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update store location');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update store location';
+      dispatch({
+        type: UPDATE_STORE_LOCATION_FAILURE,
+        payload: errorMessage
+      });
+      console.error('Error updating store location:', error);
+      throw error;
+    }
+  };
 };

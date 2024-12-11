@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Eye,
@@ -25,6 +25,7 @@ import {
   getServiceability,
   updateServiceability,
   getAllServiceability,
+  updateStoreLocation,
 } from "../../redux/Action/action";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
@@ -625,7 +626,7 @@ const shippingColumns: Column[] = [
         label: "View",
         icon: "eye",
         onClick: (row: any) => console.log("View", row),
-      },       
+      },
       {
         label: "Toggle Status",
         icon: "toggle",
@@ -720,17 +721,24 @@ const StoreDetailsStep = ({
   locationId,
   onNext,
   onStoreCreated,
+  isEditing,
+  formData,
 }: {
   handleInputChange: (key: string, value: any) => void;
   locationId: number;
   onNext: () => void;
   onStoreCreated: (locationId: number) => void;
+  isEditing?: boolean;
+  formData: any;
 }) => {
   return (
     <div className="space-y-6">
       <StoreDetailsForm
         handleInputChange={handleInputChange}
         onStoreCreated={onStoreCreated}
+        isEditing={isEditing}
+        locationId={locationId}
+        formData={formData}
       />
       <WorkingHoursForm
         handleInputChange={handleInputChange}
@@ -1364,63 +1372,148 @@ const ServiceabilityStep = ({
 };
 
 const LocationServices = () => {
-  // 1. All hooks at the top
+  const { id } = useParams();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [activeTab, setActiveTab] = useState<TabType>("stores");
   const [viewType, setViewType] = useState<ViewType>("table");
   const [showShippingDetails, setShowShippingDetails] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<StoreFormData>({
-    storeName: "",
-    contactPersonName: "",
-    phoneNumber: "",
-    storeType: "",
-    gstNumber: "",
-    email: "",
-    address: "",
-    building: "",
-    locality: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    isSameTimings: false,
-    storeTimings: {},
-    storePickupTimings: {},
-    holidays: [],
-    isTemporarilyClosed: false,
-  });
   const [createdLocationId, setCreatedLocationId] = useState<number | null>(
     null
   );
 
-  // 2. All handlers
+  // Combined form data state
+  const [formData, setFormData] = useState({
+    name: "",
+    address: {
+      name: "",
+      building: "",
+      locality: "",
+      city: "",
+      state: "",
+      country: "India",
+      area_code: "",
+    },
+    location_type_id: 0,
+    email: "",
+    gst_number: "",
+    mobile_number: "",
+    latitude: "23.0283384",
+    longitude: "72.5280284",
+    opening_time: "2023-12-11T01:10:43+05:30",
+    closing_time: "2023-12-11T13:25:49+05:30",
+    contact_name: "",
+  });
+
+  // Fetch store details if editing
+  useEffect(() => {
+    const fetchStoreDetails = async () => {
+      if (id) {
+        try {
+          setIsEditing(true);
+          const response = await dispatch(
+            getStoreLocations({
+              page_no: 1,
+              per_page: 1,
+              filters: { id: parseInt(id) },
+            })
+          );
+
+          if (response?.data?.[0]) {
+            const storeData = response.data[0];
+            setFormData({
+              name: storeData.name || "",
+              address: {
+                name: storeData.address?.name || "",
+                building: storeData.address?.building || "",
+                locality: storeData.address?.locality || "",
+                city: storeData.address?.city || "",
+                state: storeData.address?.state || "",
+                country: "India",
+                area_code: storeData.address?.area_code || "",
+              },
+              location_type_id: storeData.location_type_id || 0,
+              email: storeData.email || "",
+              gst_number: storeData.gst_number || "",
+              mobile_number: storeData.mobile_number || "",
+              latitude: storeData.latitude || "23.0283384",
+              longitude: storeData.longitude || "72.5280284",
+              opening_time:
+                storeData.opening_time || "2023-12-11T01:10:43+05:30",
+              closing_time:
+                storeData.closing_time || "2023-12-11T13:25:49+05:30",
+              contact_name: storeData.contact_name || "",
+            });
+            setCreatedLocationId(parseInt(id));
+          }
+        } catch (error) {
+          console.error("Error fetching store details:", error);
+          toast.error("Failed to fetch store details");
+        }
+      }
+    };
+
+    fetchStoreDetails();
+  }, [id, dispatch]);
+
   const handleInputChange = (key: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleSubmit = () => {
-    console.log("Form submitted:", formData);
-    navigate("/dashboard/seller-settings/location-services");
-  };
-
-  const handleStoreCreated = (locationId: number) => {
-    console.log("Store created with ID:", locationId);
-    setCreatedLocationId(locationId);
-  };
-
-  // 3. Component render logic
-  const renderCreateForm = () => {
-    const handleInputChange = (key: string, value: any) => {
+    if (key.includes(".")) {
+      // Handle nested object updates (like address.name, address.building, etc.)
+      const [parent, child] = key.split(".");
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value,
+        },
+      }));
+    } else {
+      // Handle top-level updates
       setFormData((prev) => ({
         ...prev,
         [key]: value,
       }));
-    };
+    }
+  };
 
+  const handleStoreCreated = (locationId: number) => {
+    setCreatedLocationId(locationId);
+  };
+
+  const handleSaveStore = async () => {
+    try {
+      let response;
+      if (isEditing && createdLocationId) {
+        response = await dispatch(
+          updateStoreLocation(createdLocationId, formData)
+        );
+        if (response?.meta?.status) {
+          toast.success("Store updated successfully");
+          navigate("/dashboard/seller-settings/location-services");
+        }
+      } else {
+        response = await dispatch(createStoreLocation(formData));
+        if (response?.meta?.status) {
+          toast.success("Store created successfully");
+          if (response.data?.id) {
+            handleStoreCreated(response.data.id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(
+        `Failed to ${isEditing ? "update" : "create"} store:`,
+        error
+      );
+      toast.error(`Failed to ${isEditing ? "update" : "create"} store`);
+    }
+  };
+
+  // Render create/edit form
+  const renderForm = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-6">
@@ -1432,7 +1525,9 @@ const LocationServices = () => {
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold">Create New Store</h1>
+          <h1 className="text-2xl font-bold">
+            {isEditing ? "Edit Store" : "Create New Store"}
+          </h1>
         </div>
 
         <Steps />
@@ -1443,69 +1538,74 @@ const LocationServices = () => {
             locationId={createdLocationId || 0}
             onNext={() => setCurrentStep(2)}
             onStoreCreated={handleStoreCreated}
+            isEditing={isEditing}
+            formData={formData}
           />
         ) : (
           <ServiceabilityStep
             handleInputChange={handleInputChange}
             onBack={() => setCurrentStep(1)}
-            locationId={createdLocationId}
+            locationId={createdLocationId || 0}
           />
         )}
       </div>
     );
   };
 
-  const renderMainView = () => (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-lg"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-2xl font-bold">Locations & Serviceability</h1>
-      </div>
+  // Main render logic
+  return (
+    <div className="p-6">
+      {location.pathname.includes("create-store") ||
+      location.pathname.includes("edit-store") ? (
+        renderForm()
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-2xl font-bold">Locations & Serviceability</h1>
+          </div>
 
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab("stores")}
-            className={`py-2 px-1 ${
-              activeTab === "stores"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            } font-medium`}
-          >
-            Your Stores
-          </button>
-          <button
-            onClick={() => setActiveTab("shipping")}
-            className={`py-2 px-1 ${
-              activeTab === "shipping"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            } font-medium`}
-          >
-            Shipping services
-          </button>
-        </nav>
-      </div>
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab("stores")}
+                className={`py-2 px-1 ${
+                  activeTab === "stores"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                } font-medium`}
+              >
+                Your Stores
+              </button>
+              <button
+                onClick={() => setActiveTab("shipping")}
+                className={`py-2 px-1 ${
+                  activeTab === "shipping"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                } font-medium`}
+              >
+                Shipping services
+              </button>
+            </nav>
+          </div>
 
-      <div className="space-y-6">
-        {activeTab === "stores" ? (
-          <StoresTab navigate={navigate} />
-        ) : (
-          <ShippingTab viewType={viewType} setViewType={setViewType} />
-        )}
-      </div>
+          <div className="space-y-6">
+            {activeTab === "stores" ? (
+              <StoresTab navigate={navigate} />
+            ) : (
+              <ShippingTab viewType={viewType} setViewType={setViewType} />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
-
-  // 4. Final render
-  return location.pathname.includes("create-store")
-    ? renderCreateForm()
-    : renderMainView();
 };
 
 // 5. Separate components
@@ -1556,7 +1656,13 @@ const StoresTab = ({ navigate }: { navigate: any }) => {
         {
           label: "Edit",
           icon: "edit",
-          onClick: (row: any) => console.log("Edit", row),
+          onClick: (row: any) => {
+            console.log("Edit", row);
+            // Navigate to edit page with store ID
+            navigate(
+              `/dashboard/seller-settings/location-services/edit-store/${row.id}`
+            );
+          },
         },
         {
           label: "Toggle Status",
@@ -1817,33 +1923,19 @@ const ShippingTab = ({
 const StoreDetailsForm = ({
   handleInputChange,
   onStoreCreated,
+  isEditing,
+  locationId,
+  formData,
 }: {
   handleInputChange: (key: string, value: any) => void;
   onStoreCreated: (locationId: number) => void;
+  isEditing?: boolean;
+  locationId?: number;
+  formData: any;
 }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const [locationTypes, setLocationTypes] = useState<LocationType[]>([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    address: {
-      name: "",
-      building: "",
-      locality: "",
-      city: "",
-      state: "",
-      country: "India",
-      area_code: "",
-    },
-    location_type_id: 0,
-    email: "",
-    gst_number: "",
-    mobile_number: "",
-    latitude: "23.0283384",
-    longitude: "72.5280284",
-    opening_time: "2023-12-11T01:10:43+05:30",
-    closing_time: "2023-12-11T13:25:49+05:30",
-    contact_name: "",
-  });
 
   // Fetch location types on component mount
   useEffect(() => {
@@ -1864,150 +1956,181 @@ const StoreDetailsForm = ({
 
   const handleSave = async () => {
     try {
-      const response = await dispatch(createStoreLocation(formData));
-      console.log("Store creation response:", response);
-
-      if (response?.meta?.status) {
-        toast.success("Store created successfully");
-        if (response.data?.id) {
-          const createdLocationId = response.data.id;
-          console.log(
-            "Created store location ID (before passing to onStoreCreated):",
-            createdLocationId
-          );
-          onStoreCreated(createdLocationId);
-          console.log(
-            "Created store location ID (after passing to onStoreCreated):",
-            createdLocationId
-          );
-        } else {
-          console.warn("Store created but no ID received in response");
+      let response;
+      if (isEditing && locationId) {
+        // Update existing store using updateStoreLocation API
+        response = await dispatch(updateStoreLocation(locationId, formData));
+        if (response?.meta?.status) {
+          toast.success("Store updated successfully");
+          // Navigate back to list after successful update
+        }
+      } else {
+        // Create new store
+        response = await dispatch(createStoreLocation(formData));
+        if (response?.meta?.status) {
+          toast.success("Store created successfully");
+          if (response.data?.id) {
+            onStoreCreated(response.data.id);
+          }
         }
       }
     } catch (error) {
-      console.error("Failed to create store:", error);
-      toast.error("Failed to create store");
-    }
-  };
-
-  const handleFormChange = (key: string, value: any) => {
-    if (key.includes(".")) {
-      const [parent, child] = key.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
+      console.error(
+        `Failed to ${isEditing ? "update" : "create"} store:`,
+        error
+      );
+      toast.error(`Failed to ${isEditing ? "update" : "create"} store`);
     }
   };
 
   return (
     <SectionContainer>
-      <AddForm
-        data={[
-          {
-            type: "text",
-            key: "name",
-            label: "Store Name",
-            required: true,
-            value: formData.name,
-            onChange: (value) => handleFormChange("name", value),
-          },
-          {
-            type: "select",
-            key: "location_type_id",
-            label: "Store Type",
-            required: true,
-            value: formData.location_type_id,
-            options: locationTypes.map((type) => ({
-              label: type.display_name,
-              value: type.id,
-            })),
-            onChange: (value) => handleFormChange("location_type_id", value),
-          },
-          {
-            type: "text",
-            key: "address.building",
-            label: "Building",
-            required: true,
-            value: formData.address.building,
-            onChange: (value) => handleFormChange("address.building", value),
-          },
-          {
-            type: "text",
-            key: "address.locality",
-            label: "Locality",
-            required: true,
-            value: formData.address.locality,
-            onChange: (value) => handleFormChange("address.locality", value),
-          },
-          {
-            type: "text",
-            key: "address.city",
-            label: "City",
-            required: true,
-            value: formData.address.city,
-            onChange: (value) => handleFormChange("address.city", value),
-          },
-          {
-            type: "text",
-            key: "address.state",
-            label: "State",
-            required: true,
-            value: formData.address.state,
-            onChange: (value) => handleFormChange("address.state", value),
-          },
-          {
-            type: "text",
-            key: "address.area_code",
-            label: "Postal Code",
-            required: true,
-            value: formData.address.area_code,
-            onChange: (value) => handleFormChange("address.area_code", value),
-          },
-          {
-            type: "text",
-            key: "email",
-            label: "Email",
-            required: true,
-            value: formData.email,
-            onChange: (value) => handleFormChange("email", value),
-          },
-          {
-            type: "text",
-            key: "gst_number",
-            label: "GST Number",
-            required: true,
-            value: formData.gst_number,
-            onChange: (value) => handleFormChange("gst_number", value),
-          },
-          {
-            type: "text",
-            key: "mobile_number",
-            label: "Mobile Number",
-            required: true,
-            value: formData.mobile_number,
-            onChange: (value) => handleFormChange("mobile_number", value),
-          },
-          {
-            type: "text",
-            key: "contact_name",
-            label: "Contact Name",
-            required: true,
-            value: formData.contact_name,
-            onChange: (value) => handleFormChange("contact_name", value),
-          },
-        ]}
-        handleInputonChange={handleFormChange}
-        handleSelectonChange={handleFormChange}
-      />
+      <div className="space-y-6">
+        <h2 className="text-lg font-semibold">Store Details</h2>
+        <p className="text-sm text-gray-500">
+          Add a new location that you can serve and provide serviceability.
+        </p>
+        <AddForm
+          data={[
+            {
+              type: "text",
+              key: "name",
+              label: "Store Name",
+              required: true,
+              value: formData.name,
+              placeholder: "Store Name",
+              onChange: (value) => handleInputChange("name", value),
+            },
+            {
+              type: "text",
+              key: "contact_name",
+              label: "Contact Person Name",
+              required: true,
+              value: formData.contact_name,
+              placeholder: "Contact Person Name",
+              onChange: (value) => handleInputChange("contact_name", value),
+            },
+            {
+              type: "text",
+              key: "mobile_number",
+              label: "Phone Number",
+              required: true,
+              value: formData.mobile_number,
+              placeholder: "Phone Number",
+              onChange: (value) => handleInputChange("mobile_number", value),
+            },
+            {
+              type: "select",
+              key: "location_type_id",
+              label: "Store Type",
+              required: true,
+              value: formData.location_type_id,
+              placeholder: "Store Type",
+              options: locationTypes.map((type) => ({
+                label: type.display_name,
+                value: type.id,
+              })),
+              onChange: (value) => handleInputChange("location_type_id", value),
+            },
+            {
+              type: "text",
+              key: "gst_number",
+              label: "GST Number",
+              value: formData.gst_number,
+              placeholder: "Enter GST Number",
+              onChange: (value) => handleInputChange("gst_number", value),
+              rightElement: (
+                <button
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  onClick={() => console.log("Verify GST")}
+                >
+                  VERIFY
+                </button>
+              ),
+            },
+            {
+              type: "text",
+              key: "email",
+              label: "Email",
+              required: true,
+              value: formData.email,
+              placeholder: "Email",
+              onChange: (value) => handleInputChange("email", value),
+            },
+            {
+              type: "text",
+              key: "address.name",
+              label: "Address",
+              required: true,
+              value: formData.address?.name || "",
+              placeholder: "Search location",
+              onChange: (value) => handleInputChange("address.name", value),
+              rightElement: (
+                <button type="button" className="p-2">
+                  <svg
+                    className="w-5 h-5 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </button>
+              ),
+            },
+            {
+              type: "text",
+              key: "address.building",
+              label: "Building",
+              required: true,
+              value: formData.address?.building || "",
+              placeholder: "Building",
+              onChange: (value) => handleInputChange("address.building", value),
+            },
+            {
+              type: "text",
+              key: "address.locality",
+              label: "Locality",
+              required: true,
+              value: formData.address?.locality || "",
+              placeholder: "Locality",
+              onChange: (value) => handleInputChange("address.locality", value),
+            },
+            {
+              type: "text",
+              key: "address.city",
+              label: "City",
+              value: formData.address?.city || "",
+              placeholder: "City",
+              onChange: (value) => handleInputChange("address.city", value),
+            },
+            {
+              type: "text",
+              key: "address.state",
+              label: "State",
+              value: formData.address?.state || "",
+              placeholder: "State",
+              onChange: (value) => handleInputChange("address.state", value),
+            },
+            {
+              type: "text",
+              key: "address.area_code",
+              label: "Postal Code",
+              value: formData.address?.area_code || "",
+              placeholder: "Postal code",
+              onChange: (value) =>
+                handleInputChange("address.area_code", value),
+            },
+          ]}
+          handleInputonChange={handleInputChange}
+          handleSelectonChange={handleInputChange}
+        />
+      </div>
       <div className="flex justify-end mt-4">
         <button
           onClick={handleSave}

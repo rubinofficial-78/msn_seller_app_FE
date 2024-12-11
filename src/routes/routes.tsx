@@ -40,7 +40,7 @@ import AddAddOn from "../pages/AddAddOn";
 import AddMenu from "../pages/AddMenu";
 
 // Settings Related Pages
-import AccountDetails from "../pages/settings/AccountDetails";
+import AccountDetails from "../pages/sellerSettings/AccountDetails";
 import LocationServices from "../pages/settings/LocationServices";
 import BankingDetails from "../pages/settings/BankingDetails";
 import AccessManagement from "../pages/settings/AccessManagement";
@@ -475,7 +475,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "account-details",
-            element: <AccountDetails />,
+            element: <AccountDetails/>,
           },
           {
             path: "banking-details",
@@ -492,6 +492,10 @@ export const routes: RouteObject[] = [
           {
             path: "location-services/shipping-details/:id",
             element: <ShippingDetailsPage />,
+          },
+          {
+            path: "location-services/edit-store/:id",
+            element: <LocationServices />,
           },
         ],
       },

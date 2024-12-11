@@ -382,6 +382,34 @@ export interface AuthState {
     data: any | null;
     error: string | null;
   };
+  users: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: {
+      total_rows: number;
+      page_no: number;
+      per_page: number;
+      total_pages: number;
+    } | null;
+  };
+  userCounts: {
+    loading: boolean;
+    error: string | null;
+    total: number;
+    active: number;
+  };
+  roles: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: {
+      total_rows: number;
+      page_no: number;
+      per_page: number;
+      total_pages: number;
+    } | null;
+  };
 }
 
 export interface RootState {

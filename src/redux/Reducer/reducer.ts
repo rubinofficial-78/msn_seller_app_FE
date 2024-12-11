@@ -171,7 +171,16 @@ import {
   GET_BANKING_DETAILS_FAILURE,
   UPDATE_BANKING_DETAILS_REQUEST,
   UPDATE_BANKING_DETAILS_SUCCESS,
-  UPDATE_BANKING_DETAILS_FAILURE
+  UPDATE_BANKING_DETAILS_FAILURE,
+  GET_USERS_REQUEST,
+  GET_USERS_SUCCESS,
+  GET_USERS_FAILURE,
+  GET_USER_COUNTS_REQUEST,
+  GET_USER_COUNTS_SUCCESS,
+  GET_USER_COUNTS_FAILURE,
+  GET_ROLES_REQUEST,
+  GET_ROLES_SUCCESS,
+  GET_ROLES_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -459,7 +468,25 @@ const initialState: AuthState = {
     loading: false,
     data: null,
     error: null
-  }
+  },
+  users: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  userCounts: {
+    loading: false,
+    error: null,
+    total: 0,
+    active: 0
+  },
+  roles: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
 };
 
 const authReducer = (state = initialState, action: AuthActionTypes): AuthState => {
@@ -1967,6 +1994,90 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         loading: false,
         error: action.payload
+      };
+    case GET_USERS_REQUEST:
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_USERS_SUCCESS:
+      return {
+        ...state,
+        users: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_USERS_FAILURE:
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_USER_COUNTS_REQUEST:
+      return {
+        ...state,
+        userCounts: {
+          ...state.userCounts,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_USER_COUNTS_SUCCESS:
+      return {
+        ...state,
+        userCounts: {
+          ...state.userCounts,
+          loading: false,
+          error: null,
+          [action.payload.type === 'Active' ? 'active' : 'total']: action.payload.count
+        }
+      };
+    case GET_USER_COUNTS_FAILURE:
+      return {
+        ...state,
+        userCounts: {
+          ...state.userCounts,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ROLES_REQUEST:
+      return {
+        ...state,
+        roles: {
+          ...state.roles,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ROLES_SUCCESS:
+      return {
+        ...state,
+        roles: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_ROLES_FAILURE:
+      return {
+        ...state,
+        roles: {
+          ...state.roles,
+          loading: false,
+          error: action.payload
+        }
       };
     default:
       return state;

@@ -224,6 +224,15 @@ import {
   UPDATE_STORE_LOCATION_SUCCESS,
   UPDATE_STORE_LOCATION_REQUEST,
   UPDATE_STORE_LOCATION_FAILURE,
+  GET_USERS_REQUEST,
+  GET_USERS_SUCCESS,
+  GET_USERS_FAILURE,
+  GET_USER_COUNTS_REQUEST,
+  GET_USER_COUNTS_SUCCESS,
+  GET_USER_COUNTS_FAILURE,
+  GET_ROLES_REQUEST,
+  GET_ROLES_SUCCESS,
+  GET_ROLES_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -2850,7 +2859,7 @@ export const uploadTemplate = (
       });
       throw error;
     }
-  };
+  }; // Fix: Add semicolon here
 };
 
 export const getOffers = (
@@ -2902,7 +2911,7 @@ export const getOffers = (
       });
       throw error;
     }
-  };
+  }; // Fix: Add semicolon here
 };
 
 export const getOfferTypes = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
@@ -2938,7 +2947,7 @@ export const getOfferTypes = (): ThunkAction<Promise<any>, RootState, unknown, A
       });
       throw error;
     }
-  };
+  }; // Fix: Add semicolon here
 };
 
 export const saveOfferBasics = (
@@ -2991,7 +3000,7 @@ export const saveOfferBasics = (
       });
       throw error;
     }
-  };
+  }; // Fix: Add semicolon here
 };
 
 export const getLocations = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
@@ -4172,6 +4181,159 @@ export const updateStoreLocation = (
         payload: errorMessage
       });
       console.error('Error updating store location:', error);
+      throw error;
+    }
+  };
+};
+
+// Add the getUsers action creator
+export const getUsers = (
+  params: { 
+    page_no: number; 
+    per_page: number;
+    search?: string;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_USERS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams({
+        page_no: params.page_no.toString(),
+        per_page: params.per_page.toString(),
+      });
+
+      // Add search parameter if it exists
+      if (params.search) {
+        queryParams.append('search', params.search);
+      }
+
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/users?${queryParams.toString()}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_USERS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch users');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch users';
+      dispatch({
+        type: GET_USERS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// Add the getUserCounts action creator
+export const getUserCounts = (
+  type?: 'Active'
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_USER_COUNTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams();
+      if (type) {
+        queryParams.append('type', type);
+      }
+
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/users/count${type ? '?' + queryParams.toString() : ''}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_USER_COUNTS_SUCCESS,
+          payload: {
+            type: type || 'total',
+            count: response.data.data.counts
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch user counts');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user counts';
+      dispatch({
+        type: GET_USER_COUNTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// Add the getRoles action creator
+export const getRoles = (
+  params: { page_no: number; per_page: number }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ROLES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams({
+        page_no: params.page_no.toString(),
+        per_page: params.per_page.toString(),
+      });
+
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/roles?${queryParams.toString()}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ROLES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch roles');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch roles';
+      dispatch({
+        type: GET_ROLES_FAILURE,
+        payload: errorMessage
+      });
       throw error;
     }
   };

@@ -61,18 +61,21 @@ const ViewProduct = () => {
     }>
   >([]);
 
+  // State to track product status
+  const [isActive, setIsActive] = useState<boolean>(product?.is_active || false);
+
   const handleInputChange = (key: string, value: any) => {
     setFormData((prev: typeof formData) => {
       if (typeof value === "boolean") {
         return {
           ...prev,
-          [key]: value
+          [key]: value,
         };
       }
-      
+
       return {
         ...prev,
-        [key]: value
+        [key]: value,
       };
     });
   };
@@ -88,7 +91,7 @@ const ViewProduct = () => {
     if (link) {
       setFormData((prev: typeof formData) => ({
         ...prev,
-        productImages: [link]
+        productImages: [link],
       }));
     }
   };
@@ -106,7 +109,9 @@ const ViewProduct = () => {
             saveBasicDetails({
               section_key: "PRODUCT_IMAGE",
               sku_id: product.sku_id,
-              image_arr: formData.productImages?.[0] ? [formData.productImages[0]] : []
+              image_arr: formData.productImages?.[0]
+                ? [formData.productImages[0]]
+                : [],
             })
           );
           break;
@@ -136,61 +141,68 @@ const ViewProduct = () => {
 
         case "ondc":
           if (product.category_attributes) {
-            const bulkUpdatePayload = product.category_attributes.map((field: any) => {
-              let value = formData[field.field_key];
+            const bulkUpdatePayload = product.category_attributes.map(
+              (field: any) => {
+                let value = formData[field.field_key];
 
-              switch (field.type) {
-                case "checkbox":
-                  value = value !== undefined ? Boolean(value) : Boolean(field.value);
-                  break;
+                switch (field.type) {
+                  case "checkbox":
+                    value =
+                      value !== undefined
+                        ? Boolean(value)
+                        : Boolean(field.value);
+                    break;
 
-                case "number":
-                case "decimal":
-                  value = value ? Number(value) : null;
-                  break;
+                  case "number":
+                  case "decimal":
+                    value = value ? Number(value) : null;
+                    break;
 
-                case "dropdown":
-                  if (isTimeRelatedField(field.field_name)) {
-                    const selectedOption = timeOptions.find(
-                      (opt) => opt.value === value
-                    );
-                    value = selectedOption
-                      ? {
-                          id: selectedOption.id,
-                          label: selectedOption.label,
-                          lookup_code: selectedOption.value,
-                        }
-                      : null;
-                  } else if (field.data_source) {
-                    value = value ? { id: Number(value) } : null;
-                  }
-                  break;
+                  case "dropdown":
+                    if (isTimeRelatedField(field.field_name)) {
+                      const selectedOption = timeOptions.find(
+                        (opt) => opt.value === value
+                      );
+                      value = selectedOption
+                        ? {
+                            id: selectedOption.id,
+                            label: selectedOption.label,
+                            lookup_code: selectedOption.value,
+                          }
+                        : null;
+                    } else if (field.data_source) {
+                      value = value ? { id: Number(value) } : null;
+                    }
+                    break;
 
-                case "date":
-                  value = value || null;
-                  break;
+                  case "date":
+                    value = value || null;
+                    break;
 
-                default:
-                  value = value || null;
+                  default:
+                    value = value || null;
+                }
+
+                return {
+                  id: field.id,
+                  value: value,
+                };
               }
-
-              return {
-                id: field.id,
-                value: value
-              };
-            });
+            );
 
             await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
-            
-            setFormData(prev => ({
+
+            setFormData((prev) => ({
               ...prev,
               ...bulkUpdatePayload.reduce((acc: any, item: any) => {
-                const field = product.category_attributes.find((f: any) => f.id === item.id);
+                const field = product.category_attributes.find(
+                  (f: any) => f.id === item.id
+                );
                 if (field) {
                   acc[field.field_key] = item.value;
                 }
                 return acc;
-              }, {})
+              }, {}),
             }));
           }
           break;
@@ -218,6 +230,24 @@ const ViewProduct = () => {
     }
   };
 
+  // Function to toggle product status
+  const toggleProductStatus = async () => {
+    try {
+      const statusId = isActive ? 34 : 33; // 34 for deactivating, 33 for activating
+      await dispatch(
+        saveBasicDetails({
+          sku_id: product.sku_id,
+          status_id: statusId,
+        })
+      );
+      setIsActive(!isActive); // Toggle the status in the UI
+      toast.success(`Product status updated successfully!`);
+    } catch (error) {
+      console.error('Failed to update product status:', error);
+      toast.error('Failed to update product status. Please try again.');
+    }
+  };
+
   const productImagesFields = [
     {
       type: "image",
@@ -228,8 +258,11 @@ const ViewProduct = () => {
       uploadText: "Upload product image",
       uploadDescription: "PNG, JPG, GIF up to 10MB",
       aspect_ratio: "free",
-      value: formData.productImages?.[0] ? [formData.productImages[0]] : 
-             product.image_arr?.[0] ? [product.image_arr[0]] : [],
+      value: formData.productImages?.[0]
+        ? [formData.productImages[0]]
+        : product.image_arr?.[0]
+        ? [product.image_arr[0]]
+        : [],
       handleImageLink: handleImageUpload,
       maxFiles: 1,
     },
@@ -381,20 +414,22 @@ const ViewProduct = () => {
 
   useEffect(() => {
     if (product) {
-      const ondcInitialValues = product.category_attributes?.reduce((acc: any, field: any) => {
-        if (field.type === "dropdown") {
-          if (isTimeRelatedField(field.field_name)) {
-            acc[field.field_key] = field.value?.lookup_code || field.value || '';
+      const ondcInitialValues =
+        product.category_attributes?.reduce((acc: any, field: any) => {
+          if (field.type === "dropdown") {
+            if (isTimeRelatedField(field.field_name)) {
+              acc[field.field_key] =
+                field.value?.lookup_code || field.value || "";
+            } else {
+              acc[field.field_key] = field.value?.id || field.value || "";
+            }
+          } else if (field.type === "checkbox") {
+            acc[field.field_key] = Boolean(field.value);
           } else {
-            acc[field.field_key] = field.value?.id || field.value || '';
+            acc[field.field_key] = field.value || "";
           }
-        } else if (field.type === "checkbox") {
-          acc[field.field_key] = Boolean(field.value);
-        } else {
-          acc[field.field_key] = field.value || '';
-        }
-        return acc;
-      }, {}) || {};
+          return acc;
+        }, {}) || {};
 
       setFormData({
         productImages: product.image_arr || [],
@@ -453,7 +488,8 @@ const ViewProduct = () => {
       if (typeof value === "boolean") {
         displayValue = value ? "YES" : "NO";
       } else if (typeof value === "object") {
-        displayValue = value.display_name || value.name || JSON.stringify(value);
+        displayValue =
+          value.display_name || value.name || JSON.stringify(value);
       } else if (Array.isArray(value)) {
         displayValue = value.join(", ");
       } else {
@@ -479,10 +515,10 @@ const ViewProduct = () => {
     if (!field) return null;
 
     if (field.type === "checkbox") {
-      const checkboxValue = formData.hasOwnProperty(field.field_key) 
-        ? formData[field.field_key] 
+      const checkboxValue = formData.hasOwnProperty(field.field_key)
+        ? formData[field.field_key]
         : field.value;
-      
+
       return Boolean(checkboxValue) ? "YES" : "NO";
     }
 
@@ -490,11 +526,16 @@ const ViewProduct = () => {
       if (isTimeRelatedField(field.field_name)) {
         return field.value.label || field.value.display_name || null;
       }
-      return field.value.display_name || field.value.name || field.value.label || null;
+      return (
+        field.value.display_name ||
+        field.value.name ||
+        field.value.label ||
+        null
+      );
     }
 
-    return formData.hasOwnProperty(field.field_key) 
-      ? formData[field.field_key] 
+    return formData.hasOwnProperty(field.field_key)
+      ? formData[field.field_key]
       : field.value;
   };
 
@@ -513,14 +554,18 @@ const ViewProduct = () => {
       const checkboxFields = [
         "refund_eligible",
         "is_cancellable",
-        "seller_pickup_return"
+        "seller_pickup_return",
       ];
 
-      if (checkboxFields.includes(field.field_key) || field.type === "checkbox") {
-        const currentValue = formData[field.field_key] !== undefined 
-          ? formData[field.field_key] 
-          : field.value;
-        
+      if (
+        checkboxFields.includes(field.field_key) ||
+        field.type === "checkbox"
+      ) {
+        const currentValue =
+          formData[field.field_key] !== undefined
+            ? formData[field.field_key]
+            : field.value;
+
         return {
           ...baseField,
           type: "checkbox",
@@ -536,7 +581,10 @@ const ViewProduct = () => {
             return {
               ...baseField,
               type: "select",
-              value: currentValue && typeof currentValue === 'object' ? currentValue.lookup_code : currentValue,
+              value:
+                currentValue && typeof currentValue === "object"
+                  ? currentValue.lookup_code
+                  : currentValue,
               options: timeOptions,
             };
           }
@@ -546,11 +594,15 @@ const ViewProduct = () => {
           return {
             ...baseField,
             type: "select",
-            value: currentValue && typeof currentValue === 'object' ? currentValue.id : currentValue,
-            options: field.data_source_values?.map((item: any) => ({
-              label: item.display_name || item.name,
-              value: item.id || item.value,
-            })) || [],
+            value:
+              currentValue && typeof currentValue === "object"
+                ? currentValue.id
+                : currentValue,
+            options:
+              field.data_source_values?.map((item: any) => ({
+                label: item.display_name || item.name,
+                value: item.id || item.value,
+              })) || [],
           };
 
         case "decimal":
@@ -559,7 +611,7 @@ const ViewProduct = () => {
             ...baseField,
             type: "text",
             inputType: "number",
-            value: formData[field.field_key] || field.value || '',
+            value: formData[field.field_key] || field.value || "",
             endAdornment: field.field_name.toLowerCase().includes("weight")
               ? "gm"
               : field.field_name.toLowerCase().includes("length") ||
@@ -573,7 +625,7 @@ const ViewProduct = () => {
           return {
             ...baseField,
             type: "date",
-            value: formData[field.field_key] || field.value || '',
+            value: formData[field.field_key] || field.value || "",
           };
 
         case "textarea":
@@ -581,14 +633,14 @@ const ViewProduct = () => {
             ...baseField,
             type: "textarea",
             rows: 3,
-            value: formData[field.field_key] || field.value || '',
+            value: formData[field.field_key] || field.value || "",
           };
 
         default:
           return {
             ...baseField,
             type: "text",
-            value: formData[field.field_key] || field.value || '',
+            value: formData[field.field_key] || field.value || "",
           };
       }
     });
@@ -620,6 +672,16 @@ const ViewProduct = () => {
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back
+        </button>
+      </div>
+
+      {/* Activate/Deactivate Button */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={toggleProductStatus}
+          className={`px-4 py-2  rounded-lg text-white ${isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+        >
+          {isActive ? 'Deactivate' : 'Activate'}
         </button>
       </div>
 
@@ -698,22 +760,32 @@ const ViewProduct = () => {
                   {getOndcFields()
                     .filter((field: any) => field.type === "checkbox")
                     .map((field: any, index: number) => (
-                      <div key={field.key} className="flex items-center space-x-2">
+                      <div
+                        key={field.key}
+                        className="flex items-center space-x-2"
+                      >
                         <input
                           type="checkbox"
                           id={field.key}
                           checked={field.checked}
-                          onChange={(e) => handleInputChange(field.key, e.target.checked)}
+                          onChange={(e) =>
+                            handleInputChange(field.key, e.target.checked)
+                          }
                           className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                         />
-                        <label htmlFor={field.key} className="text-sm text-gray-700">
+                        <label
+                          htmlFor={field.key}
+                          className="text-sm text-gray-700"
+                        >
                           {field.label}
-                          {field.required && <span className="text-red-500 ml-1">*</span>}
+                          {field.required && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
                         </label>
                       </div>
                     ))}
                 </div>
-                
+
                 {/* Non-checkbox Fields */}
                 {getOndcFields()
                   .filter((field: any) => field.type !== "checkbox")

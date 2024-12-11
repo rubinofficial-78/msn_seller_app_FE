@@ -98,6 +98,9 @@ export const GET_MY_LISTING_FAILURE = 'GET_MY_LISTING_FAILURE';
 export const GET_STORE_LOCATIONS_REQUEST = 'GET_STORE_LOCATIONS_REQUEST';
 export const GET_STORE_LOCATIONS_SUCCESS = 'GET_STORE_LOCATIONS_SUCCESS';
 export const GET_STORE_LOCATIONS_FAILURE = 'GET_STORE_LOCATIONS_FAILURE';
+export const GET_ISSUE_CATEGORIES_REQUEST = 'GET_ISSUE_CATEGORIES_REQUEST';
+export const GET_ISSUE_CATEGORIES_SUCCESS = 'GET_ISSUE_CATEGORIES_SUCCESS';
+export const GET_ISSUE_CATEGORIES_FAILURE = 'GET_ISSUE_CATEGORIES_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -409,6 +412,11 @@ export interface AuthState {
       per_page: number;
       total_pages: number;
     } | null;
+  };
+  issueCategories: {
+    loading: boolean;
+    error: string | null;
+    data: IssueCategory[];
   };
 }
 
@@ -1003,7 +1011,8 @@ export type AuthActionTypes =
   | GetMyListingFailureAction
   | GetStoreLocationsRequestAction
   | GetStoreLocationsSuccessAction
-  | GetStoreLocationsFailureAction;
+  | GetStoreLocationsFailureAction
+  | GetIssueCategoriesRequestAction;
 
 
 export interface FileUploadPayload {
@@ -1309,4 +1318,28 @@ export interface AccountDetails {
   company_id: number;
   is_active: boolean;
   status: string;
+}
+
+// Add these interfaces
+interface IssueCategory {
+  category: string;
+  display_name: string;
+  code: string;
+  description: string;
+  raised_by: string;
+  raised_on: string;
+  expected_response_time: string;
+  expected_resolution_time: string;
+  createdAt: string;
+  updatedAt: string;
+  image_upload: boolean;
+}
+
+export interface AuthState {
+  // ... existing state properties
+  issueCategories: {
+    loading: boolean;
+    error: string | null;
+    data: IssueCategory[];
+  };
 }

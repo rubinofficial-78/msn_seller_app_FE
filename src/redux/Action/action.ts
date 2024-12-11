@@ -233,6 +233,12 @@ import {
   GET_ROLES_REQUEST,
   GET_ROLES_SUCCESS,
   GET_ROLES_FAILURE,
+  GET_ISSUES_REQUEST,
+  GET_ISSUES_SUCCESS,
+  GET_ISSUES_FAILURE,
+  GET_ISSUE_CATEGORIES_REQUEST,
+  GET_ISSUE_CATEGORIES_SUCCESS,
+  GET_ISSUE_CATEGORIES_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -4332,6 +4338,91 @@ export const getRoles = (
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch roles';
       dispatch({
         type: GET_ROLES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getIssues = (
+  params: { 
+    page_no: number; 
+    per_page: number;
+    search?: string;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ISSUES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/ondc/bpp/get_issue_list`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ISSUES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch issues');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch issues';
+      dispatch({
+        type: GET_ISSUES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getIssueCategories = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ISSUE_CATEGORIES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/ondc/bpp/categories`,
+        {
+          params: { per_page: -1 },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ISSUE_CATEGORIES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch issue categories');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch issue categories';
+      dispatch({
+        type: GET_ISSUE_CATEGORIES_FAILURE,
         payload: errorMessage
       });
       throw error;

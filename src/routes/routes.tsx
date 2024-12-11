@@ -72,6 +72,7 @@ import EditSeller from "../pages/EditSeller";
 import Payouts from "../pages/Payouts";
 
 // Add import for CreateTicket
+import ViewTicket from "../pages/support/ViewTicket";
 import CreateTicket from "../pages/support/CreateTicket";
 
 import BulkUploadMasterCatalogue from "../pages/bulkUploadMasterCatalogue";
@@ -369,6 +370,10 @@ export const routes: RouteObject[] = [
           {
             path: "create-ticket",
             element: <CreateTicket />,
+          },
+          {
+            path: "view/:id",
+            element: <ViewTicket />,
           }
         ],
       },

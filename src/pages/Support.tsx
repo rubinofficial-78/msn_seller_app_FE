@@ -1,244 +1,205 @@
-import React, { useState } from 'react';
-import { Download } from 'lucide-react';
-import CustomTable from '../components/CustomTable';
-import * as XLSX from 'xlsx';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Download, Eye } from "lucide-react";
+import CustomTable from "../components/CustomTable";
+import * as XLSX from "xlsx";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getIssues, getIssueCategories } from "../redux/Action/action";
+import { RootState } from "../redux/types";
+import { AppDispatch } from "../redux/store";
 
-interface Ticket {
-  ticketType: string;
-  ticketId: string;
-  networkIssueId: string;
-  orderId: string;
-  category: string;
-  networkParticipants: string[];
-  creationDate: string;
-  issueCategory: string;
-  subCategory: string;
-  relayDateTime: string;
-  lastUpdateDateTime: string;
-  closedDateTime: string;
-  status: 'OPEN' | 'RESOLVED' | 'CLOSED';
-}
-
-// Generate dummy data
-const generateDummyData = (count: number): Ticket[] => {
-  return Array(count).fill(null).map((_, index) => ({
-    ticketType: 'ISSUE',
-    ticketId: `TKT-${String(index + 1).padStart(4, '0')}`,
-    networkIssueId: `NI-${String(index + 1).padStart(4, '0')}`,
-    orderId: `2024-10-01-${String(800330 + index).padStart(6, '0')}`,
-    category: ['Dresses', 'Electronics', 'Food', 'Groceries'][Math.floor(Math.random() * 4)],
-    networkParticipants: ['preprod-ondc.letsbho.in', 'preprod.ondc.adya.ai'],
-    creationDate: '2024-11-01 17:53:19',
-    issueCategory: ['PAYMENT', 'DELIVERY', 'PRODUCT', 'SERVICE'][Math.floor(Math.random() * 4)],
-    subCategory: ['Over paid', 'Delayed', 'Quality Issue', 'Wrong Item'][Math.floor(Math.random() * 4)],
-    relayDateTime: '2024-11-01 17:53:19',
-    lastUpdateDateTime: '2024-11-01 17:53:19',
-    closedDateTime: Math.random() > 0.5 ? '2024-11-02 10:30:00' : '--',
-    status: ['OPEN', 'RESOLVED', 'CLOSED'][Math.floor(Math.random() * 3)] as 'OPEN' | 'RESOLVED' | 'CLOSED'
-  }));
-};
-
-// Table columns configuration
-const tableColumns = [
-  {
-    id: 'ticketType',
-    key: 'ticketType',
-    label: 'Ticket Type',
-    minWidth: 120
-  },
-  {
-    id: 'status',
-    key: 'status',
-    label: 'Ticket Status\nTicket ID\nNetwork Issue ID',
-    type: 'custom',
-    minWidth: 200,
-    render: (row: Ticket) => (
-      <div>
-        <div className={`inline-block px-2 py-1 rounded-md text-white text-xs ${
-          row.status === 'OPEN' ? 'bg-red-500' : 
-          row.status === 'RESOLVED' ? 'bg-blue-500' : 'bg-green-500'
-        }`}>
-          {row.status}
-        </div>
-        <div className="mt-1">{row.ticketId}</div>
-        <div className="text-gray-500">{row.networkIssueId}</div>
-      </div>
-    )
-  },
-  {
-    id: 'orderDetails',
-    key: ['orderId', 'category'],
-    label: 'Order ID\nCategory',
-    type: 'custom',
-    minWidth: 180,
-    render: (row: Ticket) => (
-      <div>
-        <div>{row.orderId}</div>
-        <div className="text-gray-500">Category: {row.category}</div>
-      </div>
-    )
-  },
-  {
-    id: 'networkParticipants',
-    key: 'networkParticipants',
-    label: 'Network Participants',
-    minWidth: 200
-  },
-  {
-    id: 'creationDate',
-    key: 'creationDate',
-    label: 'Creation\ndate & time',
-    minWidth: 150
-  },
-  {
-    id: 'issueCategory',
-    key: 'issueCategory',
-    label: 'Issue Category (L1)',
-    minWidth: 150
-  },
-  {
-    id: 'subCategory',
-    key: 'subCategory',
-    label: 'Issue Sub Category (L2)',
-    minWidth: 180
-  },
-  {
-    id: 'relayDateTime',
-    key: 'relayDateTime',
-    label: 'Relay\ndate & time',
-    minWidth: 150
-  },
-  {
-    id: 'lastUpdateDateTime',
-    key: 'lastUpdateDateTime',
-    label: 'Last Update\ndate & time',
-    minWidth: 150
-  },
-  {
-    id: 'closedDateTime',
-    key: 'closedDateTime',
-    label: 'Closed\ndate & time',
-    minWidth: 150
-  }
-];
-
-// Generate 100 dummy tickets
-const dummyData = generateDummyData(100);
-
-function Support() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [issueCategory, setIssueCategory] = useState('');
-  const [status, setStatus] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [paginationState, setPaginationState] = useState({
-    page_no: 1,
-    per_page: 10,
-    total_rows: dummyData.length
-  });
-
+const Support = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [issueCategory, setIssueCategory] = useState("");
+  const [status, setStatus] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage] = useState(10);
 
-  // Filter data based on all criteria
-  const filteredData = React.useMemo(() => {
-    return dummyData.filter(ticket => {
-      // Search filter
-      const searchMatch = searchTerm === '' || 
-        ticket.networkIssueId.toLowerCase().includes(searchTerm.toLowerCase());
+  const {
+    data: issues,
+    loading,
+    meta,
+  } = useSelector((state: RootState) => state.data.issues);
 
-      // Issue category filter
-      const categoryMatch = issueCategory === '' || 
-        ticket.issueCategory === issueCategory;
+  const { data: categories } = useSelector((state: RootState) => state.data.issueCategories);
 
-      // Status filter
-      const statusMatch = status === '' || 
-        ticket.status === status;
+  useEffect(() => {
+    fetchIssues();
+  }, [dispatch, currentPage, perPage]);
 
-      // Date range filter
-      let dateMatch = true;
-      if (fromDate || toDate) {
-        const ticketDate = new Date(ticket.creationDate);
-        
-        if (fromDate) {
-          const startDate = new Date(fromDate);
-          dateMatch = dateMatch && ticketDate >= startDate;
-        }
-        
-        if (toDate) {
-          const endDate = new Date(toDate);
-          endDate.setHours(23, 59, 59, 999);
-          dateMatch = dateMatch && ticketDate <= endDate;
-        }
-      }
+  useEffect(() => {
+    dispatch(getIssueCategories());
+  }, [dispatch]);
 
-      return searchMatch && categoryMatch && statusMatch && dateMatch;
-    });
-  }, [searchTerm, issueCategory, status, fromDate, toDate]);
-
-  // Get paginated data from filtered data
-  const getPaginatedData = () => {
-    const startIndex = (paginationState.page_no - 1) * paginationState.per_page;
-    const endIndex = startIndex + paginationState.per_page;
-    return filteredData.slice(startIndex, endIndex);
+  const fetchIssues = () => {
+    dispatch(
+      getIssues({
+        page_no: currentPage,
+        per_page: perPage,
+        search: searchTerm,
+      })
+    );
   };
 
-  // Handle pagination changes
-  const handlePaginationChange = (params: { page_no?: number; per_page?: number }) => {
-    setPaginationState(prev => ({
-      ...prev,
-      page_no: params.page_no || prev.page_no,
-      per_page: params.per_page || prev.per_page
-    }));
-  };
+  const tableColumns = [
+    {
+      id: "ticketType",
+      key: "issue.issue_type",
+      label: "Ticket Type",
+      minWidth: 120,
+    },
+    {
+      id: "status",
+      key: "status",
+      label: "Ticket Status\nTicket ID\nNetwork Issue ID",
+      type: "custom",
+      minWidth: 200,
+      renderCell: (row: any) => (
+        <div>
+          <div
+            className={`inline-block px-2 py-1 rounded-md text-white text-xs ${
+              row.status === "OPEN"
+                ? "bg-red-500"
+                : row.status === "RESOLVED"
+                ? "bg-blue-500"
+                : "bg-green-500"
+            }`}
+          >
+            {row.status}
+          </div>
+          <div className="mt-1">{row.issue_id_crm_bpp}</div>
+          <div className="text-gray-500">{row.unique_issue_id}</div>
+        </div>
+      ),
+    },
+    {
+      id: "orderDetails",
+      key: "issue.order_details",
+      label: "Order ID\nCategory",
+      type: "custom",
+      minWidth: 180,
+      renderCell: (row: any) => (
+        <div>
+          <div>{row.issue.order_details.id}</div>
+          <div className="text-gray-500">
+            Category: {row.issue.order_details.items[0]?.category || "-"}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "networkParticipants",
+      key: ["buyer", "seller"],
+      label: "Network Participants",
+      type: "custom",
+      minWidth: 200,
+      renderCell: (row: any) => (
+        <div>
+          <div>{row.buyer}</div>
+          <div>{row.seller}</div>
+        </div>
+      ),
+    },
+    {
+      id: "creationDate",
+      key: "createdAt",
+      label: "Creation\ndate & time",
+      minWidth: 150,
+    },
+    {
+      id: "issueCategory",
+      key: "issue_category",
+      label: "Issue Category (L1)",
+      minWidth: 150,
+    },
+    {
+      id: "subCategory",
+      key: "sub_category_name",
+      label: "Issue Sub Category (L2)",
+      minWidth: 180,
+    },
+    {
+      id: "expectedResponseTime",
+      key: "expected_response_timestamp",
+      label: "Expected Response\ndate & time",
+      minWidth: 150,
+    },
+    {
+      id: "updatedAt",
+      key: "updatedAt",
+      label: "Last Update\ndate & time",
+      minWidth: 150,
+    },
+    {
+      id: "expectedResolutionTime",
+      key: "expected_resolution_timestamp",
+      label: "Expected Resolution\ndate & time",
+      minWidth: 150,
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Actions",
+      type: "actions",
+      minWidth: 100,
+      actions: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => navigate(`/dashboard/support/view/${row.issue_id_crm_bpp}`)
+        }
+      ]
+    },
+  ];
 
-  // Handle export with filtered data
   const handleExportToExcel = () => {
-    const exportData = filteredData.map(ticket => ({
-      'Ticket Type': ticket.ticketType,
-      'Ticket Status': ticket.status,
-      'Ticket ID': ticket.ticketId,
-      'Network Issue ID': ticket.networkIssueId,
-      'Order ID': ticket.orderId,
-      'Category': ticket.category,
-      'Network Participants': Array.isArray(ticket.networkParticipants) 
-        ? ticket.networkParticipants.join(', ')
-        : ticket.networkParticipants,
-      'Creation Date & Time': ticket.creationDate,
-      'Issue Category': ticket.issueCategory,
-      'Sub Category': ticket.subCategory,
-      'Relay Date & Time': ticket.relayDateTime,
-      'Last Update Date & Time': ticket.lastUpdateDateTime,
-      'Closed Date & Time': ticket.closedDateTime,
+    const exportData = issues.map((issue) => ({
+      "Ticket Type": issue.issue.issue_type,
+      "Ticket Status": issue.status,
+      "Ticket ID": issue.issue_id_crm_bpp,
+      "Network Issue ID": issue.unique_issue_id,
+      "Order ID": issue.issue.order_details.id,
+      Category: issue.issue.order_details.items[0]?.category,
+      "Network Participants": `${issue.buyer}, ${issue.seller}`,
+      "Creation Date & Time": issue.createdAt,
+      "Issue Category": issue.issue_category,
+      "Sub Category": issue.sub_category_name,
+      "Expected Response Time": issue.expected_response_timestamp,
+      "Last Update Time": issue.updatedAt,
+      "Expected Resolution Time": issue.expected_resolution_timestamp,
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Support Tickets');
-    XLSX.writeFile(wb, `Support_Tickets_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Support Tickets");
+    XLSX.writeFile(
+      wb,
+      `Support_Tickets_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
   };
 
-  // Reset all filters
   const handleClearFilters = () => {
-    setSearchTerm('');
-    setIssueCategory('');
-    setStatus('');
-    setFromDate('');
-    setToDate('');
-    setPaginationState(prev => ({
-      ...prev,
-      page_no: 1
-    }));
+    setSearchTerm("");
+    setIssueCategory("");
+    setStatus("");
+    setFromDate("");
+    setToDate("");
+    setCurrentPage(1);
+    fetchIssues();
   };
 
   return (
     <div className="space-y-4">
-      {/* Controls - Updated Layout to match screenshot */}
+      {/* Controls */}
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex flex-wrap items-center gap-4">
-          <button 
+          <button
             id="raise-ticket-button-support"
-            onClick={() => navigate('/dashboard/support/create-ticket')} 
+            onClick={() => navigate("/dashboard/support/create-ticket")}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
           >
             RAISE TICKET
@@ -256,29 +217,32 @@ function Support() {
               />
             </div>
 
-            <select 
+            <select
               id="issue-category-select-support"
               className="px-4 py-2 border rounded-md text-sm min-w-[180px]"
               value={issueCategory}
               onChange={(e) => {
                 setIssueCategory(e.target.value);
-                setPaginationState(prev => ({ ...prev, page_no: 1 }));
+                setCurrentPage(1);
+                fetchIssues();
               }}
             >
               <option value="">All Issue Categories</option>
-              <option value="PAYMENT">Payment</option>
-              <option value="DELIVERY">Delivery</option>
-              <option value="PRODUCT">Product</option>
-              <option value="SERVICE">Service</option>
+              {categories.map((category) => (
+                <option key={category.code} value={category.category}>
+                  {category.display_name}
+                </option>
+              ))}
             </select>
 
-            <select 
+            <select
               id="status-select-support"
               className="px-4 py-2 border rounded-md text-sm min-w-[180px]"
               value={status}
               onChange={(e) => {
                 setStatus(e.target.value);
-                setPaginationState(prev => ({ ...prev, page_no: 1 }));
+                setCurrentPage(1);
+                fetchIssues();
               }}
             >
               <option value="">All Statuses</option>
@@ -327,26 +291,23 @@ function Support() {
       <div className="bg-white rounded-lg shadow">
         <CustomTable
           headCells={tableColumns}
-          data={getPaginatedData()}
+          data={issues}
+          loading={loading}
           pagination={true}
-          meta_data={{
-            total_rows: filteredData.length,
-            page_no: paginationState.page_no,
-            per_page: paginationState.per_page,
-            totalPages: Math.ceil(filteredData.length / paginationState.per_page)
-          }}
-          setParams={handlePaginationChange}
+          meta_data={meta}
+          setParams={(params) => setCurrentPage(params.page_no || 1)}
+          currentPage={currentPage}
         />
       </div>
 
       {/* No Results Message */}
-      {filteredData.length === 0 && (
+      {!loading && issues.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No tickets found matching the selected filters
         </div>
       )}
     </div>
   );
-}
+};
 
 export default Support;

@@ -180,7 +180,13 @@ import {
   GET_USER_COUNTS_FAILURE,
   GET_ROLES_REQUEST,
   GET_ROLES_SUCCESS,
-  GET_ROLES_FAILURE
+  GET_ROLES_FAILURE,
+  GET_ISSUES_REQUEST,
+  GET_ISSUES_SUCCESS,
+  GET_ISSUES_FAILURE,
+  GET_ISSUE_CATEGORIES_REQUEST,
+  GET_ISSUE_CATEGORIES_SUCCESS,
+  GET_ISSUE_CATEGORIES_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -486,6 +492,17 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: null
+  },
+  issues: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  issueCategories: {
+    loading: false,
+    error: null,
+    data: []
   },
 };
 
@@ -2075,6 +2092,61 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         roles: {
           ...state.roles,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ISSUES_REQUEST:
+      return {
+        ...state,
+        issues: {
+          ...state.issues,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ISSUES_SUCCESS:
+      return {
+        ...state,
+        issues: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_ISSUES_FAILURE:
+      return {
+        ...state,
+        issues: {
+          ...state.issues,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ISSUE_CATEGORIES_REQUEST:
+      return {
+        ...state,
+        issueCategories: {
+          ...state.issueCategories,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ISSUE_CATEGORIES_SUCCESS:
+      return {
+        ...state,
+        issueCategories: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ISSUE_CATEGORIES_FAILURE:
+      return {
+        ...state,
+        issueCategories: {
+          ...state.issueCategories,
           loading: false,
           error: action.payload
         }

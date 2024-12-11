@@ -32,9 +32,9 @@ const SellerInfo = ({ onNext }: { onNext: (data: any) => void }) => {
 
     // Seller Name validation
     if (formValues.sellerName) {
-      if (formValues.sellerName.length > 10) {
+      if (formValues.sellerName.length > 20) {
         if (showError)
-          toast.error("Seller name should not exceed 10 characters");
+          toast.error("Seller name should not exceed 20 characters");
         isValid = false;
       }
     } else {

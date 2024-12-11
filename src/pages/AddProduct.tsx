@@ -39,7 +39,7 @@ interface FormData {
 
 const MAX_TITLE_CHARS = 50;
 const MAX_SHORT_DESC_CHARS = 150;
-const MAX_PRODUCT_DESC_CHARS = 500;
+const MAX_PRODUCT_DESC_CHARS = 300;
 
 const countChars = (text: string) => {
   return text?.trim().length || 0;

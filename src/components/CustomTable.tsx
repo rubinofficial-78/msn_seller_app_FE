@@ -132,7 +132,8 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
                                 transition-colors duration-200 ease-in-out focus:outline-none
                                 ${
-                                  row.status?.lookup_code === "ACTIVE"
+                                  row.status?.lookup_code === "ACTIVE" ||
+                                  row.status?.lookup_code === "DRAFT"
                                     ? "bg-blue-600"
                                     : "bg-gray-200"
                                 }
@@ -143,7 +144,8 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                   pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
                                   transition duration-200 ease-in-out
                                   ${
-                                    row.status?.lookup_code === "ACTIVE"
+                                    row.status?.lookup_code === "ACTIVE" ||
+                                    row.status?.lookup_code === "DRAFT"
                                       ? "translate-x-5"
                                       : "translate-x-0"
                                   }
@@ -154,7 +156,8 @@ const CustomTable: React.FC<CustomTableProps> = ({
                               className={`
                                 text-sm font-medium px-3 py-1 rounded-full
                                 ${
-                                  row.status?.lookup_code === "ACTIVE"
+                                  row.status?.lookup_code === "ACTIVE" ||
+                                  row.status?.lookup_code === "DRAFT"
                                     ? "bg-green-100 text-green-800"
                                     : "bg-red-100 text-red-800"
                                 }
@@ -170,12 +173,14 @@ const CustomTable: React.FC<CustomTableProps> = ({
                         ) : cell.type === "status" ? (
                           <span
                             className={`px-2 py-1 rounded-full text-xs ${
-                              row[cell.key as string] === "Active"
+                              row.status?.lookup_code === "ACTIVE"
                                 ? "bg-green-100 text-green-800"
+                                : row.status?.lookup_code === "DRAFT"
+                                ? "bg-gray-100 text-gray-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {row[cell.key as string]}
+                            {row.status?.display_name || row.status?.lookup_code}
                           </span>
                         ) : cell.type === "image_text" ? (
                           <div className="flex items-center">

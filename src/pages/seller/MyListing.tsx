@@ -374,7 +374,7 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
     },
     {
       id: "quantity",
-      key: "quantity_in_hand",
+      key: "inventory_arr.0.on_hand_quantity",
       label: "Quantity in hand",
       type: "number",
       minWidth: 140,
@@ -392,30 +392,6 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       label: "Status",
       type: "status",
       minWidth: 120,
-    },
-    {
-      id: "sellerName",
-      key: "created_by.name",
-      label: "Seller Name",
-      minWidth: 150,
-    },
-    {
-      id: "partnerName",
-      key: "created_by.parent.name", // Adjust based on actual API response
-      label: "Partner Name",
-      minWidth: 150,
-    },
-    {
-      id: "branchName",
-      key: "created_by.parent.parent.name", // Adjust based on actual API response
-      label: "Branch Name",
-      minWidth: 150,
-    },
-    {
-      id: "companyName",
-      key: "created_by.parent.parent.parent.name", // Adjust based on actual API response
-      label: "Company Name",
-      minWidth: 150,
     },
     {
       id: "actions",
@@ -487,18 +463,57 @@ const MyListing = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
-  const { data: listings, loading, error, meta } = useSelector(
-    (state: RootState) => state.data.myListing
-  );
+  const {
+    data: listings,
+    loading,
+    error,
+    meta,
+  } = useSelector((state: RootState) => state.data.myListing);
   const productCounts = useSelector(
     (state: RootState) => state.data.productCounts?.data
   );
 
-  // Fetch products and counts when component mounts
+  // Update the useEffect to include status parameter based on active tab
   useEffect(() => {
-    dispatch(getmylisting({ page_no: 1, per_page: 10 }));
-    dispatch(getmylistingCounts());
-  }, [dispatch]);
+    const fetchListings = async () => {
+      try {
+        // Get status based on active tab
+        let statusParam;
+        switch (activeTab) {
+          case "Active":
+            statusParam = "ACTIVE";
+            break;
+          case "Inactive":
+            statusParam = "INACTIVE";
+            break;
+          case "Draft":
+            statusParam = "DRAFT";
+            break;
+          default:
+            statusParam = undefined;
+        }
+
+        // Call API with status parameter
+        await dispatch(
+          getmylisting({
+            page_no: 1,
+            per_page: 10,
+            ...(statusParam && { status: statusParam }), // Only include status if it's defined
+          })
+        );
+
+        // Fetch counts
+        await dispatch(getmylistingCounts());
+      } catch (error) {
+        console.error("Error fetching listings:", error);
+      }
+    };
+
+    // Only fetch for product-related tabs
+    if (["All Products", "Active", "Inactive", "Draft"].includes(activeTab)) {
+      fetchListings();
+    }
+  }, [dispatch, activeTab]); // Add activeTab to dependencies
 
   // Update the tabs with counts from API
   const updatedTabs = tabs.map((tab) => {
@@ -539,7 +554,6 @@ const MyListing = () => {
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
               />
             </div>
-          
           </div>
           <div className="flex items-center gap-2">
             <button

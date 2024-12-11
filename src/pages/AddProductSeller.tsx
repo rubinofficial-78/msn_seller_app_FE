@@ -43,8 +43,8 @@ interface FormData {
 }
 
 const MAX_TITLE_CHARS = 20;
-const MAX_SHORT_DESC_CHARS = 50;
-const MAX_PRODUCT_DESC_CHARS = 100;
+const MAX_SHORT_DESC_CHARS = 150;
+const MAX_PRODUCT_DESC_CHARS = 300;
 
 const countChars = (text: string) => {
   return text?.trim().length || 0;
@@ -137,6 +137,7 @@ const AddProductSeller = () => {
             id: item.id,
           }));
           setTimeOptions(options);
+          console.log("Time options loaded:", options); // Debug log
         }
       } catch (error) {
         console.error("Failed to fetch time options:", error);
@@ -429,15 +430,15 @@ const AddProductSeller = () => {
     inventory: false,
     measurement: false,
     pricing: false,
+    ondc: false
   });
 
   // Update handleSave function to use specific saving state
   const handleSave = async (section: string) => {
     try {
-      // Set saving state for specific section
-      setSavingStates((prev) => ({
+      setSavingStates(prev => ({
         ...prev,
-        [getSavingStateKey(section)]: true,
+        [getSavingStateKey(section)]: true
       }));
 
       switch (section) {
@@ -593,6 +594,54 @@ const AddProductSeller = () => {
           toast.success("Pricing details saved successfully!");
           break;
 
+        case "ONDC Details":
+          if (!ondcDetails) {
+            throw new Error("ONDC details not loaded");
+          }
+
+          // Prepare the bulk update payload
+          const bulkUpdatePayload = ondcDetails.map((field) => {
+            const value = formData[field.field_key];
+            let processedValue = value;
+
+            // Process value based on field type
+            switch (field.type) {
+              case "checkbox":
+                processedValue = Boolean(value);
+                break;
+
+              case "dropdown":
+                if (isTimeRelatedField(field.field_name)) {
+                  const selectedOption = timeOptions.find(
+                    (opt) => opt.value === value
+                  );
+                  processedValue = selectedOption ? {
+                    id: selectedOption.id,
+                    label: selectedOption.label,
+                    lookup_code: selectedOption.value,
+                  } : null;
+                }
+                break;
+
+              case "decimal":
+                processedValue = value ? Number(value) : null;
+                break;
+
+              default:
+                processedValue = value || null;
+            }
+
+            return {
+              id: field.id,
+              value: processedValue,
+            };
+          });
+
+          // Call the bulk update API
+          await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
+          toast.success("ONDC details saved successfully!");
+          break;
+
         default:
           break;
       }
@@ -600,10 +649,9 @@ const AddProductSeller = () => {
       console.error("Failed to save:", error);
       toast.error("Failed to save. Please try again.");
     } finally {
-      // Reset saving state for specific section
-      setSavingStates((prev) => ({
+      setSavingStates(prev => ({
         ...prev,
-        [getSavingStateKey(section)]: false,
+        [getSavingStateKey(section)]: false
       }));
     }
   };
@@ -621,6 +669,8 @@ const AddProductSeller = () => {
         return "measurement";
       case "Pricing Details":
         return "pricing";
+      case "ONDC Details":
+        return "ondc";
       default:
         return "basicInfo";
     }
@@ -680,7 +730,18 @@ const AddProductSeller = () => {
     }
   }, [ondcDetails]);
 
-  // Update the getOndcFieldsBySection function
+  // First, add this check for time-related fields
+  const isTimeRelatedField = (fieldName: string): boolean => {
+    const timeFields = [
+      "Return Within",
+      "Time To Ship",
+      "Time to Ship",
+      "Expected Delivery_time"
+    ];
+    return timeFields.includes(fieldName);
+  };
+
+  // Then update the getOndcFieldsBySection function
   const getOndcFieldsBySection = () => {
     if (!ondcDetails) return {};
 
@@ -689,94 +750,99 @@ const AddProductSeller = () => {
         acc[field.section_name] = [];
       }
 
+      // Base field object with common properties
       let fieldObject: any = {
         type: field.type,
         key: field.field_key,
         label: field.field_name,
         required: field.category_id.is_mandatory,
         placeholder: field.placeholder || field.field_name,
-        value: formData[field.field_key] || field.value || "", // Use formData value if exists
+        value: formData[field.field_key] || field.value || "",
         data_type: field.data_type,
       };
 
-      // Special handling for time-related fields
-      if (
-        field.field_name === "Return Within" ||
-        field.field_name === "Time To Ship" ||
-        field.field_name === "Time to Ship" ||
-        field.field_name === "Expected Delivery_time"
-      ) {
+      // Package Dimensions section fields
+      if (field.section_name === "Package Dimensions") {
         fieldObject = {
           ...fieldObject,
-          type: "select",
-          options: timeOptions,
-          data_source: null,
+          type: "text",
+          endAdornment: field.field_name.toLowerCase().includes("weight")
+            ? "gm"
+            : "cm",
         };
-      } else {
-        // Handle other field types
-        switch (field.type) {
-          case "checkbox":
-            fieldObject = {
-              ...fieldObject,
-              type: "checkbox",
-              checked: Boolean(formData[field.field_key] || field.value),
-            };
-            break;
+      }
 
-          case "dropdown":
-            fieldObject = {
-              ...fieldObject,
-              type: "select",
-              options: formData[`${field.key}_options`] || [],
-              data_source: field.data_source,
-              data_source_params: field.data_source_params,
-            };
-            break;
+      // Packaged Commodities section fields
+      if (field.section_name === "Packaged Commodities") {
+        fieldObject = {
+          ...fieldObject,
+          type: "text",
+        };
+      }
 
-          case "decimal":
-            fieldObject = {
-              ...fieldObject,
-              type: "number",
-              step: "0.01",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+      // Handle specific field types
+      switch (field.type) {
+        case "text":
+        case "number":
+        case "decimal":
+          fieldObject.type = "text";
+          break;
 
-          case "textarea":
-            fieldObject = {
-              ...fieldObject,
-              type: "textarea",
-              rows: 3,
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+        case "dropdown":
+          fieldObject = {
+            ...fieldObject,
+            type: "select",
+            // Check if it's a time-related field
+            options: isTimeRelatedField(field.field_name) 
+              ? timeOptions // Use timeOptions for time-related fields
+              : formData[`${field.key}_options`] || [],
+            data_source: !isTimeRelatedField(field.field_name) ? field.data_source : null,
+            data_source_params: !isTimeRelatedField(field.field_name) ? field.data_source_params : null,
+          };
+          break;
 
-          case "date":
-            fieldObject = {
-              ...fieldObject,
-              type: "date",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+        case "checkbox":
+          fieldObject = {
+            ...fieldObject,
+            type: "checkbox",
+            checked: Boolean(formData[field.field_key] || field.value),
+          };
+          break;
 
-          case "text":
-            fieldObject = {
-              ...fieldObject,
-              type: "text",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
+        case "textarea":
+          fieldObject = {
+            ...fieldObject,
+            type: "textarea",
+            rows: 3,
+          };
+          break;
 
-          default:
-            fieldObject = {
-              ...fieldObject,
-              type: "text",
-              value: formData[field.field_key] || field.value || "",
-            };
-        }
+        case "date":
+          fieldObject = {
+            ...fieldObject,
+            type: "date",
+            value: formData[field.field_key] || field.value || "",
+          };
+          break;
+
+        case "text":
+          fieldObject = {
+            ...fieldObject,
+            type: "text",
+            value: formData[field.field_key] || field.value || "",
+          };
+          break;
+
+        default:
+          fieldObject = {
+            ...fieldObject,
+            type: "text",
+            value: formData[field.field_key] || field.value || "",
+          };
       }
 
       acc[field.section_name].push(fieldObject);
+    
       return acc;
     }, {});
   };
@@ -991,7 +1057,7 @@ const AddProductSeller = () => {
         : (locations || []).map((location: any) => {
             console.log("Mapping Location:", location);
             return {
-              label: location.name,
+              label: location.contact_name,
               value: location.id.toString(),
             };
           }),
@@ -1349,7 +1415,7 @@ const AddProductSeller = () => {
               ([sectionName, fields]: [string, any]) => (
                 <div key={sectionName} className="mb-6">
                   <h3 className="text-lg font-medium mb-4">{sectionName}</h3>
-                  <div className="grid gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {fields.map((field: any) => (
                       <div key={field.key} className="space-y-2">
                         {field.type === "checkbox" ? (
@@ -1391,12 +1457,11 @@ const AddProductSeller = () => {
           <div className="flex justify-end mt-6">
             <button
               onClick={() => handleSave("ONDC Details")}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-                savingStates.pricing ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              disabled={savingStates.pricing}
+              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                ${savingStates.ondc ? "opacity-50 cursor-not-allowed" : ""}`}
+              disabled={savingStates.ondc}
             >
-              {savingStates.pricing ? "Saving..." : "Save ONDC Details"}
+              {savingStates.ondc ? "Saving..." : "Save ONDC Details"}
             </button>
           </div>
         </div>

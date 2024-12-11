@@ -38,8 +38,8 @@ interface FormData {
 }
 
 const MAX_TITLE_CHARS = 20;
-const MAX_SHORT_DESC_CHARS = 50;
-const MAX_PRODUCT_DESC_CHARS = 100;
+const MAX_SHORT_DESC_CHARS = 150;
+const MAX_PRODUCT_DESC_CHARS = 300;
 
 const countChars = (text: string) => {
   return text?.trim().length || 0;
@@ -381,10 +381,109 @@ const AddproductMasterCatalogue = () => {
     }
   };
 
-  // Update handleSave function to use specific saving state
+  // Add isTimeRelatedField helper function
+  const isTimeRelatedField = (fieldName: string): boolean => {
+    const timeFields = [
+      "Return Within",
+      "Time To Ship",
+      "Time to Ship",
+      "Expected Delivery_time"
+    ];
+    return timeFields.includes(fieldName);
+  };
+
+  // Update getOndcFieldsBySection function
+  const getOndcFieldsBySection = () => {
+    if (!ondcDetails) return {};
+
+    return ondcDetails.reduce((acc: any, field: any) => {
+      if (!acc[field.section_name]) {
+        acc[field.section_name] = [];
+      }
+
+      // Base field object with common properties
+      let fieldObject: any = {
+        type: field.type,
+        key: field.field_key,
+        label: field.field_name,
+        required: field.category_id.is_mandatory,
+        placeholder: field.placeholder || field.field_name,
+        value: formData[field.field_key] || field.value || "",
+        data_type: field.data_type,
+      };
+
+      // Package Dimensions section fields
+      if (field.section_name === "Package Dimensions") {
+        fieldObject = {
+          ...fieldObject,
+          type: "text",
+          endAdornment: field.field_name.toLowerCase().includes("weight")
+            ? "gm"
+            : "cm",
+        };
+      }
+
+      // Packaged Commodities section fields
+      if (field.section_name === "Packaged Commodities") {
+        fieldObject = {
+          ...fieldObject,
+          type: "text",
+        };
+      }
+
+      // Handle specific field types
+      switch (field.type) {
+        case "text":
+        case "number":
+        case "decimal":
+          fieldObject.type = "text";
+          break;
+
+        case "dropdown":
+          fieldObject = {
+            ...fieldObject,
+            type: "select",
+            // Check if it's a time-related field
+            options: isTimeRelatedField(field.field_name) 
+              ? timeOptions // Use timeOptions for time-related fields
+              : formData[`${field.key}_options`] || [],
+            data_source: !isTimeRelatedField(field.field_name) ? field.data_source : null,
+            data_source_params: !isTimeRelatedField(field.field_name) ? field.data_source_params : null,
+          };
+          break;
+
+        case "checkbox":
+          fieldObject = {
+            ...fieldObject,
+            type: "checkbox",
+            checked: Boolean(formData[field.field_key] || field.value),
+          };
+          break;
+
+        case "textarea":
+          fieldObject = {
+            ...fieldObject,
+            type: "textarea",
+            rows: 3,
+          };
+          break;
+          case "date":
+            fieldObject = {
+              ...fieldObject,
+              type: "date",
+              value: formData[field.field_key] || field.value || "",
+          };
+          break;
+      }
+
+      acc[field.section_name].push(fieldObject);
+      return acc;
+    }, {});
+  };
+
+  // Update handleSave function to include ONDC Details case
   const handleSave = async (section: string) => {
     try {
-      // Set saving state for specific section
       setSavingStates(prev => ({
         ...prev,
         [getSavingStateKey(section)]: true
@@ -517,36 +616,20 @@ const AddproductMasterCatalogue = () => {
                 break;
 
               case "dropdown":
-                if (
-                  field.field_name === "Return Within" ||
-                  field.field_name === "Time To Ship" ||
-                  field.field_name === "Time to Ship" ||
-                  field.field_name === "Expected Delivery_time"
-                ) {
+                if (isTimeRelatedField(field.field_name)) {
                   const selectedOption = timeOptions.find(
                     (opt) => opt.value === value
                   );
-                  if (selectedOption) {
-                    processedValue = {
-                      id: selectedOption.id,
-                      label: selectedOption.label,
-                      lookup_code: selectedOption.value,
-                    };
-                  }
+                  processedValue = selectedOption ? {
+                    id: selectedOption.id,
+                    label: selectedOption.label,
+                    lookup_code: selectedOption.value,
+                  } : null;
                 }
                 break;
 
               case "decimal":
                 processedValue = value ? Number(value) : null;
-                break;
-
-              case "text":
-              case "textarea":
-                processedValue = value || null;
-                break;
-
-              case "date":
-                processedValue = value || null;
                 break;
 
               default:
@@ -571,7 +654,6 @@ const AddproductMasterCatalogue = () => {
       console.error("Failed to save:", error);
       toast.error("Failed to save. Please try again.");
     } finally {
-      // Reset saving state for specific section
       setSavingStates(prev => ({
         ...prev,
         [getSavingStateKey(section)]: false
@@ -632,107 +714,6 @@ const AddproductMasterCatalogue = () => {
       });
     }
   }, [ondcDetails]);
-
-  // Update the getOndcFieldsBySection function
-  const getOndcFieldsBySection = () => {
-    if (!ondcDetails) return {};
-
-    return ondcDetails.reduce((acc: any, field: any) => {
-      if (!acc[field.section_name]) {
-        acc[field.section_name] = [];
-      }
-
-      let fieldObject: any = {
-        type: field.type,
-        key: field.field_key,
-        label: field.field_name,
-        required: field.category_id.is_mandatory,
-        placeholder: field.placeholder || field.field_name,
-        value: formData[field.field_key] || field.value || "", // Use formData value if exists
-        data_type: field.data_type,
-      };
-
-      // Special handling for time-related fields
-      if (
-        field.field_name === "Return Within" ||
-        field.field_name === "Time To Ship" ||
-        field.field_name === "Time to Ship" ||
-        field.field_name === "Expected Delivery_time"
-      ) {
-        fieldObject = {
-          ...fieldObject,
-          type: "select",
-          options: timeOptions,
-          data_source: null,
-        };
-      } else {
-        // Handle other field types
-        switch (field.type) {
-          case "checkbox":
-            fieldObject = {
-              ...fieldObject,
-              type: "checkbox",
-              checked: Boolean(formData[field.field_key] || field.value),
-            };
-            break;
-
-          case "dropdown":
-            fieldObject = {
-              ...fieldObject,
-              type: "select",
-              options: formData[`${field.key}_options`] || [],
-              data_source: field.data_source,
-              data_source_params: field.data_source_params,
-            };
-            break;
-
-          case "decimal":
-            fieldObject = {
-              ...fieldObject,
-              type: "number",
-              step: "0.01",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
-
-          case "textarea":
-            fieldObject = {
-              ...fieldObject,
-              type: "textarea",
-              rows: 3,
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
-
-          case "date":
-            fieldObject = {
-              ...fieldObject,
-              type: "date",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
-
-          case "text":
-            fieldObject = {
-              ...fieldObject,
-              type: "text",
-              value: formData[field.field_key] || field.value || "",
-            };
-            break;
-
-          default:
-            fieldObject = {
-              ...fieldObject,
-              type: "text",
-              value: formData[field.field_key] || field.value || "",
-            };
-        }
-      }
-
-      acc[field.section_name].push(fieldObject);
-      return acc;
-    }, {});
-  };
 
   // Then define the fields
   const basicInfoFields = [
@@ -1160,7 +1141,7 @@ const AddproductMasterCatalogue = () => {
               ([sectionName, fields]: [string, any]) => (
                 <div key={sectionName} className="mb-6">
                   <h3 className="text-lg font-medium mb-4">{sectionName}</h3>
-                  <div className="grid gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {fields.map((field: any) => (
                       <div key={field.key} className="space-y-2">
                         {field.type === "checkbox" ? (
@@ -1201,11 +1182,9 @@ const AddproductMasterCatalogue = () => {
 
           <div className="flex justify-end mt-6">
             <button
-              id="add-button-ondc-details"
               onClick={() => handleSave("ONDC Details")}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-                savingStates.ondc ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                ${savingStates.ondc ? "opacity-50 cursor-not-allowed" : ""}`}
               disabled={savingStates.ondc}
             >
               {savingStates.ondc ? "Saving..." : "Save ONDC Details"}

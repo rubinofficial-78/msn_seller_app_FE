@@ -25,8 +25,8 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
     // Bank Name validation (max 10 characters)
     if (!formValues.bankName.trim()) {
       isValid = false;
-    } else if (formValues.bankName.length > 10) {
-      toast.error("Bank name should not exceed 10 characters");
+    } else if (formValues.bankName.length > 20) {
+      toast.error("Bank name should not exceed 20 characters");
       isValid = false;
     }
 
@@ -51,8 +51,8 @@ const BankingInfo = ({ onNext }: { onNext: (data: any) => void }) => {
     // Beneficiary Name validation (max 10 characters)
     if (!formValues.beneficiaryName.trim()) {
       isValid = false;
-    } else if (formValues.beneficiaryName.length > 10) {
-      toast.error("Beneficiary name should not exceed 10 characters");
+    } else if (formValues.beneficiaryName.length > 20) {
+      toast.error("Beneficiary name should not exceed 20 characters");
       isValid = false;
     }
 

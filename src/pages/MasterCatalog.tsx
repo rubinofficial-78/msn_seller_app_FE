@@ -147,11 +147,11 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
           className="bg-white rounded-lg shadow-sm p-4 border border-gray-200"
         >
           {/* Product Image */}
-          <div className="relative aspect-square mb-4">
+          <div className="relative mb-4">
             <img
               src={product.image_arr?.[0] || "/placeholder-product.png"}
               alt={product.name}
-              className="w-full h-full object-cover rounded-lg"
+              className="w-20 h-20 object-cover rounded-lg"
             />
             {/* Action Buttons Overlay */}
             <div className="absolute top-2 right-2 flex gap-2">

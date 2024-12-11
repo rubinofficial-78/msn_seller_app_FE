@@ -239,6 +239,21 @@ import {
   GET_ISSUE_CATEGORIES_REQUEST,
   GET_ISSUE_CATEGORIES_SUCCESS,
   GET_ISSUE_CATEGORIES_FAILURE,
+  GET_ORDER_DETAILS_REQUEST,
+  GET_ORDER_DETAILS_SUCCESS,
+  GET_ORDER_DETAILS_FAILURE,
+  GET_ORDER_FULFILLMENT_STATUS_REQUEST,
+  GET_ORDER_FULFILLMENT_STATUS_SUCCESS,
+  GET_ORDER_FULFILLMENT_STATUS_FAILURE,
+  GET_CANCELLATION_REASONS_REQUEST,
+  GET_CANCELLATION_REASONS_SUCCESS,
+  GET_CANCELLATION_REASONS_FAILURE,
+  CANCEL_ORDER_REQUEST,
+  CANCEL_ORDER_SUCCESS,
+  CANCEL_ORDER_FAILURE,
+  UPDATE_ORDER_FULFILLMENT_REQUEST,
+  UPDATE_ORDER_FULFILLMENT_SUCCESS,
+  UPDATE_ORDER_FULFILLMENT_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -2865,7 +2880,7 @@ export const uploadTemplate = (
       });
       throw error;
     }
-  }; // Fix: Add semicolon here
+  };
 };
 
 export const getOffers = (
@@ -2917,7 +2932,7 @@ export const getOffers = (
       });
       throw error;
     }
-  }; // Fix: Add semicolon here
+  };
 };
 
 export const getOfferTypes = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
@@ -2953,7 +2968,7 @@ export const getOfferTypes = (): ThunkAction<Promise<any>, RootState, unknown, A
       });
       throw error;
     }
-  }; // Fix: Add semicolon here
+  };
 };
 
 export const saveOfferBasics = (
@@ -3006,7 +3021,7 @@ export const saveOfferBasics = (
       });
       throw error;
     }
-  }; // Fix: Add semicolon here
+  };
 };
 
 export const getLocations = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
@@ -4423,6 +4438,216 @@ export const getIssueCategories = (): ThunkAction<Promise<any>, RootState, unkno
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch issue categories';
       dispatch({
         type: GET_ISSUE_CATEGORIES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getOrderDetails = (
+  orderId: string
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ORDER_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/sales_orders/get/${orderId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ORDER_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch order details');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch order details';
+      dispatch({
+        type: GET_ORDER_DETAILS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getOrderFulfillmentStatus = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ORDER_FULFILLMENT_STATUS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/core/lookup_code/list/SALES_ORDER_FULFILLMENT_STATUS`,
+        {
+          params: { per_page: -1, page_no: 1 },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ORDER_FULFILLMENT_STATUS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch fulfillment status');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch fulfillment status';
+      dispatch({
+        type: GET_ORDER_FULFILLMENT_STATUS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getCancellationReasons = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_CANCELLATION_REASONS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/core/lookup_code/list/CANCELLATION_REASON`,
+        {
+          params: { per_page: -1, page_no: 1 },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_CANCELLATION_REASONS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch cancellation reasons');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch cancellation reasons';
+      dispatch({
+        type: GET_CANCELLATION_REASONS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+interface CancelOrderPayload {
+  id: number;
+  ids: Array<{
+    id: number;
+    item_quantity: number;
+  }>;
+  cancellation_reason_id: number;
+  item_status_id: number;
+}
+
+export const cancelOrder = (
+  payload: CancelOrderPayload
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: CANCEL_ORDER_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/sales_orders/line_update`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: CANCEL_ORDER_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to cancel order');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel order';
+      dispatch({
+        type: CANCEL_ORDER_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+interface UpdateOrderFulfillmentPayload {
+  fulfillment_status_id: number;
+}
+
+export const updateOrderFulfillment = (
+  orderId: number,
+  payload: UpdateOrderFulfillmentPayload
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_ORDER_FULFILLMENT_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/sales_orders/${orderId}/fulfillment_update`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_ORDER_FULFILLMENT_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update order fulfillment');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update order fulfillment';
+      dispatch({
+        type: UPDATE_ORDER_FULFILLMENT_FAILURE,
         payload: errorMessage
       });
       throw error;

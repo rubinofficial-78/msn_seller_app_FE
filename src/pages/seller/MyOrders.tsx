@@ -1,217 +1,426 @@
-import React, { useState } from 'react';
-import { Search, Calendar, Download, LayoutList, Table, ExternalLink, Clock, LayoutGrid } from 'lucide-react';
-
-// Sample data for the orders table
-const orderData = [
-  {
-    buyerNPName: 'preprod.ondc.adya.ai',
-    sellerNPName: 'preprod.ondc.adya.ai',
-    orderCreateDate: '07-11-2024 01:10 pm',
-    networkOrderID: 'SMBOI04XRO27BIAUYW',
-    networkTransactionID: 'a1205e74-410c-4717-936c-7f3f7dea7cb8',
-    sellerNPOrderID: '2740',
-    itemID: '2VIJFPA6',
-    status: 'Completed'
-  },
-  // Add more sample data as needed
-];
-
-// Interface definitions
-interface Order {
-  buyerNPName: string;
-  sellerNPName: string;
-  orderCreateDate: string;
-  networkOrderID: string;
-  networkTransactionID: string;
-  sellerNPOrderID: string;
-  itemID: string;
-  status: string;
-}
-
-interface OrderComponentProps {
-  data: Order[];
-}
-
-interface Tab {
-  label: string;
-  count?: number;
-  color?: string;
-}
-
-interface StatusBadgeProps {
-  status: string;
-}
-
-interface InfoRowProps {
-  label: string;
-  value: string;
-}
-
-// Component definitions
-const OrderTable: React.FC<OrderComponentProps> = ({ data }) => (
-  <div className="bg-white rounded-lg shadow overflow-x-auto">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-blue-50">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Buyer NP Name
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Seller NP Name
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Order Create Date & Time
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Network Order ID
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Network Transaction ID
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Seller NP Order ID
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Item ID
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Status
-          </th>
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {data.map((order, index) => (
-          <tr key={index} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.buyerNPName}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.sellerNPName}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.orderCreateDate}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.networkOrderID}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.networkTransactionID}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.sellerNPOrderID}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.itemID}</td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <StatusBadge status={order.status} />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
-const OrderGrid: React.FC<OrderComponentProps> = ({ data }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {data.map((order, index) => (
-      <div key={index} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <p className="text-sm font-medium text-gray-900">Order #{order.sellerNPOrderID}</p>
-            <p className="text-xs text-gray-500">{order.orderCreateDate}</p>
-          </div>
-          <StatusBadge status={order.status} />
-        </div>
-        
-        <div className="space-y-2">
-          <InfoRow label="Buyer" value={order.buyerNPName} />
-          <InfoRow label="Seller" value={order.sellerNPName} />
-          <InfoRow label="Network Order ID" value={order.networkOrderID} />
-          <InfoRow label="Item ID" value={order.itemID} />
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-          <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-            <ExternalLink size={14} />
-            View Details
-          </button>
-          <div className="flex items-center gap-1 text-gray-500 text-xs">
-            <Clock size={14} />
-            {order.orderCreateDate}
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const OrderList: React.FC<OrderComponentProps> = ({ data }) => (
-  <div className="space-y-3">
-    {data.map((order, index) => (
-      <div key={index} className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <p className="text-sm font-medium text-gray-900">Order #{order.sellerNPOrderID}</p>
-              <StatusBadge status={order.status} />
-            </div>
-            <p className="text-xs text-gray-500">{order.orderCreateDate}</p>
-          </div>
-          <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-            <ExternalLink size={14} />
-            View Details
-          </button>
-        </div>
-        
-        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <InfoRow label="Buyer" value={order.buyerNPName} />
-          <InfoRow label="Seller" value={order.sellerNPName} />
-          <InfoRow label="Network Order ID" value={order.networkOrderID} />
-          <InfoRow label="Network Transaction ID" value={order.networkTransactionID} />
-          <InfoRow label="Item ID" value={order.itemID} />
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => (
-  <span className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full
-    ${status === 'Completed' ? 'bg-green-100 text-green-800' : 
-      status === 'In-progress' ? 'bg-orange-100 text-orange-800' : 
-      'bg-gray-100 text-gray-800'}`}>
-    {status}
-  </span>
-);
-
-const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
-  <div>
-    <p className="text-xs text-gray-500">{label}</p>
-    <p className="text-sm text-gray-900 truncate" title={value}>{value}</p>
-  </div>
-);
-
-const tabs: Tab[] = [
-  { label: 'All Orders' },
-  { label: 'Accepted', count: 1295, color: 'text-green-600' },
-  { label: 'In-progress', count: 133, color: 'text-orange-500' },
-  { label: 'Completed', count: 775, color: 'text-blue-600' },
-  { label: 'Cancelled', count: 466, color: 'text-red-500' },
-  { label: 'Returns', count: 73, color: 'text-purple-500' },
-];
+import React, { useState, useEffect, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Eye, Search, Calendar, Filter, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import CustomTable from "../../components/CustomTable";
+import {
+  getOrders,
+  getOrderStatusLookup,
+  getReturns,
+  getCancellationReasons,
+  cancelOrder,
+} from "../../redux/Action/action";
+import { RootState } from "../../redux/types";
+import { AppDispatch } from "../../redux/store";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const MyOrders = () => {
-  const [activeTab, setActiveTab] = useState('All Orders');
-  const [viewMode, setViewMode] = useState<'table' | 'list' | 'grid'>('table');
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const renderOrders = () => {
-    switch (viewMode) {
-      case 'grid':
-        return <OrderGrid data={orderData} />;
-      case 'list':
-        return <OrderList data={orderData} />;
+  // Move tableColumns inside the component to access navigate
+  const tableColumns = [
+    {
+      id: "order_create_date",
+      label: "Order Create Date & Time",
+      key: "createdAt",
+      format: (date: string) => new Date(date).toLocaleString(),
+    },
+    {
+      id: "network_order_id",
+      label: "Network Order ID",
+      key: "sales_order_number",
+    },
+    {
+      id: "network_transaction_id",
+      label: "Network Transaction ID",
+      key: "ondc_order_context.transaction_id",
+    },
+    { id: "order_status", label: "Order Status", key: "status.display_name" },   
+    
+    
+    // { id: "ready_to_ship_at", label: "Ready to Ship At Date & Time", key: "sales_order_fulfillments[0].ready_to_ship", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
+    // { id: "shipped_at", label: "Shipped At Date & Time", key: "sales_order_fulfillments[0].pickedup_time", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
+   
+    
+   
+    
+    { id: "total_order_value", label: "Total Order Value", key: "order_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
+    { id: "total_refund_amount", label: "Total Refund Amount", key: "total_refund_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
+    {
+      id: "action",
+      label: "Action",
+      key: "action_triggered",
+      type: "actions",
+      minWidth: 100,
+      actions: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => navigate(`/dashboard/orders/view/${row.id}`),
+        },
+        {
+          label: "Cancel",
+          icon: "close",
+          onClick: (row: any) => handleCancelOrder(row),
+          show: (row: any) =>
+            ["IN-PROGRESS", "ACCEPTED"].includes(row.status?.lookup_code),
+          className: "text-red-600 hover:bg-red-50",
+        },
+      ],
+    },
+  ];
+
+  const {
+    data: orders,
+    loading,
+    meta,
+  } = useSelector((state: RootState) => state.data.orders);
+  const { data: statusLookup } = useSelector(
+    (state: RootState) => state.data.orderStatusLookup
+  );
+  const {
+    data: returnsData,
+    loading: returnsLoading,
+    meta: returnsMeta,
+  } = useSelector((state: RootState) => state.data.returns);
+
+  const [activeTab, setActiveTab] = useState("All Orders");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterValues, setFilterValues] = useState({
+    search: "",
+    fromDate: null as Date | null,
+    toDate: null as Date | null,
+  });
+
+  const [params, setParams] = useState({
+    page_no: 1,
+    per_page: 10,
+    status: "",
+    search: "",
+    from_date: "",
+    to_date: "",
+  });
+
+  const [returnsParams, setReturnsParams] = useState({
+    page_no: 1,
+    per_page: 10,
+    search: "",
+    from_date: "",
+    to_date: "",
+  });
+
+  // Add states for cancel popup
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  // Add selector for cancellation reasons
+  const { data: cancellationReasons } = useSelector(
+    (state: RootState) => state.data.cancellationReasons
+  );
+
+  // Fetch orders with current params
+  const fetchOrders = useCallback(() => {
+    dispatch(getOrders(params));
+  }, [dispatch, params]);
+
+  // Fetch returns with current params
+  const fetchReturns = useCallback(() => {
+    dispatch(getReturns(returnsParams));
+  }, [dispatch, returnsParams]);
+
+  // Fetch status lookup on mount
+  useEffect(() => {
+    dispatch(getOrderStatusLookup());
+  }, [dispatch]);
+
+  // Fetch orders or returns when params change
+  useEffect(() => {
+    if (activeTab === "Returns") {
+      fetchReturns();
+    } else {
+      fetchOrders();
+    }
+  }, [fetchOrders, fetchReturns, activeTab]);
+
+  // Fetch cancellation reasons when component mounts
+  useEffect(() => {
+    dispatch(getCancellationReasons());
+  }, [dispatch]);
+
+  // Handle tab change
+  const handleTabChange = (tabLabel: string) => {
+    setActiveTab(tabLabel);
+    if (tabLabel === "All Orders") {
+      setParams((prev) => ({
+        ...prev,
+        status: "",
+        page_no: 1,
+      }));
+    } else if (tabLabel === "Returns") {
+      setReturnsParams((prev) => ({
+        ...prev,
+        page_no: 1,
+      }));
+    } else {
+      const selectedStatus = statusLookup?.find(
+        (s) => s.display_name === tabLabel
+      );
+      if (selectedStatus) {
+        setParams((prev) => ({
+          ...prev,
+          status: selectedStatus.lookup_code,
+          page_no: 1,
+        }));
+      }
+    }
+  };
+
+  // Handle apply filters
+  const handleApply = () => {
+    const newParams = {
+      search: filterValues.search,
+      from_date: filterValues.fromDate
+        ? filterValues.fromDate.toISOString()
+        : "",
+      to_date: filterValues.toDate ? filterValues.toDate.toISOString() : "",
+      page_no: 1,
+    };
+
+    if (activeTab === "Returns") {
+      setReturnsParams((prev) => ({
+        ...prev,
+        ...newParams,
+      }));
+    } else {
+      setParams((prev) => ({
+        ...prev,
+        ...newParams,
+      }));
+    }
+    setShowFilters(false);
+  };
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ACCEPTED":
+        return "text-green-600";
+      case "IN-PROGRESS":
+        return "text-orange-500";
+      case "COMPLETED":
+        return "text-blue-600";
+      case "CANCELLED":
+        return "text-red-500";
       default:
-        return <OrderTable data={orderData} />;
+        return "text-gray-500";
+    }
+  };
+
+  // Create tabs including Returns
+  const tabs = [
+    { label: "All Orders" },
+    ...(statusLookup?.map((status) => ({
+      label: status.display_name,
+      lookup_code: status.lookup_code,
+      color: getStatusColor(status.lookup_code),
+    })) || []),
+    { label: "Returns", color: "text-purple-500" },
+  ];
+
+  // Returns table columns
+  const returnsColumns = [
+    {
+      id: "return_order_id",
+      key: "sales_return_number",
+      label: "Return Order ID",
+    },
+    {
+      id: "reference_number",
+      key: "reference_number",
+      label: "Reference No",
+    },
+    {
+      id: "return_date",
+      key: "createdAt",
+      label: "Return Date",
+      format: (date: string) => new Date(date).toLocaleDateString(),
+    },
+    {
+      id: "customer_name",
+      key: "customer_name",
+      label: "Customer Name",
+    },
+    {
+      id: "items",
+      key: "sales_return_fulfillments",
+      label: "Number of Items",
+      type: "custom",
+      renderCell: (row: any) => {
+        const itemCount =
+          row.sales_return_fulfillments?.reduce(
+            (total: number, fulfillment: any) =>
+              total + (fulfillment.sales_return_lines?.length || 0),
+            0
+          ) || 0;
+        return <span>{itemCount}</span>;
+      },
+    },
+    {
+      id: "order_amount",
+      key: "order_amount",
+      label: "Order Amount",
+      format: (amount: number) => `₹${amount?.toFixed(2) || "0.00"}`,
+    },
+    {
+      id: "return_status",
+      key: "status",
+      label: "Return Status",
+      type: "custom",
+      renderCell: (row: any) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            row.status?.lookup_code === "COMPLETED"
+              ? "bg-green-100 text-green-800"
+              : row.status?.lookup_code === "PENDING"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {row.status?.display_name || "N/A"}
+        </span>
+      ),
+    },
+    {
+      id: "seller_name",
+      key: "service_provider_name",
+      label: "Seller Name",
+    },
+    {
+      id: "actions",
+      key: "actions",
+      label: "Action",
+      type: "actions",
+      actions: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => navigate(`/dashboard/returns/view/${row.id}`),
+        },
+      ],
+    },
+  ];
+
+  // Handle view return (placeholder)
+  const handleViewReturn = (row: any) => {
+    console.log("View return:", row);
+  };
+
+  // Add the cancel handler function
+  const handleCancelOrder = (order: any) => {
+    setSelectedOrder(order);
+    setShowCancelModal(true);
+  };
+
+  // Add cancel confirmation handler
+  const handleConfirmCancel = async () => {
+    if (!cancelReason) {
+      alert("Please select a reason for cancellation");
+      return;
+    }
+
+    try {
+      const payload = {
+        id: selectedOrder.id,
+        ids: selectedOrder.sales_order_fulfillments[0].sales_order_lines.map(
+          (line: any) => ({
+            id: line.id,
+            item_quantity: line.item_quantity,
+          })
+        ),
+        cancellation_reason_id: parseInt(cancelReason),
+        item_status_id: 7, // Status ID for cancelled
+      };
+
+      await dispatch(cancelOrder(payload));
+
+      // Refresh orders list
+      fetchOrders();
+
+      // Show success message
+      alert("Order cancelled successfully");
+
+      // Close modal and reset state
+      setShowCancelModal(false);
+      setSelectedOrder(null);
+      setCancelReason("");
+    } catch (error) {
+      // Show error message
+      alert(error instanceof Error ? error.message : "Failed to cancel order");
     }
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">My Orders</h1>
-      
-      {/* Order Stats */}
-      <div className="flex justify-end space-x-4 text-sm">
-        <span>Total <span className="font-semibold text-gray-700">2678</span></span>
-        <span>Completed <span className="font-semibold text-green-600">775</span></span>
-        <span>Inprogress <span className="font-semibold text-orange-500">133</span></span>
+    <div className="space-y-4">
+      {/* Filter Section */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Search id="search-icon-orders" className="text-gray-400" size={20} />
+          <input
+            id="search-input-orders"
+            type="text"
+            placeholder="Search"
+            value={filterValues.search}
+            onChange={(e) =>
+              setFilterValues((prev) => ({ ...prev, search: e.target.value }))
+            }
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Calendar
+            id="calendar-icon-orders"
+            className="text-gray-400"
+            size={20}
+          />
+          <DatePicker
+            id="from-date-picker-orders"
+            selected={filterValues.fromDate}
+            onChange={(date) =>
+              setFilterValues((prev) => ({ ...prev, fromDate: date }))
+            }
+            placeholderText="From Date"
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <DatePicker
+            id="to-date-picker-orders"
+            selected={filterValues.toDate}
+            onChange={(date) =>
+              setFilterValues((prev) => ({ ...prev, toDate: date }))
+            }
+            placeholderText="To Date"
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <button
+            id="apply-filters-button-orders"
+            onClick={handleApply}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Apply
+          </button>
+        </div>
+
+        <button
+          id="filter-button-orders"
+          onClick={() => setShowFilters(!showFilters)}
+          className="p-2 text-gray-600 hover:text-gray-800"
+          title="Filter"
+        >
+          <Filter size={20} />
+        </button>
       </div>
 
       {/* Tabs */}
@@ -219,20 +428,22 @@ const MyOrders = () => {
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
             <button
+              id={`tab-button-orders-${tab.label}`}
               key={tab.label}
-              onClick={() => setActiveTab(tab.label)}
+              onClick={() => handleTabChange(tab.label)}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                ${activeTab === tab.label
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ${
+                  activeTab === tab.label
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }
               `}
             >
               {tab.label}
-              {tab.count !== undefined && (
-                <span className={`ml-2 ${tab.color || 'text-gray-600'}`}>
-                  {tab.count}
+              {tab.lookup_code && (
+                <span className={`ml-2 text-xs ${tab.color}`}>
+                  ({meta?.pagination?.total_rows || 0})
                 </span>
               )}
             </button>
@@ -240,72 +451,167 @@ const MyOrders = () => {
         </nav>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-4 flex-1">
-          {/* Search */}
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search by Order Id"
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+      {/* Table View */}
+      {activeTab === "Returns" ? (
+        <CustomTable
+          headCells={returnsColumns}
+          data={returnsData}
+          meta_data={{
+            total: returnsMeta?.pagination?.total_rows || 0,
+            per_page: returnsParams.per_page,
+            current_page: returnsParams.page_no,
+            last_page: returnsMeta?.pagination?.total_pages || 1,
+            from: (returnsParams.page_no - 1) * returnsParams.per_page + 1,
+            to: Math.min(
+              returnsParams.page_no * returnsParams.per_page,
+              returnsMeta?.pagination?.total_rows || 0
+            ),
+          }}
+          setParams={setReturnsParams}
+          pagination={true}
+          loading={returnsLoading}
+        />
+      ) : (
+        <CustomTable
+          headCells={tableColumns}
+          data={orders}
+          meta_data={{
+            total: meta?.pagination?.total_rows || 0,
+            per_page: params.per_page,
+            current_page: params.page_no,
+            last_page: meta?.pagination?.total_pages || 1,
+            from: (params.page_no - 1) * params.per_page + 1,
+            to: Math.min(
+              params.page_no * params.per_page,
+              meta?.pagination?.total_rows || 0
+            ),
+          }}
+          setParams={setParams}
+          pagination={true}
+          loading={loading}
+        />
+      )}
 
-          {/* Date Filters */}
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="From Date"
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+      {/* Cancel Order Modal */}
+      {showCancelModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[800px] max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold">Cancel Order</h2>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="To Date"
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <p className="text-gray-600 mb-6">
+              Order has been accepted by default if you want to cancel the
+              order.
+            </p>
+
+            {/* Fulfillment Section */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium mb-4">Fulfillment 1</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Select
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Product Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Quantity
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Price
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Tax
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        Total amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {selectedOrder.sales_order_fulfillments?.[0]?.sales_order_lines?.map(
+                      (item: any) => (
+                        <tr key={item.id}>
+                          <td className="px-4 py-3">
+                            <input
+                              type="checkbox"
+                              checked
+                              readOnly
+                              className="rounded"
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={item.product_images?.[0]}
+                                alt={item.product_name}
+                                className="w-10 h-10 object-cover rounded"
+                              />
+                              {item.product_name}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">{item.item_quantity}</td>
+                          <td className="px-4 py-3">₹{item.item_price}</td>
+                          <td className="px-4 py-3">₹{item.item_tax}</td>
+                          <td className="px-4 py-3">₹{item.total_amount}</td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Cancel Reason */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Cancel reason
+              </label>
+              <select
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="">Select reason to cancel order</option>
+                {cancellationReasons?.map((reason: any) => (
+                  <option key={reason.id} value={reason.lookup_code}>
+                    {reason.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Yes cancel order
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* View Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-            title="List view"
-          >
-            <LayoutList size={20} />
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-            title="Grid view"
-          >
-            <LayoutGrid size={20} />
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`p-2 rounded ${viewMode === 'table' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
-            title="Table view"
-          >
-            <Table size={20} />
-          </button>
-          <button className="p-2 text-gray-600 hover:text-gray-800" title="Download">
-            <Download size={20} />
-          </button>
-        </div>
-      </div>
-
-      {/* Render Orders based on view mode */}
-      {renderOrders()}
+      )}
     </div>
   );
 };
 
-export default MyOrders; 
+export default MyOrders;

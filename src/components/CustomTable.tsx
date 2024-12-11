@@ -12,12 +12,33 @@ import {
   Copy,
   Trash2,
   Edit,
+  X
 } from "lucide-react";
 
 // Helper function to get image source
 const getImageSrc = (path: string) => {
   // Implement your image source logic here
   return path;
+};
+
+// Add a function to get the icon component
+const getActionIcon = (iconName: string, size: number = 18) => {
+  switch (iconName) {
+    case 'eye':
+      return <Eye size={size} />;
+    case 'edit':
+      return <Edit size={size} />;
+    case 'delete':
+      return <Trash2 size={size} />;
+    case 'save':
+      return <Save size={size} />;
+    case 'copy':
+      return <Copy size={size} />;
+    case 'close':
+      return <X size={size} />;
+    default:
+      return null;
+  }
 };
 
 export interface ColumnButton {
@@ -233,33 +254,29 @@ const CustomTable: React.FC<CustomTableProps> = ({
                           </div>
                         ) : cell.type === "actions" ? (
                           <div className="flex items-center gap-2">
-                            {cell.actions?.map((action, actionIndex) => (
-                              <button
-                                key={actionIndex}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  action.onClick(row);
-                                }}
-                                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                                title={action.label}
-                              >
-                                {typeof action.icon === "string" ? (
-                                  action.icon === "edit" ? (
-                                    <Edit size={18} />
-                                  ) : action.icon === "eye" ? (
-                                    <Eye size={18} />
-                                  ) : action.icon === "toggle" ? (
-                                    row.status === "Active" ? (
-                                      <ToggleRight size={18} />
-                                    ) : (
-                                      <ToggleLeft size={18} />
-                                    )
-                                  ) : null
-                                ) : (
-                                  action.icon
-                                )}
-                              </button>
-                            ))}
+                            {cell.actions?.map((action, actionIndex) => {
+                              // Check if action should be shown
+                              if (action.show && !action.show(row)) {
+                                return null;
+                              }
+
+                              return (
+                                <button
+                                  key={actionIndex}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    action.onClick(row);
+                                  }}
+                                  className={`p-1.5 hover:bg-gray-100 rounded-full transition-colors ${action.className || ''}`}
+                                  title={action.label}
+                                >
+                                  {typeof action.icon === 'string' 
+                                    ? getActionIcon(action.icon)
+                                    : action.icon
+                                  }
+                                </button>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="text-gray-900">

@@ -101,6 +101,18 @@ export const GET_STORE_LOCATIONS_FAILURE = 'GET_STORE_LOCATIONS_FAILURE';
 export const GET_ISSUE_CATEGORIES_REQUEST = 'GET_ISSUE_CATEGORIES_REQUEST';
 export const GET_ISSUE_CATEGORIES_SUCCESS = 'GET_ISSUE_CATEGORIES_SUCCESS';
 export const GET_ISSUE_CATEGORIES_FAILURE = 'GET_ISSUE_CATEGORIES_FAILURE';
+export const GET_ORDER_DETAILS_REQUEST = 'GET_ORDER_DETAILS_REQUEST';
+export const GET_ORDER_DETAILS_SUCCESS = 'GET_ORDER_DETAILS_SUCCESS';
+export const GET_ORDER_DETAILS_FAILURE = 'GET_ORDER_DETAILS_FAILURE';
+export const GET_ORDER_FULFILLMENT_STATUS_REQUEST = 'GET_ORDER_FULFILLMENT_STATUS_REQUEST';
+export const GET_ORDER_FULFILLMENT_STATUS_SUCCESS = 'GET_ORDER_FULFILLMENT_STATUS_SUCCESS';
+export const GET_ORDER_FULFILLMENT_STATUS_FAILURE = 'GET_ORDER_FULFILLMENT_STATUS_FAILURE';
+export const CANCEL_ORDER_REQUEST = 'CANCEL_ORDER_REQUEST';
+export const CANCEL_ORDER_SUCCESS = 'CANCEL_ORDER_SUCCESS';
+export const CANCEL_ORDER_FAILURE = 'CANCEL_ORDER_FAILURE';
+export const UPDATE_ORDER_FULFILLMENT_REQUEST = 'UPDATE_ORDER_FULFILLMENT_REQUEST';
+export const UPDATE_ORDER_FULFILLMENT_SUCCESS = 'UPDATE_ORDER_FULFILLMENT_SUCCESS';
+export const UPDATE_ORDER_FULFILLMENT_FAILURE = 'UPDATE_ORDER_FULFILLMENT_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -417,6 +429,57 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: IssueCategory[];
+  };
+  orderDetails: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
+  };
+  orderStatusLookup: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+      createdAt: string;
+      updatedAt: string | null;
+    }>;
+  };
+  orderFulfillmentStatus: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+      createdAt: string;
+      updatedAt: string | null;
+    }>;
+  };
+  cancellationReasons: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      display_name: string;
+      lookup_code: string;
+      is_active: boolean;
+      createdAt: string;
+      updatedAt: string | null;
+    }>;
+  };
+  orderCancellation: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
+  };
+  orderFulfillmentUpdate: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
   };
 }
 
@@ -1012,7 +1075,19 @@ export type AuthActionTypes =
   | GetStoreLocationsRequestAction
   | GetStoreLocationsSuccessAction
   | GetStoreLocationsFailureAction
-  | GetIssueCategoriesRequestAction;
+  | GetIssueCategoriesRequestAction
+  | GetOrderDetailsRequestAction
+  | GetOrderDetailsSuccessAction
+  | GetOrderDetailsFailureAction
+  | GetOrderFulfillmentStatusRequestAction
+  | GetOrderFulfillmentStatusSuccessAction
+  | GetOrderFulfillmentStatusFailureAction
+  | CancelOrderRequestAction
+  | CancelOrderSuccessAction
+  | CancelOrderFailureAction
+  | UpdateOrderFulfillmentRequestAction
+  | UpdateOrderFulfillmentSuccessAction
+  | UpdateOrderFulfillmentFailureAction;
 
 
 export interface FileUploadPayload {
@@ -1342,4 +1417,60 @@ export interface AuthState {
     error: string | null;
     data: IssueCategory[];
   };
+}
+
+interface GetOrderDetailsRequestAction {
+  type: typeof GET_ORDER_DETAILS_REQUEST;
+}
+
+interface GetOrderDetailsSuccessAction {
+  type: typeof GET_ORDER_DETAILS_SUCCESS;
+  payload: any;
+}
+
+interface GetOrderDetailsFailureAction {
+  type: typeof GET_ORDER_DETAILS_FAILURE;
+  payload: string;
+}
+
+interface GetOrderFulfillmentStatusRequestAction {
+  type: typeof GET_ORDER_FULFILLMENT_STATUS_REQUEST;
+}
+
+interface GetOrderFulfillmentStatusSuccessAction {
+  type: typeof GET_ORDER_FULFILLMENT_STATUS_SUCCESS;
+  payload: any;
+}
+
+interface GetOrderFulfillmentStatusFailureAction {
+  type: typeof GET_ORDER_FULFILLMENT_STATUS_FAILURE;
+  payload: string;
+}
+
+interface CancelOrderRequestAction {
+  type: typeof CANCEL_ORDER_REQUEST;
+}
+
+interface CancelOrderSuccessAction {
+  type: typeof CANCEL_ORDER_SUCCESS;
+  payload: any;
+}
+
+interface CancelOrderFailureAction {
+  type: typeof CANCEL_ORDER_FAILURE;
+  payload: string;
+}
+
+interface UpdateOrderFulfillmentRequestAction {
+  type: typeof UPDATE_ORDER_FULFILLMENT_REQUEST;
+}
+
+interface UpdateOrderFulfillmentSuccessAction {
+  type: typeof UPDATE_ORDER_FULFILLMENT_SUCCESS;
+  payload: any;
+}
+
+interface UpdateOrderFulfillmentFailureAction {
+  type: typeof UPDATE_ORDER_FULFILLMENT_FAILURE;
+  payload: string;
 }

@@ -186,7 +186,22 @@ import {
   GET_ISSUES_FAILURE,
   GET_ISSUE_CATEGORIES_REQUEST,
   GET_ISSUE_CATEGORIES_SUCCESS,
-  GET_ISSUE_CATEGORIES_FAILURE
+  GET_ISSUE_CATEGORIES_FAILURE,
+  GET_ORDER_DETAILS_REQUEST,
+  GET_ORDER_DETAILS_SUCCESS,
+  GET_ORDER_DETAILS_FAILURE,
+  GET_ORDER_FULFILLMENT_STATUS_REQUEST,
+  GET_ORDER_FULFILLMENT_STATUS_SUCCESS,
+  GET_ORDER_FULFILLMENT_STATUS_FAILURE,
+  GET_CANCELLATION_REASONS_REQUEST,
+  GET_CANCELLATION_REASONS_SUCCESS,
+  GET_CANCELLATION_REASONS_FAILURE,
+  CANCEL_ORDER_REQUEST,
+  CANCEL_ORDER_SUCCESS,
+  CANCEL_ORDER_FAILURE,
+  UPDATE_ORDER_FULFILLMENT_REQUEST,
+  UPDATE_ORDER_FULFILLMENT_SUCCESS,
+  UPDATE_ORDER_FULFILLMENT_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -403,9 +418,9 @@ const initialState: AuthState = {
     }
   },
   orderStatusLookup: {
-    data: [],
     loading: false,
-    error: null
+    error: null,
+    data: []
   },
   returns: {
     loading: false,
@@ -504,6 +519,31 @@ const initialState: AuthState = {
     error: null,
     data: []
   },
+  orderDetails: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  orderFulfillmentStatus: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  cancellationReasons: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  orderCancellation: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  orderFulfillmentUpdate: {
+    loading: false,
+    error: null,
+    data: null
+  }
 };
 
 const authReducer = (state = initialState, action: AuthActionTypes): AuthState => {
@@ -1355,62 +1395,61 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
-
-      case GET_ORDER_STATUS_LOOKUP_REQUEST:
-        return {
-          ...state,
-          orderStatusLookup: {
-            ...state.orderStatusLookup,
-            loading: true,
-            error: null
-          }
-        };
-      case GET_ORDER_STATUS_LOOKUP_SUCCESS:
-        return {
-          ...state,
-          orderStatusLookup: {
-            data: action.payload,
-            loading: false,
-            error: null
-          }
-        };
-      case GET_ORDER_STATUS_LOOKUP_FAILURE:
-        return {
-          ...state,
-          orderStatusLookup: {
-            ...state.orderStatusLookup,
-            loading: false,
-            error: action.payload
-          }
-        };
-      case GET_RETURNS_REQUEST:
-        return {
-          ...state,
-          returns: {
-            ...state.returns,
-            loading: true,
-            error: null
-          }
-        };
-      case GET_RETURNS_SUCCESS:
-        return {
-          ...state,
-          returns: {
-            loading: false,
-            data: action.payload.data,
-            meta: action.payload.meta,
-            error: null
-          }
-        };
-      case GET_RETURNS_FAILURE:
-        return {
-          ...state,
-          returns: {
-            ...state.returns,
-            loading: false,
-            error: action.payload
-          }
-        };
+    case GET_ORDER_STATUS_LOOKUP_REQUEST:
+      return {
+        ...state,
+        orderStatusLookup: {
+          ...state.orderStatusLookup,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ORDER_STATUS_LOOKUP_SUCCESS:
+      return {
+        ...state,
+        orderStatusLookup: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ORDER_STATUS_LOOKUP_FAILURE:
+      return {
+        ...state,
+        orderStatusLookup: {
+          ...state.orderStatusLookup,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_RETURNS_REQUEST:
+      return {
+        ...state,
+        returns: {
+          ...state.returns,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_RETURNS_SUCCESS:
+      return {
+        ...state,
+        returns: {
+          loading: false,
+          data: action.payload.data,
+          meta: action.payload.meta,
+          error: null
+        }
+      };
+    case GET_RETURNS_FAILURE:
+      return {
+        ...state,
+        returns: {
+          ...state.returns,
+          loading: false,
+          error: action.payload
+        }
+      };
     case GET_UOM_LOOKUP_REQUEST:
       return {
         ...state,
@@ -2147,6 +2186,141 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         issueCategories: {
           ...state.issueCategories,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ORDER_DETAILS_REQUEST:
+      return {
+        ...state,
+        orderDetails: {
+          ...state.orderDetails,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ORDER_DETAILS_SUCCESS:
+      return {
+        ...state,
+        orderDetails: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ORDER_DETAILS_FAILURE:
+      return {
+        ...state,
+        orderDetails: {
+          ...state.orderDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ORDER_FULFILLMENT_STATUS_REQUEST:
+      return {
+        ...state,
+        orderFulfillmentStatus: {
+          ...state.orderFulfillmentStatus,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ORDER_FULFILLMENT_STATUS_SUCCESS:
+      return {
+        ...state,
+        orderFulfillmentStatus: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ORDER_FULFILLMENT_STATUS_FAILURE:
+      return {
+        ...state,
+        orderFulfillmentStatus: {
+          ...state.orderFulfillmentStatus,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_CANCELLATION_REASONS_REQUEST:
+      return {
+        ...state,
+        cancellationReasons: {
+          ...state.cancellationReasons,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_CANCELLATION_REASONS_SUCCESS:
+      return {
+        ...state,
+        cancellationReasons: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_CANCELLATION_REASONS_FAILURE:
+      return {
+        ...state,
+        cancellationReasons: {
+          ...state.cancellationReasons,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case CANCEL_ORDER_REQUEST:
+      return {
+        ...state,
+        orderCancellation: {
+          ...state.orderCancellation,
+          loading: true,
+          error: null
+        }
+      };
+    case CANCEL_ORDER_SUCCESS:
+      return {
+        ...state,
+        orderCancellation: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case CANCEL_ORDER_FAILURE:
+      return {
+        ...state,
+        orderCancellation: {
+          ...state.orderCancellation,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case UPDATE_ORDER_FULFILLMENT_REQUEST:
+      return {
+        ...state,
+        orderFulfillmentUpdate: {
+          ...state.orderFulfillmentUpdate,
+          loading: true,
+          error: null
+        }
+      };
+    case UPDATE_ORDER_FULFILLMENT_SUCCESS:
+      return {
+        ...state,
+        orderFulfillmentUpdate: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case UPDATE_ORDER_FULFILLMENT_FAILURE:
+      return {
+        ...state,
+        orderFulfillmentUpdate: {
+          ...state.orderFulfillmentUpdate,
           loading: false,
           error: action.payload
         }

@@ -1,52 +1,74 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Eye, Search, Calendar, Filter } from "lucide-react";
+import { Eye, Search, Calendar, Filter, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import CustomTable from "../components/CustomTable";
-import { getOrders, getOrderStatusLookup, getReturns } from "../redux/Action/action";
+import { getOrders, getOrderStatusLookup, getReturns, getCancellationReasons, cancelOrder } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-// Define table columns
-const tableColumns = [
-  { id: "buyer_np_name", label: "Buyer NP Name", key: "customer_name" },
-  { id: "seller_np_name", label: "Seller NP Name", key: "created_by.name" },
-  { id: "order_create_date", label: "Order Create Date & Time", key: "createdAt", format: (date: string) => new Date(date).toLocaleString() },
-  { id: "network_order_id", label: "Network Order ID", key: "sales_order_number" },
-  { id: "network_transaction_id", label: "Network Transaction ID", key: "ondc_order_context.transaction_id" },
-  { id: "seller_np_order_id", label: "Seller NP Order ID", key: "id" },
-  { id: "item_id", label: "Item ID", key: "sales_order_lines[0].id" },
-  { id: "order_status", label: "Order Status", key: "status.display_name" },
-  { id: "seller_name", label: "Seller Name", key: "created_by.name" },
-  { id: "quantity", label: "Quantity", key: "order_quantity" },
-  { id: "seller_np_type", label: "Seller NP Type", key: "shipping_type" },
-  { id: "seller_pincode", label: "Seller Pincode", key: "start_location.location.address.area_code" },
-  { id: "seller_city", label: "Seller City", key: "start_location.location.address.city" },
-  { id: "sku_name", label: "SKU Name", key: "sales_order_lines[0].product_name" },
-  { id: "sku_code", label: "SKU Code", key: "sales_order_lines[0].product_sku_id" },
-  { id: "order_category", label: "Order Category", key: "sales_order_lines[0].parent_category" },
-  { id: "ready_to_ship_at", label: "Ready to Ship At Date & Time", key: "sales_order_fulfillments[0].ready_to_ship", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
-  { id: "shipped_at", label: "Shipped At Date & Time", key: "sales_order_fulfillments[0].pickedup_time", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
-  { id: "delivered_at", label: "Delivered At Date & Time", key: "sales_order_fulfillments[0].delivered_time", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
-  { id: "delivery_type", label: "Delivery Type", key: "sales_order_fulfillments[0].fulfiilment_type" },
-  { id: "logistics_seller_np_name", label: "Logistics Seller NP Name", key: "sales_order_fulfillments[0].service_provider_name" },
-  { id: "logistics_network_order_id", label: "Logistics Network Order ID", key: "sales_order_fulfillments[0].fulfillment_id" },
-  { id: "logistics_network_transaction_id", label: "Logistics Network Transaction ID", key: "logistics_network_transaction_id" },
-  { id: "delivery_city", label: "Delivery City", key: "end_location.location.address.city" },
-  { id: "delivery_pincode", label: "Delivery Pincode", key: "end_location.location.address.area_code" },
-  { id: "cancelled_at", label: "Cancelled At Date & Time", key: "sales_order_fulfillments[0].cancelled_date", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
-  { id: "cancelled_by", label: "Cancelled By", key: "sales_order_fulfillments[0].cancelled_by" },
-  { id: "cancellation_reason", label: "Cancellation Reason / Return Reason", key: "sales_order_fulfillments[0].cancellation_reason" },
-  { id: "total_shipping_charges", label: "Total Shipping Charges", key: "total_shipping_charges", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
-  { id: "total_order_value", label: "Total Order Value", key: "order_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
-  { id: "total_refund_amount", label: "Total Refund Amount", key: "total_refund_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
-  { id: "action", label: "Action", key: "action_triggered" }
-];
-
-
 const Orders = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+
+  // Move tableColumns inside the component to access navigate
+  const tableColumns = [
+    { id: "buyer_np_name", label: "Buyer NP Name", key: "customer_name" },
+    { id: "seller_np_name", label: "Seller NP Name", key: "created_by.name" },
+    { id: "order_create_date", label: "Order Create Date & Time", key: "createdAt", format: (date: string) => new Date(date).toLocaleString() },
+    { id: "network_order_id", label: "Network Order ID", key: "sales_order_number" },
+    { id: "network_transaction_id", label: "Network Transaction ID", key: "ondc_order_context.transaction_id" },
+    { id: "seller_np_order_id", label: "Seller NP Order ID", key: "id" },
+    { id: "item_id", label: "Item ID", key: "sales_order_lines[0].id" },
+    { id: "order_status", label: "Order Status", key: "status.display_name" },
+    { id: "seller_name", label: "Seller Name", key: "created_by.name" },
+    { id: "quantity", label: "Quantity", key: "order_quantity" },
+    { id: "seller_np_type", label: "Seller NP Type", key: "shipping_type" },
+    { id: "seller_pincode", label: "Seller Pincode", key: "start_location.location.address.area_code" },
+    { id: "seller_city", label: "Seller City", key: "start_location.location.address.city" },
+    { id: "sku_name", label: "SKU Name", key: "sales_order_lines[0].product_name" },
+    { id: "sku_code", label: "SKU Code", key: "sales_order_lines[0].product_sku_id" },
+    { id: "order_category", label: "Order Category", key: "sales_order_lines[0].parent_category" },
+    { id: "ready_to_ship_at", label: "Ready to Ship At Date & Time", key: "sales_order_fulfillments[0].ready_to_ship", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
+    { id: "shipped_at", label: "Shipped At Date & Time", key: "sales_order_fulfillments[0].pickedup_time", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
+    { id: "delivered_at", label: "Delivered At Date & Time", key: "sales_order_fulfillments[0].delivered_time", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
+    { id: "delivery_type", label: "Delivery Type", key: "sales_order_fulfillments[0].fulfiilment_type" },
+    { id: "logistics_seller_np_name", label: "Logistics Seller NP Name", key: "sales_order_fulfillments[0].service_provider_name" },
+    { id: "logistics_network_order_id", label: "Logistics Network Order ID", key: "sales_order_fulfillments[0].fulfillment_id" },
+    { id: "logistics_network_transaction_id", label: "Logistics Network Transaction ID", key: "logistics_network_transaction_id" },
+    { id: "delivery_city", label: "Delivery City", key: "end_location.location.address.city" },
+    { id: "delivery_pincode", label: "Delivery Pincode", key: "end_location.location.address.area_code" },
+    { id: "cancelled_at", label: "Cancelled At Date & Time", key: "sales_order_fulfillments[0].cancelled_date", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
+    { id: "cancelled_by", label: "Cancelled By", key: "sales_order_fulfillments[0].cancelled_by" },
+    { id: "cancellation_reason", label: "Cancellation Reason / Return Reason", key: "sales_order_fulfillments[0].cancellation_reason" },
+    { id: "total_shipping_charges", label: "Total Shipping Charges", key: "total_shipping_charges", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
+    { id: "total_order_value", label: "Total Order Value", key: "order_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
+    { id: "total_refund_amount", label: "Total Refund Amount", key: "total_refund_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
+    { 
+      id: "action", 
+      label: "Action", 
+      key: "action_triggered",
+      type: "actions",
+      minWidth: 100,
+      actions: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => navigate(`/dashboard/orders/view/${row.id}`)
+        },
+        {
+          label: "Cancel",
+          icon: "close",
+          onClick: (row: any) => handleCancelOrder(row),
+          show: (row: any) => ['IN-PROGRESS', 'ACCEPTED'].includes(row.status?.lookup_code),
+          className: "text-red-600 hover:bg-red-50"
+        }
+      ]
+    }
+  ];
+
   const { data: orders, loading, meta } = useSelector((state: RootState) => state.data.orders);
   const { data: statusLookup } = useSelector((state: RootState) => state.data.orderStatusLookup);
   const { 
@@ -80,6 +102,14 @@ const Orders = () => {
     to_date: ""
   });
 
+  // Add states for cancel popup
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  // Add selector for cancellation reasons
+  const { data: cancellationReasons } = useSelector((state: RootState) => state.data.cancellationReasons);
+
   // Fetch orders with current params
   const fetchOrders = useCallback(() => {
     dispatch(getOrders(params));
@@ -103,6 +133,11 @@ const Orders = () => {
       fetchOrders();
     }
   }, [fetchOrders, fetchReturns, activeTab]);
+
+  // Fetch cancellation reasons when component mounts
+  useEffect(() => {
+    dispatch(getCancellationReasons());
+  }, [dispatch]);
 
   // Handle tab change
   const handleTabChange = (tabLabel: string) => {
@@ -202,20 +237,36 @@ const Orders = () => {
       id: "items",
       key: "sales_return_fulfillments",
       label: "Number of Items",
-      format: (fulfillments: any[]) => 
-        fulfillments.reduce((total, f) => total + f.sales_return_lines.length, 0),
+      type: "custom",
+      renderCell: (row: any) => {
+        const itemCount = row.sales_return_fulfillments?.reduce(
+          (total: number, fulfillment: any) => 
+            total + (fulfillment.sales_return_lines?.length || 0), 
+          0
+        ) || 0;
+        return <span>{itemCount}</span>;
+      }
     },
     {
       id: "order_amount",
       key: "order_amount",
       label: "Order Amount",
-      format: (amount: number) => `₹${amount.toFixed(2)}`,
+      format: (amount: number) => `₹${amount?.toFixed(2) || '0.00'}`,
     },
     {
       id: "return_status",
       key: "status",
       label: "Return Status",
-      format: (status: any) => status.display_name,
+      type: "custom",
+      renderCell: (row: any) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          row.status?.lookup_code === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+          row.status?.lookup_code === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {row.status?.display_name || 'N/A'}
+        </span>
+      )
     },
     {
       id: "seller_name",
@@ -226,23 +277,63 @@ const Orders = () => {
       id: "actions",
       key: "actions",
       label: "Action",
-      renderCell: (row: any) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleViewReturn(row)}
-            className="p-1 text-blue-600 hover:text-blue-700"
-            title="View"
-          >
-            <Eye size={16} />
-          </button>
-        </div>
-      ),
-    },
+      type: "actions",
+      actions: [
+        {
+          label: "View",
+          icon: "eye",
+          onClick: (row: any) => navigate(`/dashboard/returns/view/${row.id}`)
+        }
+      ]
+    }
   ];
 
   // Handle view return (placeholder)
   const handleViewReturn = (row: any) => {
     console.log("View return:", row);
+  };
+
+  // Add the cancel handler function
+  const handleCancelOrder = (order: any) => {
+    setSelectedOrder(order);
+    setShowCancelModal(true);
+  };
+
+  // Add cancel confirmation handler
+  const handleConfirmCancel = async () => {
+    if (!cancelReason) {
+      alert("Please select a reason for cancellation");
+      return;
+    }
+
+    try {
+      const payload = {
+        id: selectedOrder.id,
+        ids: selectedOrder.sales_order_fulfillments[0].sales_order_lines.map((line: any) => ({
+          id: line.id,
+          item_quantity: line.item_quantity
+        })),
+        cancellation_reason_id: parseInt(cancelReason),
+        item_status_id: 7 // Status ID for cancelled
+      };
+
+      await dispatch(cancelOrder(payload));
+      
+      // Refresh orders list
+      fetchOrders();
+      
+      // Show success message
+      alert('Order cancelled successfully');
+      
+      // Close modal and reset state
+      setShowCancelModal(false);
+      setSelectedOrder(null);
+      setCancelReason("");
+      
+    } catch (error) {
+      // Show error message
+      alert(error instanceof Error ? error.message : 'Failed to cancel order');
+    }
   };
 
   return (
@@ -356,6 +447,105 @@ const Orders = () => {
           pagination={true}
           loading={loading}
         />
+      )}
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[800px] max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold">Cancel Order</h2>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Order has been accepted by default if you want to cancel the order.
+            </p>
+
+            {/* Fulfillment Section */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium mb-4">Fulfillment 1</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Select</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quantity</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Price</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Tax</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Total amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {selectedOrder.sales_order_fulfillments?.[0]?.sales_order_lines?.map((item: any) => (
+                      <tr key={item.id}>
+                        <td className="px-4 py-3">
+                          <input type="checkbox" checked readOnly className="rounded" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={item.product_images?.[0]} 
+                              alt={item.product_name}
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                            {item.product_name}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">{item.item_quantity}</td>
+                        <td className="px-4 py-3">₹{item.item_price}</td>
+                        <td className="px-4 py-3">₹{item.item_tax}</td>
+                        <td className="px-4 py-3">₹{item.total_amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Cancel Reason */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Cancel reason
+              </label>
+              <select
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="">Select reason to cancel order</option>
+                {cancellationReasons?.map((reason: any) => (
+                  <option key={reason.id} value={reason.lookup_code}>
+                    {reason.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Yes cancel order
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

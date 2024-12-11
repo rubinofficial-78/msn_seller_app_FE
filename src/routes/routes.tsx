@@ -77,6 +77,7 @@ import CreateTicket from "../pages/support/CreateTicket";
 
 import BulkUploadMasterCatalogue from "../pages/bulkUploadMasterCatalogue";
 import ShippingDetailsPage from "../pages/sellerSettings/ShippingDetailsPage";
+import OrderView from "../pages/orders/OrderView";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -522,7 +523,7 @@ export const routes: RouteObject[] = [
           <ProtectedRoute allowedRoles={["SELLER"]}>
             <MyOrders />
           </ProtectedRoute>
-        ),
+        ) 
       },
 
       // Payouts route
@@ -553,7 +554,11 @@ export const routes: RouteObject[] = [
       {
         path: "/dashboard/mastercatalogue/bulk-upload",
         element: <BulkUploadMasterCatalogue />
-      }
+      },
+      {
+        path: "/dashboard/orders/view/:id",
+        element: <OrderView />,
+      },
     ],
   },
 ];

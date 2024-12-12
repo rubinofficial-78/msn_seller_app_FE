@@ -40,7 +40,7 @@ import AddAddOn from "../pages/AddAddOn";
 import AddMenu from "../pages/AddMenu";
 
 // Settings Related Pages
-import AccountDetails from "../pages/sellerSettings/AccountDetails";
+import AccountDetails from "../pages/settings/AccountDetails";
 import LocationServices from "../pages/settings/LocationServices";
 import BankingDetails from "../pages/sellerSettings/BankingDetails";
 import AccessManagement from "../pages/settings/AccessManagement";

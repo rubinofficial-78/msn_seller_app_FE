@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Users,
@@ -17,6 +17,7 @@ import {
   getSellerCounts,
   getAffiliatePartnerCounts,
   getSalesOrdersCount,
+  getSellerMatrix,
 } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
@@ -33,6 +34,9 @@ import {
   Area,
 } from "recharts";
 import GLOBAL_CONSTANTS, { useGlobalConstants } from "../GlobalConstants";
+import moment from "moment";
+import CustomMonthPicker from "../components/CustomMonthPicker";
+import StackedBarChart from "../components/StackedBarChart";
 // Sample data for the charts
 const chartData = [
   {
@@ -154,6 +158,29 @@ const Dashboard = () => {
   const { data: salesOrdersCount, loading: salesOrdersLoading } = useSelector(
     (state: RootState) => state.data.salesOrdersCount
   );
+  const { data: sellerMatrix, loading: sellerMatrixLoading } = useSelector(
+    (state: RootState) => state.data.sellerMatrix
+  );
+
+  const handleDateChange = (date: Date) => {
+    const startOfMonth = moment(date).startOf("month").format("YYYY-MM-DD");
+    const endOfMonth = moment(date).endOf("month").format("YYYY-MM-DD");
+    dispatch(getSellerMatrix({ 
+      start_date: startOfMonth, 
+      end_date: endOfMonth 
+    }));
+  };
+
+  // Initial load of seller matrix data
+  useEffect(() => {
+    const today = new Date();
+    const startOfMonth = moment(today).startOf("month").format("YYYY-MM-DD");
+    const endOfMonth = moment(today).endOf("month").format("YYYY-MM-DD");
+    dispatch(getSellerMatrix({ 
+      start_date: startOfMonth, 
+      end_date: endOfMonth 
+    }));
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(getDashboardCounts());
@@ -256,111 +283,29 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Make the chart section full width */}
-        <div className="w-full">
+        {/* Replace the existing chart section with this */}
+        <div className="w-full mt-6">
           <div className="bg-white p-4 lg:p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">Order Statistics</h3>
-                <p className="text-sm text-gray-500 mt-1">Weekly order distribution</p>
+                <h3 className="text-lg font-semibold text-gray-800">Order Sales vs Seller Matrix</h3>
+                <p className="text-sm text-gray-500 mt-1">Monthly order distribution by seller</p>
               </div>
-              {/* <select className="mt-2 sm:mt-0 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option>This Week</option>
-                <option>Last Month</option>
-                <option>Last Quarter</option>
-              </select> */}
+              <CustomMonthPicker onChange={handleDateChange} />
             </div>
             
-            {/* Increase chart height and add better styling */}
-            <div className="h-[400px] mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 20,
-                  }}
-                  barGap={8}
-                  barSize={32}
-                >
-                  <CartesianGrid 
-                    strokeDasharray="3 3" 
-                    vertical={false}
-                    stroke="#f0f0f0"
-                  />
-                  <XAxis 
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#6B7280', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#6B7280', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    cursor={{ fill: 'transparent' }}
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                      padding: '12px',
-                    }}
-                    labelStyle={{ color: '#111827', fontWeight: 600, marginBottom: '4px' }}
-                    itemStyle={{ color: '#6B7280', fontSize: '12px', padding: '4px 0' }}
-                  />
-                  <Legend 
-                    verticalAlign="top"
-                    height={36}
-                    iconType="circle"
-                    iconSize={8}
-                    wrapperStyle={{
-                      paddingBottom: '20px',
-                    }}
-                  />
-                  <Bar 
-                    dataKey="Completed" 
-                    fill="#10B981" // Green
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="In Progress" 
-                    fill="#6366F1" // Indigo
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="Cancelled" 
-                    fill="#F43F5E" // Rose
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            
-            {/* Summary section below chart */}
-            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-500">Completed Orders</p>
-                <p className="text-2xl font-semibold text-emerald-600 mt-1">
-                  {chartData.reduce((sum, item) => sum + item.Completed, 0)}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-500">In Progress</p>
-                <p className="text-2xl font-semibold text-indigo-600 mt-1">
-                  {chartData.reduce((sum, item) => sum + item['In Progress'], 0)}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-500">Cancelled</p>
-                <p className="text-2xl font-semibold text-rose-600 mt-1">
-                  {chartData.reduce((sum, item) => sum + item.Cancelled, 0)}
-                </p>
-              </div>
+            <div className="h-[400px]">
+              {sellerMatrixLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <p>Loading chart data...</p>
+                </div>
+              ) : sellerMatrix && sellerMatrix.length > 0 ? (
+                <StackedBarChart memoizedData={sellerMatrix} />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p>No data available for the selected period</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -3,11 +3,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { BarChart3, DollarSign, Package, Users, ExternalLink, Settings } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
-import { getSellerDashboardCounts } from '../../redux/Action/action';
+import { getSellerDashboardCounts,getCategorySalesMatrix, getProductSalesMatrix } from '../../redux/Action/action';
 import { AppDispatch } from '../../redux/store';
 import { RootState } from '../../redux/types';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
+import NewReleasesOutlinedIcon from '@mui/icons-material/NewReleasesOutlined';
+import CustomMonthPicker from '../../components/CustomMonthPicker';
+import PieChartComp from '../../components/PieChartComp';
+import SimpleBarChart from '../../components/SimpleBarChart';
+import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 
 // Sample data for the category pie chart
 const categoryData = [
@@ -49,6 +55,27 @@ const SellerDashboard = () => {
     }
   });
 
+  const { data: categorySalesMatrix, loading: categoryMatrixLoading } = useSelector(
+    (state: RootState) => state.data.categorySalesMatrix
+  );
+
+  const { data: productSalesMatrix, loading: productMatrixLoading } = useSelector(
+    (state: RootState) => state.data.productSalesMatrix
+  );
+
+  const handleDateChange = (date: Date) => {
+    const startOfMonth = moment(date).startOf("month").format("YYYY-MM-DD");
+    const endOfMonth = moment(date).endOf("month").format("YYYY-MM-DD");
+    const dateParams = { 
+      start_date: startOfMonth, 
+      end_date: endOfMonth 
+    };
+    
+    // Update both charts
+    dispatch(getCategorySalesMatrix(dateParams));
+    dispatch(getProductSalesMatrix(dateParams));
+  };
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -59,6 +86,14 @@ const SellerDashboard = () => {
     };
 
     fetchDashboardData();
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getCategorySalesMatrix()); // Initial load without date params
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getProductSalesMatrix()); // Initial load without date params
   }, [dispatch]);
 
   return (
@@ -121,55 +156,50 @@ const SellerDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Category Sales Matrix */}
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-0">Category wise sales matrix</h2>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-              <span>Month-November</span>
-              <span className="text-xs text-gray-400">Selected Month</span>
+          <div className="flex justify-between items-center mb-6">
+            <span className="font-semibold flex items-center">
+              <NewReleasesOutlinedIcon
+                sx={{ marginRight: "0.3em", color: "#8668FF" }}
+              />
+              <div>Category wise sales matrix</div>
+            </span>
+            <CustomMonthPicker onChange={handleDateChange} />
+          </div>
+          
+          {categoryMatrixLoading ? (
+            <div className="flex items-center justify-center h-[300px]">
+              Loading chart data...
             </div>
-          </div>
-          <div className="h-[250px] sm:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          ) : (
+            <PieChartComp
+              data={categorySalesMatrix?.categories}
+              outerRadius={30}
+              innerRadius={50}
+            />
+          )}
         </div>
 
         {/* Sales Orders Matrix */}
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-0">Sales Orders matrix</h2>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-              <span>Month-November</span>
-              <span className="text-xs text-gray-400">Selected Month</span>
+          <div className="flex justify-between items-center mb-6">
+            <span className="font-semibold flex items-center">
+              <SupportAgentOutlinedIcon
+                sx={{ marginRight: "0.3em", color: "#8668FF" }}
+              />
+              <div>Sales Orders matrix</div>
+            </span>
+            <CustomMonthPicker onChange={handleDateChange} />
+          </div>
+          
+          {productMatrixLoading ? (
+            <div className="flex items-center justify-center h-[300px]">
+              Loading chart data...
             </div>
-          </div>
-          <div className="h-[250px] sm:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={orderData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Bar dataKey="value" fill="#4F46E5" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          ) : (
+            <SimpleBarChart
+              dataObject={productSalesMatrix}
+            />
+          )}
         </div>
       </div>
     </div>

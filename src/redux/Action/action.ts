@@ -266,6 +266,15 @@ import {
   RAISE_ISSUE_REQUEST,
   RAISE_ISSUE_SUCCESS,
   RAISE_ISSUE_FAILURE,
+  GET_SELLER_MATRIX_REQUEST,
+  GET_SELLER_MATRIX_SUCCESS,
+  GET_SELLER_MATRIX_FAILURE,
+  GET_CATEGORY_SALES_MATRIX_REQUEST,
+  GET_CATEGORY_SALES_MATRIX_SUCCESS,
+  GET_CATEGORY_SALES_MATRIX_FAILURE,
+  GET_PRODUCT_SALES_MATRIX_REQUEST,
+  GET_PRODUCT_SALES_MATRIX_SUCCESS,
+  GET_PRODUCT_SALES_MATRIX_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -4831,6 +4840,118 @@ export const raiseIssue = (payload: RaiseIssuePayload): ThunkAction<Promise<any>
       dispatch({
         type: RAISE_ISSUE_FAILURE,
         payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getSellerMatrix = (dates: { start_date: string; end_date: string }): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_SELLER_MATRIX_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/dashboard/seller_records`,
+        {
+          params: dates,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        const formattedData = response.data.data.map((item: any) => ({
+          name: item.Seller.name,
+          "Fulfilled Orders": item.Accepted_Counter,
+          "In progress Orders": item.In_Process_Counter,
+          "Canceled Items": item.Cancelled_Counter
+        }));
+
+        dispatch({
+          type: GET_SELLER_MATRIX_SUCCESS,
+          payload: formattedData
+        });
+        return response.data;
+      }
+
+    } catch (error) {
+      dispatch({
+        type: GET_SELLER_MATRIX_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch seller matrix'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getCategorySalesMatrix = (dates?: { start_date: string; end_date: string }): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_CATEGORY_SALES_MATRIX_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/dashboard/category_wise_sales_matrix`,
+        {
+          params: dates,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_CATEGORY_SALES_MATRIX_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      }
+
+    } catch (error) {
+      dispatch({
+        type: GET_CATEGORY_SALES_MATRIX_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch category sales matrix'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getProductSalesMatrix = (dates?: { start_date: string; end_date: string }): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_SALES_MATRIX_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/dashboard/product_wise_sales_matrix`,
+        {
+          params: dates,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_SALES_MATRIX_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      }
+
+    } catch (error) {
+      dispatch({
+        type: GET_PRODUCT_SALES_MATRIX_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch product sales matrix'
       });
       throw error;
     }

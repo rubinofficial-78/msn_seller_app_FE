@@ -213,7 +213,16 @@ import {
   GET_ORDER_LIST_FAILURE,
   RAISE_ISSUE_REQUEST,
   RAISE_ISSUE_SUCCESS,
-  RAISE_ISSUE_FAILURE
+  RAISE_ISSUE_FAILURE,
+  GET_SELLER_MATRIX_REQUEST,
+  GET_SELLER_MATRIX_SUCCESS,
+  GET_SELLER_MATRIX_FAILURE,
+  GET_CATEGORY_SALES_MATRIX_REQUEST,
+  GET_CATEGORY_SALES_MATRIX_SUCCESS,
+  GET_CATEGORY_SALES_MATRIX_FAILURE,
+  GET_PRODUCT_SALES_MATRIX_REQUEST,
+  GET_PRODUCT_SALES_MATRIX_SUCCESS,
+  GET_PRODUCT_SALES_MATRIX_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -572,6 +581,21 @@ const initialState: AuthState = {
     data: []
   },
   raiseIssue: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  sellerMatrix: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  categorySalesMatrix: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  productSalesMatrix: {
     loading: false,
     error: null,
     data: null
@@ -2465,6 +2489,87 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         raiseIssue: {
           ...state.raiseIssue,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_SELLER_MATRIX_REQUEST:
+      return {
+        ...state,
+        sellerMatrix: {
+          ...state.sellerMatrix,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_SELLER_MATRIX_SUCCESS:
+      return {
+        ...state,
+        sellerMatrix: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_SELLER_MATRIX_FAILURE:
+      return {
+        ...state,
+        sellerMatrix: {
+          ...state.sellerMatrix,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_CATEGORY_SALES_MATRIX_REQUEST:
+      return {
+        ...state,
+        categorySalesMatrix: {
+          ...state.categorySalesMatrix,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_CATEGORY_SALES_MATRIX_SUCCESS:
+      return {
+        ...state,
+        categorySalesMatrix: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_CATEGORY_SALES_MATRIX_FAILURE:
+      return {
+        ...state,
+        categorySalesMatrix: {
+          ...state.categorySalesMatrix,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PRODUCT_SALES_MATRIX_REQUEST:
+      return {
+        ...state,
+        productSalesMatrix: {
+          ...state.productSalesMatrix,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCT_SALES_MATRIX_SUCCESS:
+      return {
+        ...state,
+        productSalesMatrix: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PRODUCT_SALES_MATRIX_FAILURE:
+      return {
+        ...state,
+        productSalesMatrix: {
+          ...state.productSalesMatrix,
           loading: false,
           error: action.payload
         }

@@ -254,6 +254,18 @@ import {
   UPDATE_ORDER_FULFILLMENT_REQUEST,
   UPDATE_ORDER_FULFILLMENT_SUCCESS,
   UPDATE_ORDER_FULFILLMENT_FAILURE,
+  GET_ISSUE_STATUS_LOOKUP_REQUEST,
+  GET_ISSUE_STATUS_LOOKUP_SUCCESS,
+  GET_ISSUE_STATUS_LOOKUP_FAILURE,
+  GET_ISSUE_SUB_CATEGORIES_REQUEST,
+  GET_ISSUE_SUB_CATEGORIES_SUCCESS,
+  GET_ISSUE_SUB_CATEGORIES_FAILURE,
+  GET_ORDER_LIST_REQUEST,
+  GET_ORDER_LIST_SUCCESS,
+  GET_ORDER_LIST_FAILURE,
+  RAISE_ISSUE_REQUEST,
+  RAISE_ISSUE_SUCCESS,
+  RAISE_ISSUE_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -4648,6 +4660,176 @@ export const updateOrderFulfillment = (
       const errorMessage = error instanceof Error ? error.message : 'Failed to update order fulfillment';
       dispatch({
         type: UPDATE_ORDER_FULFILLMENT_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// Add this action creator
+export const getIssueStatusLookup = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ISSUE_STATUS_LOOKUP_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/ondc/bpp/igm_lookup_code?lookup_type=ISSUE_STATUS`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ISSUE_STATUS_LOOKUP_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch issue status lookup');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch issue status lookup';
+      dispatch({
+        type: GET_ISSUE_STATUS_LOOKUP_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// Update this action creator to use category key directly
+export const getIssueSubCategories = (categoryKey: string): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ISSUE_SUB_CATEGORIES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      // Now using categoryKey directly in the URL (e.g. FULFILLMENT)
+      const response = await axios.get(
+        `${API_BASE_URL}/ondc/bpp/sub_categories/${categoryKey}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ISSUE_SUB_CATEGORIES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch issue sub-categories');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch issue sub-categories';
+      dispatch({
+        type: GET_ISSUE_SUB_CATEGORIES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getOrderIdList = (email: string, mobileNumber: string): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ORDER_LIST_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.get(
+        `${API_BASE_URL}/ondc/bpp/adya_bpp/for_igm/orders_list`, {
+          params: {
+            email,
+            mobile_number: mobileNumber
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ORDER_LIST_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch order list');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch order list';
+      dispatch({
+        type: GET_ORDER_LIST_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+interface RaiseIssuePayload {
+  order_id: string;
+  category: string;
+  sub_category: string;
+  description: {
+    long_desc: string;
+    short_desc: string;
+    additional_desc: {
+      url: string;
+    };
+    images: string[];
+  };
+}
+
+export const raiseIssue = (payload: RaiseIssuePayload): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: RAISE_ISSUE_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/ondc/bpp/raise_issue`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: RAISE_ISSUE_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to raise issue');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to raise issue';
+      dispatch({
+        type: RAISE_ISSUE_FAILURE,
         payload: errorMessage
       });
       throw error;

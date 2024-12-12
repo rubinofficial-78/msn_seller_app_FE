@@ -201,7 +201,19 @@ import {
   CANCEL_ORDER_FAILURE,
   UPDATE_ORDER_FULFILLMENT_REQUEST,
   UPDATE_ORDER_FULFILLMENT_SUCCESS,
-  UPDATE_ORDER_FULFILLMENT_FAILURE
+  UPDATE_ORDER_FULFILLMENT_FAILURE,
+  GET_ISSUE_STATUS_LOOKUP_REQUEST,
+  GET_ISSUE_STATUS_LOOKUP_SUCCESS,
+  GET_ISSUE_STATUS_LOOKUP_FAILURE,
+  GET_ISSUE_SUB_CATEGORIES_REQUEST,
+  GET_ISSUE_SUB_CATEGORIES_SUCCESS,
+  GET_ISSUE_SUB_CATEGORIES_FAILURE,
+  GET_ORDER_LIST_REQUEST,
+  GET_ORDER_LIST_SUCCESS,
+  GET_ORDER_LIST_FAILURE,
+  RAISE_ISSUE_REQUEST,
+  RAISE_ISSUE_SUCCESS,
+  RAISE_ISSUE_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -540,6 +552,26 @@ const initialState: AuthState = {
     data: null
   },
   orderFulfillmentUpdate: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  issueStatusLookup: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  issueSubCategories: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  orderList: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  raiseIssue: {
     loading: false,
     error: null,
     data: null
@@ -2321,6 +2353,118 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         orderFulfillmentUpdate: {
           ...state.orderFulfillmentUpdate,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ISSUE_STATUS_LOOKUP_REQUEST:
+      return {
+        ...state,
+        issueStatusLookup: {
+          ...state.issueStatusLookup,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ISSUE_STATUS_LOOKUP_SUCCESS:
+      return {
+        ...state,
+        issueStatusLookup: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ISSUE_STATUS_LOOKUP_FAILURE:
+      return {
+        ...state,
+        issueStatusLookup: {
+          ...state.issueStatusLookup,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ISSUE_SUB_CATEGORIES_REQUEST:
+      return {
+        ...state,
+        issueSubCategories: {
+          ...state.issueSubCategories,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ISSUE_SUB_CATEGORIES_SUCCESS:
+      return {
+        ...state,
+        issueSubCategories: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_ISSUE_SUB_CATEGORIES_FAILURE:
+      return {
+        ...state,
+        issueSubCategories: {
+          ...state.issueSubCategories,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_ORDER_LIST_REQUEST:
+      return {
+        ...state,
+        orderList: {
+          ...state.orderList,
+          loading: true,
+          error: null
+        }
+      };
+    
+    case GET_ORDER_LIST_SUCCESS:
+      return {
+        ...state,
+        orderList: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    
+    case GET_ORDER_LIST_FAILURE:
+      return {
+        ...state,
+        orderList: {
+          ...state.orderList,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case RAISE_ISSUE_REQUEST:
+      return {
+        ...state,
+        raiseIssue: {
+          ...state.raiseIssue,
+          loading: true,
+          error: null
+        }
+      };
+    
+    case RAISE_ISSUE_SUCCESS:
+      return {
+        ...state,
+        raiseIssue: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    
+    case RAISE_ISSUE_FAILURE:
+      return {
+        ...state,
+        raiseIssue: {
+          ...state.raiseIssue,
           loading: false,
           error: action.payload
         }

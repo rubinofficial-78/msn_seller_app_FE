@@ -481,6 +481,54 @@ export interface AuthState {
     error: string | null;
     data: any | null;
   };
+  issueStatusLookup: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      lookup_type: string;
+      lookup_code: string;
+      display_name: string;
+    }>;
+  };
+  issueSubCategories: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      category: string;
+      code: string;
+      description: string;
+      raised_by: string;
+      raised_on: string;
+      expected_response_time: string;
+      expected_resolution_time: string;
+      parent_category: string;
+      createdAt: string;
+      updatedAt: string;
+      display_name: string;
+    }>;
+  };
+  orderList: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: string;
+      state: string;
+      items: Array<{
+        id: string;
+        name: string;
+        category: string;
+        quantity: number;
+      }>;
+      amount: number;
+      created_at: string;
+    }>;
+  };
+  raiseIssue: {
+    loading: boolean;
+    error: string | null;
+    data: any | null;
+  };
 }
 
 export interface RootState {

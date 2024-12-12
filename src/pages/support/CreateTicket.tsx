@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import AddForm from '../../components/AddForm';
+import { useDispatch, useSelector } from 'react-redux';
+import { getIssueCategories, getIssueSubCategories, getOrderIdList, getUserDetails, raiseIssue } from '../../redux/Action/action';
+import { AppDispatch } from '../../redux/store';
+import { RootState } from '../../redux/types';
 
 interface TicketFormData {
   orderId: string;
@@ -12,17 +16,21 @@ interface TicketFormData {
   images: string[];
 }
 
-const ISSUE_CATEGORIES = {
-  'order': ['Delivery Delay', 'Wrong Item', 'Missing Item', 'Damaged Item'],
-  'payment': ['Refund', 'Overcharged', 'Payment Failed', 'Double Payment'],
-  'fulfillment': ['Order Not Accepted', 'Order Preparation Delay', 'Packaging Issue'],
-  'return': ['Return Request', 'Return Pickup', 'Return Refund'],
-  'agent': ['Agent Behavior', 'Agent Response Delay', 'Wrong Information'],
-  'item': ['Quality Issue', 'Quantity Issue', 'Price Mismatch', 'Item Description Mismatch']
-};
-
 const CreateTicket = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Get issue categories from Redux store
+  const { data: categories, loading } = useSelector((state: RootState) => state.data.issueCategories);
+  const { data: userDetails, loading: userLoading } = useSelector((state: RootState) => state.data.userDetails);
+  const { data: subCategories, loading: subCategoriesLoading } = useSelector(
+    (state: RootState) => state.data.issueSubCategories
+  );
+  const { data: orderList, loading: orderListLoading } = useSelector(
+    (state: RootState) => state.data.orderList
+  );
+  const { loading: raiseIssueLoading } = useSelector((state: RootState) => state.data.raiseIssue);
+
   const [formData, setFormData] = useState<TicketFormData>({
     orderId: '',
     issueCategory: '',
@@ -32,7 +40,36 @@ const CreateTicket = () => {
     images: []
   });
 
-  const [subCategories, setSubCategories] = useState<string[]>([]);
+  // Fetch user details and other data when component mounts
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const parsedUserData = JSON.parse(userData);
+      console.log('Fetching user details with ID:', parsedUserData.ID);
+    } else {
+      console.log('No user data in localStorage');
+    }
+    dispatch(getUserDetails());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getIssueCategories());
+  }, [dispatch]);
+
+  // Fetch order list when user details are available
+  useEffect(() => {
+    if (userDetails?.email && userDetails?.mobile_number) {
+      dispatch(getOrderIdList(userDetails.email, userDetails.mobile_number));
+    }
+  }, [dispatch, userDetails]);
+
+  // Add this effect to debug user details
+  useEffect(() => {
+    console.log('User Details:', userDetails);
+    // Also check localStorage
+    const userData = localStorage.getItem('user');
+    console.log('LocalStorage User Data:', userData ? JSON.parse(userData) : null);
+  }, [userDetails]);
 
   const handleInputChange = (key: string, value: any) => {
     setFormData(prev => ({
@@ -40,10 +77,20 @@ const CreateTicket = () => {
       [key]: value
     }));
 
-    // Update sub-categories when category changes
     if (key === 'issueCategory') {
-      setSubCategories(ISSUE_CATEGORIES[value as keyof typeof ISSUE_CATEGORIES] || []);
       setFormData(prev => ({ ...prev, issueSubCategory: '' }));
+      if (value) {
+        // Add console logs to debug
+        console.log('Selected value:', value);
+        const selectedCategory = categories.find(cat => cat.code === value);
+        console.log('Selected category:', selectedCategory);
+        
+        // Check if category has category property instead of parent_category
+        if (selectedCategory?.category) {
+          console.log('Fetching subcategories for:', selectedCategory.category);
+          dispatch(getIssueSubCategories(selectedCategory.category));
+        }
+      }
     }
   };
 
@@ -56,19 +103,48 @@ const CreateTicket = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Submit ticket:', formData);
-    navigate('/dashboard/support');
+  const handleSubmit = async () => {
+    try {
+      const selectedCategory = categories.find(cat => cat.code === formData.issueCategory);
+      
+      const payload = {
+        order_id: formData.orderId,
+        category: selectedCategory?.category || '',
+        sub_category: formData.issueSubCategory,
+        description: {
+          long_desc: formData.description,
+          short_desc: formData.subject,
+          additional_desc: {
+            url: ''
+          },
+          images: formData.images
+        }
+      };
+
+      await dispatch(raiseIssue(payload));
+      navigate('/dashboard/support');
+    } catch (error) {
+      console.error('Failed to raise issue:', error);
+      // Handle error (show error message to user)
+    }
   };
+
+  // Get selected category details
+  const selectedCategory = categories.find(cat => cat.code === formData.issueCategory);
 
   const formFields = [
     {
-      type: "text",
+      type: "select",
       key: "orderId",
       label: "Order Id",
       required: true,
       value: formData.orderId,
-      placeholder: "Enter Order ID"
+      options: orderList.map(order => ({
+        value: order.id,
+        label: `${order.id} - ${order.items.map(item => item.name).join(', ')} (₹${order.amount})`
+      })),
+      placeholder: "Select Order ID",
+      disabled: orderListLoading
     },
     {
       type: "select",
@@ -76,11 +152,15 @@ const CreateTicket = () => {
       label: "Issue Category",
       required: true,
       value: formData.issueCategory,
-      options: Object.keys(ISSUE_CATEGORIES).map(category => ({
-        value: category,
-        label: category.charAt(0).toUpperCase() + category.slice(1)
-      })),
-      placeholder: "Select Issue Category"
+      options: categories.map(category => {
+        console.log('Category mapping:', category); // Debug log
+        return {
+          value: category.code,
+          label: category.display_name
+        };
+      }),
+      placeholder: "Select Issue Category",
+      disabled: loading
     },
     {
       type: "select",
@@ -89,11 +169,11 @@ const CreateTicket = () => {
       required: true,
       value: formData.issueSubCategory,
       options: subCategories.map(subCategory => ({
-        value: subCategory,
-        label: subCategory
+        value: subCategory.code,
+        label: subCategory.display_name
       })),
       placeholder: "Select Issue Sub-Category",
-      disabled: !formData.issueCategory
+      disabled: !formData.issueCategory || loading || subCategoriesLoading
     },
     {
       type: "text",
@@ -132,7 +212,7 @@ const CreateTicket = () => {
           onClick={() => navigate('/dashboard/support')}
           className="p-2 hover:bg-gray-100 rounded-lg"
         >
-          <ChevronLeft id="back-icon-create-ticket"   size={20} />
+          <ChevronLeft id="back-icon-create-ticket" size={20} />
         </button>
         <div>
           <h1 className="text-2xl font-semibold">Create Ticket</h1>
@@ -142,12 +222,16 @@ const CreateTicket = () => {
 
       {/* Form */}
       <div className="bg-white rounded-lg shadow p-6">
-        <AddForm
-          data={formFields}
-          handleInputonChange={handleInputChange}
-          handleSelectonChange={handleInputChange}
-          handleImageLink={handleImageLink}
-        />
+        {(loading || subCategoriesLoading || orderListLoading || userLoading) ? (
+          <div className="text-center py-4">Loading...</div>
+        ) : (
+          <AddForm
+            data={formFields}
+            handleInputonChange={handleInputChange}
+            handleSelectonChange={handleInputChange}
+            handleImageLink={handleImageLink}
+          />
+        )}
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
@@ -161,9 +245,14 @@ const CreateTicket = () => {
           <button
             id="raise-ticket-button-create-ticket"
             onClick={handleSubmit}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            disabled={loading || raiseIssueLoading}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
+              loading || raiseIssueLoading
+                ? 'bg-blue-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            Raise Ticket
+            {raiseIssueLoading ? 'Raising Ticket...' : 'Raise Ticket'}
           </button>
         </div>
       </div>

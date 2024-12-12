@@ -4,7 +4,7 @@ import CustomTable from "../components/CustomTable";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getIssues, getIssueCategories } from "../redux/Action/action";
+import { getIssues, getIssueCategories, getIssueStatusLookup } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
 
@@ -27,12 +27,18 @@ const Support = () => {
 
   const { data: categories } = useSelector((state: RootState) => state.data.issueCategories);
 
+  const { data: issueStatusList } = useSelector((state: RootState) => state.data.issueStatusLookup);
+
   useEffect(() => {
     fetchIssues();
   }, [dispatch, currentPage, perPage]);
 
   useEffect(() => {
     dispatch(getIssueCategories());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getIssueStatusLookup());
   }, [dispatch]);
 
   const fetchIssues = () => {
@@ -246,9 +252,11 @@ const Support = () => {
               }}
             >
               <option value="">All Statuses</option>
-              <option value="OPEN">Open</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="CLOSED">Closed</option>
+              {issueStatusList.map((statusItem) => (
+                <option key={statusItem.id} value={statusItem.lookup_code}>
+                  {statusItem.display_name}
+                </option>
+              ))}
             </select>
 
             <input

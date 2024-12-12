@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AddForm from "../../components/AddForm";
 import { Clock } from "lucide-react";
 
-const AccountDetails = () => {
+const SellerAccountDetails = () => {
   const navigate = useNavigate();
   
   const basicInfoFields = [
@@ -213,6 +213,12 @@ const AccountDetails = () => {
     setShowDeactivateConfirm(false);
   };
 
+  console.log({
+    basicInfoFields,
+    loginDetailsFields,
+    contactDetailsFields
+  });
+
   return (
     <div className="space-y-8 p-6 bg-gray-50">
       <div className="flex items-center justify-between">
@@ -352,4 +358,4 @@ const AccountDetails = () => {
   );
 };
 
-export default AccountDetails; 
+export default SellerAccountDetails; 

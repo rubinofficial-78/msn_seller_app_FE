@@ -41,6 +41,7 @@ import AddMenu from "../pages/AddMenu";
 
 // Settings Related Pages
 import AccountDetails from "../pages/settings/AccountDetails";
+import SellerAccountDetails from "../pages/sellerSettings/SellerAccountDetails";
 import LocationServices from "../pages/settings/LocationServices";
 import BankingDetails from "../pages/sellerSettings/BankingDetails";
 import AccessManagement from "../pages/settings/AccessManagement";
@@ -481,7 +482,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "account-details",
-            element: <AccountDetails/>,
+            element: <SellerAccountDetails/>,
           },
           {
             path: "banking-details",

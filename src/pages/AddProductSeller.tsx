@@ -612,14 +612,8 @@ const AddProductSeller = () => {
 
               case "dropdown":
                 if (isTimeRelatedField(field.field_name)) {
-                  const selectedOption = timeOptions.find(
-                    (opt) => opt.value === value
-                  );
-                  processedValue = selectedOption ? {
-                    id: selectedOption.id,
-                    label: selectedOption.label,
-                    lookup_code: selectedOption.value,
-                  } : null;
+                  // Just send the value directly for time-related fields
+                  processedValue = value;
                 }
                 break;
 
@@ -742,7 +736,6 @@ const AddProductSeller = () => {
     return timeFields.includes(fieldName);
   };
 
-  // Then update the getOndcFieldsBySection function
   const getOndcFieldsBySection = () => {
     if (!ondcDetails) return {};
 
@@ -793,12 +786,18 @@ const AddProductSeller = () => {
           fieldObject = {
             ...fieldObject,
             type: "select",
-            // Check if it's a time-related field
-            options: isTimeRelatedField(field.field_name) 
-              ? timeOptions // Use timeOptions for time-related fields
+            options: isTimeRelatedField(field.field_name)
+              ? timeOptions.map(option => ({
+                  label: option.label,
+                  value: option.value,
+                }))
               : formData[`${field.key}_options`] || [],
-            data_source: !isTimeRelatedField(field.field_name) ? field.data_source : null,
-            data_source_params: !isTimeRelatedField(field.field_name) ? field.data_source_params : null,
+            data_source: !isTimeRelatedField(field.field_name)
+              ? field.data_source
+              : null,
+            data_source_params: !isTimeRelatedField(field.field_name)
+              ? field.data_source_params
+              : null,
           };
           break;
 
@@ -843,10 +842,10 @@ const AddProductSeller = () => {
       }
 
       acc[field.section_name].push(fieldObject);
-    
       return acc;
     }, {});
   };
+
 
   // Then define the fields
   const basicInfoFields = [

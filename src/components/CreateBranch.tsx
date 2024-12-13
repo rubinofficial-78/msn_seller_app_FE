@@ -44,47 +44,114 @@ const CreateBranch: React.FC = () => {
       setFormData(prev => ({ ...prev, [key]: value }));
     }
   };
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
-  const handleSave = async () => {
-    try {
-      // Validate required fields
-      if (!formData.companyName || !formData.branchName || !formData.email || !formData.mobileNumber) {
-        toast.error('Please fill all required fields');
-        return;
+  const validateForm = (showError = false) => {
+    let isValid = true;
+    if (formData.companyName) {
+      if (formData.companyName.length > 20) {
+        if (showError)
+          toast.error("Company name should not exceed 20 characters");
+        isValid = false;
       }
+    }
+    if (formData.branchName) {
+      if (formData.branchName.length > 20) {
+        if (showError)
+          toast.error("Branch name should not exceed 20 characters");
+        isValid = false;
+      }
+    }
+    if (formData.mobileNumber) {
+      const mobileRegex = /^[6-9]\d{9}$/;
+      if (!mobileRegex.test(formData.mobileNumber)) {
+        if (showError)
+          toast.error("Mobile number should be 10 digits starting with 6-9");
+        isValid = false;
+      }
+    }
+    if (formData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        if (showError) toast.error("Invalid email address");
+        isValid = false;
+      }
+    }
+    // if (formData.address) {
+    //   if (formData.address.length > 20) {
+    //     if (showError) toast.error("Address should not exceed 20 characters");
+    //     isValid = false;
+    //   }
+    // }
+    if (formData.state) {
+      if (formData.state.length > 20) {
+        if (showError) toast.error("State should not exceed 20 characters");
+        isValid = false;
+      }
+    }
+    // if (formData.city) {
+    //   if (formData.city.length > 20) {
+    //     if (showError) toast.error("City should not exceed 20 characters");
+    //     isValid = false;
+    //   }
+    // }
+    if (formData.pincode) {
+      if (formData.pincode.length > 6) {
+        if (showError) toast.error("Pincode should be 6 digits");
+        isValid = false;
+      }
+    }
+    setIsFormValid(isValid);
+    return isValid;
+  }
 
-      const companyId = typeof formData.companyName === 'object' 
-        ? formData.companyName.value 
-        : formData.companyName;
-
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowValidation(true);
+  
+    if (!validateForm(true)) {
+      return;
+    }
+  
+    try {
+      const companyId =
+        typeof formData.companyName === "object"
+          ? formData.companyName.value
+          : formData.companyName;
+  
       const payload = {
         name: formData.branchName,
         email: formData.email,
         mobile_number: formData.mobileNumber,
         created_by_id: Number(companyId),
         default_address: {
-          address: formData.address || '',
-          state: formData.state || '',
-          city: formData.city || '',
-          pincode: formData.pincode || ''
-        }
+          address: formData.address || "",
+          state: formData.state || "",
+          city: formData.city || "",
+          pincode: formData.pincode || "",
+        },
       };
-
-      console.log('Creating branch with payload:', payload);
-
+  
+      console.log("Creating branch with payload:", payload);
+  
       const response = await dispatch(createBranchApi(payload));
-      
+  
       if (response?.meta?.status) {
-        toast.success('Branch created successfully');
+        toast.success("Branch created successfully");
         navigate(-1);
       } else {
-        toast.error(response?.meta?.message || 'Failed to create branch');
+        toast.error(response?.meta?.message || "Failed to create branch");
       }
     } catch (error) {
-      console.error('Error creating branch:', error);
-      toast.error('Failed to create branch: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error("Error creating branch:", error);
+      toast.error(
+        "Failed to create branch: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
     }
   };
+  
 
   const formFields = [
     {

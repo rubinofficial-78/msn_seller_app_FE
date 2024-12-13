@@ -172,8 +172,8 @@ const EditPartner: React.FC = () => {
 
               setFormData({
                 companyName: {
-                  value: partnerData.parent_company?.id || "",
-                  label: partnerData.parent_company?.name || "",
+                  value: partnerData.parent_company?.id,
+                  label: partnerData.parent_company?.name,
                 },
                 branchName: {
                   value: partnerData.parent?.id || "",
@@ -195,7 +195,7 @@ const EditPartner: React.FC = () => {
                 ifscNo: bankingDetails.ifsc_code || "",
                 bankAccountHolderName:
                   bankingDetails.bank_account_holder_name || "",
-                dynamicAffiliateUrl: "", // Will be updated from getAffiliateUrl
+                dynamicAffiliateUrl: "", // Initialize empty
                 // Commission settings
                 newSellerCommissionType: newSellerSetting.type,
                 newSellerCommissionValue: newSellerSetting.value,
@@ -215,16 +215,17 @@ const EditPartner: React.FC = () => {
                 homeDecorCommissionValue: homeDecorSetting.value,
               });
 
-              // Fetch and set affiliate URL
+              // Then fetch and update the affiliate URL separately
               try {
                 const affiliateUrlResponse = await dispatch(
                   getAffiliateUrl(parseInt(id))
                 );
-                if (affiliateUrlResponse) {
-                  setFormData((prev) => ({
+                console.log('Affiliate URL Data:', affiliateUrlResponse);
+                
+                if (affiliateUrlResponse?.dynamic_affiliate_url) {
+                  setFormData(prev => ({
                     ...prev,
-                    dynamicAffiliateUrl:
-                      affiliateUrlResponse.dynamic_affiliate_url || "",
+                    dynamicAffiliateUrl: affiliateUrlResponse.dynamic_affiliate_url
                   }));
                 }
               } catch (error) {
@@ -235,7 +236,7 @@ const EditPartner: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error("Error fetching partner details:", error);
+        console.error("Error fetching data:", error);
         toast.error("Failed to fetch partner details");
       }
     };
@@ -505,10 +506,10 @@ const EditPartner: React.FC = () => {
         {
           type: "text",
           key: "dynamicAffiliateUrl",
-          label: "Dynamic Affiliate Url",
-          value: formData.dynamicAffiliateUrl,
-          placeholder: "Enter dynamic affiliate URL",
-          id: "dynamic-affiliate-url-partner",
+          label: "Dynamic Affiliate URL",
+          value: formData.dynamicAffiliateUrl || "",
+          disabled: true,
+          placeholder: "Affiliate URL will be generated automatically",
         },
         // New Seller OnBoarding
         {

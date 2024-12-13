@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Eye, Edit, LayoutGrid, List, Search } from "lucide-react";
+import { Plus, Eye, Edit, LayoutGrid, List, Search, ToggleLeft, ToggleRight } from "lucide-react";
 import CustomTable, { Column } from "../components/CustomTable";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -11,89 +11,6 @@ import {
 } from "../redux/Action/action";
 import { AppDispatch, RootState } from "../redux/types";
 import { toast } from "react-hot-toast";
-
-// Define table columns for CustomTable
-const tableColumns: Column[] = [
-  {
-    id: "name",
-    key: "name",
-    label: "Branch Name",
-    minWidth: 180,
-  },
-  {
-    id: "parent",
-    key: "parent.name",
-    label: "Company Name",
-    minWidth: 180,
-  },
-  {
-    id: "createdAt",
-    key: "createdAt",
-    label: "Created Date",
-    minWidth: 140,
-  },
-  {
-    id: "contact",
-    key: ["email", "mobile_number"],
-    label: "Contact Information",
-    minWidth: 200,
-    join: true,
-    join_type: "multiline",
-  },
-  {
-    id: "address",
-    key: "default_address.address",
-    label: "Address",
-    minWidth: 200,
-  },
-  {
-    id: "partner_counts",
-    key: "partner_counts",
-    label: "Partner Count",
-    minWidth: 120,
-    type: "number",
-  },
-  {
-    id: "status",
-    key: "status.lookup_code",
-    label: "Status",
-    minWidth: 120,
-    type: "status_toggle",
-  },
-  {
-    id: "actions",
-    key: "actions",
-    label: "Actions",
-    type: "custom",
-    minWidth: 100,
-    renderCell: (row: any) => (
-      <div className="flex items-center gap-2">
-        <button
-          id={`view-button-${row.id}`}
-          onClick={() => handleRowClick(row, "action")}
-          className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
-          title="View"
-        >
-          <Eye size={16} />
-        </button>
-        <button
-          id={`edit-button-${row.id}`}
-          onClick={() => handleRowClick(row, "action")}
-          className="p-1 text-green-600 hover:text-green-700 rounded-full hover:bg-green-50"
-          title="Edit"
-        >
-          <Edit size={16} />
-        </button>
-      </div>
-    ),
-  },
-];
-const handleRowClick = (row: any, source?: string) => {
-  // Only navigate to view if not clicking action buttons
-  if (source !== "action") {
-    navigate(`view/${row.id}`);
-  }
-};
 
 const Branches: React.FC = () => {
   const navigate = useNavigate();
@@ -208,8 +125,8 @@ const Branches: React.FC = () => {
   };
 
   // Handle row click for view/edit actions
-  const handleRowClick = (row: any) => {
-    navigate(`view/${row.id}`);
+  const handleRowClick = () => {
+    // Do nothing - this prevents navigation on row click
   };
 
   // Handle status toggle
@@ -219,17 +136,7 @@ const Branches: React.FC = () => {
       const newStatusId = currentStatus === "ACTIVE" ? 426 : 425;
 
       const payload = {
-        name: row.name,
-        email: row.email,
-        mobile_number: row.mobile_number,
-        created_by_id: row.parent?.id,
         status_id: newStatusId,
-        default_address: row.default_address || {
-          address: "",
-          state: "",
-          city: "",
-          pincode: "",
-        },
       };
 
       const response = await dispatch(updateBranch(row.id, payload));
@@ -240,14 +147,15 @@ const Branches: React.FC = () => {
             newStatusId === 425 ? "activated" : "deactivated"
           } successfully`
         );
+        
         // Refresh the branches list with current params
-        dispatch(getBranches(params));
+        await dispatch(getBranches(params));
       } else {
         toast.error(response?.meta?.message || "Failed to update status");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating status:", error);
-      toast.error("Failed to update status");
+      toast.error(typeof error === 'string' ? error : "Failed to update status");
     }
   };
 
@@ -261,6 +169,92 @@ const Branches: React.FC = () => {
       company_id: companyId,
     }));
   };
+
+  // Define table columns inside the component to access navigate
+  const tableColumns: Column[] = [
+    {
+      id: "name",
+      key: "name",
+      label: "Branch Name",
+      minWidth: 180,
+    },
+    {
+      id: "parent",
+      key: "parent.name",
+      label: "Company Name",
+      minWidth: 180,
+    },
+    {
+      id: "createdAt",
+      key: "createdAt",
+      label: "Created Date",
+      minWidth: 140,
+      type: "custom",
+      renderCell: (row: any) => (
+        <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+      ),
+    },
+    {
+      id: "contact",
+      key: ["email", "mobile_number"],
+      label: "Contact Information",
+      minWidth: 200,
+      join: true,
+      join_type: "multiline",
+    },
+    {
+      id: "address",
+      key: "default_address.address",
+      label: "Address",
+      minWidth: 200,
+    },
+    {
+      id: "partner_counts",
+      key: "partner_counts",
+      label: "Partner Count",
+      minWidth: 120,
+      type: "number",
+    },  
+    {
+      id: "actions",
+      key: "actions",
+      label: "Actions",
+      type: "custom",
+      minWidth: 100,
+      renderCell: (row: any) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`view/${row.id}`);
+            }}
+            className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
+            title="View"
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStatusToggle(row);
+            }}
+            className={`p-1.5 rounded-full transition-colors ${
+              row.status?.lookup_code === "ACTIVE"
+                ? "bg-green-50 text-green-600 hover:bg-green-100"
+                : "bg-red-50 text-red-600 hover:bg-red-100"
+            }`}
+            title={`${row.status?.lookup_code === "ACTIVE" ? "Deactivate" : "Activate"} Branch`}
+          >
+            {row.status?.lookup_code === "ACTIVE" ? (
+              <ToggleRight size={16} />
+            ) : (
+              <ToggleLeft size={16} />
+            )}
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -374,7 +368,7 @@ const Branches: React.FC = () => {
             meta_data={meta?.pagination}
             setParams={handleParamsChange}
             pagination={true}
-            onRowClick={handleRowClick}
+            onRowClick={undefined}
             onStatusToggle={handleStatusToggle}
           />
         </div>

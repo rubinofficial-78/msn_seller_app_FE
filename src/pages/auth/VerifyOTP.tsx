@@ -183,6 +183,17 @@ export default function VerifyOTP() {
     setShowOTP(!showOTP);
   };
 
+  const handleChangeEmail = () => {
+    // Clear stored email and user data
+    localStorage.removeItem("pendingLoginEmail");
+    localStorage.removeItem("userid");
+    localStorage.removeItem("isNewUser");
+    localStorage.removeItem("token");
+    
+    // Navigate back to login
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#FDF8F4]">
       {/* Decorative Elements */}
@@ -250,10 +261,43 @@ export default function VerifyOTP() {
                   className="w-16 h-16 animate-float"
                 />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900">Verify OTP</h2>
-              <p className="text-gray-600 text-center">
-                Please enter the verification code sent to your {email ? `email ${email.slice(0, 3)}***${email.slice(email.indexOf("@"))}` : "registered email"}
-              </p>
+              <div className="flex flex-col items-center space-y-2">
+                <h2 className="text-3xl font-bold text-gray-900">Verify OTP</h2>
+                <p className="text-gray-600 text-center">
+                  Please enter the verification code sent to your{" "}
+                  {email ? (
+                    <span>
+                      email {email.slice(0, 3)}******{email.slice(email.indexOf("@"))}
+                    </span>
+                  ) : (
+                    "registered email"
+                  )}
+                </p>
+                
+                {/* Updated Change Email/Mobile Button */}
+                <button
+                  onClick={handleChangeEmail}
+                  className="inline-flex items-center text-[#4318FF] hover:text-[#3311DB]
+                            gap-2 mt-1 py-1 px-1 rounded-md
+                            text-sm font-medium
+                            transition-all duration-200 ease-in-out
+                            hover:bg-[#4318FF]/5"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    <path d="m15 5 4 4" />
+                  </svg>
+                  Change Email/Mobile
+                </button>
+              </div>
             </div>
 
             {/* Error Message */}

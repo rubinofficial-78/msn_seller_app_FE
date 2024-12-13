@@ -187,6 +187,10 @@ const Partners: React.FC = () => {
       key: "createdAt",
       label: "Created Date",
       minWidth: 120,
+      type: "custom",
+      renderCell: (row: any) => (
+        <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+      ),
     },
     {
       id: "contact",

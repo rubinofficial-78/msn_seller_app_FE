@@ -26,6 +26,7 @@ import {
   getmylistingCounts,
   getProductById,
   saveBasicDetails,
+  getProductCounts,
 } from "../../redux/Action/action";
 import { RootState } from "../../redux/types";
 import { AppDispatch } from "../../redux/store";
@@ -351,6 +352,16 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       ),
     },
     {
+      id: "created_at",
+      key: "createdAt",
+      label: "Created At",
+      minWidth: 120,
+      type: "custom",
+      renderCell: (row: any) => (
+        <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+      ),
+    },
+    {
       id: "variants",
       key: ["total_variants"],
       label: "Total no.of.Variants",
@@ -472,6 +483,9 @@ const MyListing = () => {
   const productCounts = useSelector(
     (state: RootState) => state.data.productCounts?.data
   );
+  useEffect(() => {
+    dispatch(getProductCounts());
+  }, [dispatch]);
 
   // Update the useEffect to include status parameter based on active tab
   useEffect(() => {
@@ -688,6 +702,89 @@ const MyListing = () => {
 
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Total products Card */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 transition-all hover:shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm text-blue-700 font-medium">
+              Total Products
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+              ALL
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-blue-700">
+                {(productCounts?.draft || 0) +
+                  (productCounts?.active || 0) +
+                  (productCounts?.inactive || 0)}
+              </span>
+              <span className="text-sm text-gray-500 ml-2">total products</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Active Products Card */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 transition-all hover:shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm text-green-700 font-medium">
+              Active Products
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-200">
+              ACTIVE
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-green-700">
+                {productCounts?.active || 0}
+              </span>
+              <span className="text-sm text-gray-500 ml-2">products</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Inactive Products Card */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 transition-all hover:shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm text-yellow-700 font-medium">
+              Inactive Products
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">
+              INACTIVE
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-yellow-700">
+                {productCounts?.inactive || 0}
+              </span>
+              <span className="text-sm text-gray-500 ml-2">products</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Draft Products Card */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 transition-all hover:shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm text-red-700 font-medium">
+              Draft Products
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-200">
+              DRAFT
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-red-700">
+                {productCounts?.draft || 0}
+              </span>
+              <span className="text-sm text-gray-500 ml-2">products</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="bg-white rounded-lg shadow">
         <div className="border-b border-gray-200 px-4">
           <ScrollableTabs

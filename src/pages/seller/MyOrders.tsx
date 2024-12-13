@@ -37,17 +37,23 @@ const MyOrders = () => {
       label: "Network Transaction ID",
       key: "ondc_order_context.transaction_id",
     },
-    { id: "order_status", label: "Order Status", key: "status.display_name" },   
-    
-    
+    { id: "order_status", label: "Order Status", key: "status.display_name" },
+
     // { id: "ready_to_ship_at", label: "Ready to Ship At Date & Time", key: "sales_order_fulfillments[0].ready_to_ship", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
     // { id: "shipped_at", label: "Shipped At Date & Time", key: "sales_order_fulfillments[0].pickedup_time", format: (date: string) => date ? new Date(date).toLocaleString() : "-" },
-   
-    
-   
-    
-    { id: "total_order_value", label: "Total Order Value", key: "order_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
-    { id: "total_refund_amount", label: "Total Refund Amount", key: "total_refund_amount", format: (value: number) => `₹${value.toLocaleString('en-IN')}` },
+
+    {
+      id: "total_order_value",
+      label: "Total Order Value",
+      key: "order_amount",
+      format: (value: number) => `₹${value.toLocaleString("en-IN")}`,
+    },
+    {
+      id: "total_refund_amount",
+      label: "Total Refund Amount",
+      key: "total_refund_amount",
+      format: (value: number) => `₹${value.toLocaleString("en-IN")}`,
+    },
     {
       id: "action",
       label: "Action",

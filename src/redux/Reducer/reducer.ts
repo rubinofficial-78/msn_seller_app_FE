@@ -2574,6 +2574,24 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
+    case 'UPDATE_COMPANY_STATUS':
+      return {
+        ...state,
+        companies: {
+          ...state.companies,
+          data: state.companies.data.map((company: any) =>
+            company.id === action.payload.id
+              ? {
+                  ...company,
+                  status: {
+                    ...company.status,
+                    lookup_code: action.payload.status_id === 425 ? 'ACTIVE' : 'INACTIVE'
+                  }
+                }
+              : company
+          )
+        }
+      };
     default:
       return state;
   }

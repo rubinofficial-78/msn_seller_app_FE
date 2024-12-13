@@ -73,8 +73,11 @@ const columns = [
     id: "createdAt",
     key: "createdAt",
     label: "Seller Onboarding Date",
-    minWidth: 150,
-    format: (date: string) => new Date(date).toLocaleDateString(),
+    minWidth: 150,  
+    type: "custom",
+    renderCell: (row: any) => (
+      <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+    ),
   },
   {
     id: "seller_activation_datetime",

@@ -8,6 +8,8 @@ import {
   Table,
   Eye,
   Edit,
+  ToggleRight,
+  ToggleLeft,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import CustomTable from "../components/CustomTable";
@@ -147,17 +149,17 @@ const Companies = () => {
       const response = await dispatch(updateCompany(row.id, payload));
 
       if (response?.meta?.status) {
-        toast.success("Status updated successfully");
+        toast.success(
+          `Company ${currentStatus === "ACTIVE" ? "deactivated" : "activated"} successfully`
+        );
         // Refresh the companies list
-        fetchCompanies();
+        await fetchCompanies();
       } else {
         toast.error(response?.meta?.message || "Failed to update status");
       }
-    } catch (error) {
-      toast.error(
-        "Failed to update status: " +
-          (error instanceof Error ? error.message : "Unknown error")
-      );
+    } catch (error: any) {
+      console.error("Error updating status:", error);
+      toast.error(typeof error === 'string' ? error : "Failed to update status");
     }
   };
 
@@ -298,14 +300,7 @@ const Companies = () => {
       label: "System Users Count",
       minWidth: 140,
       type: "number",
-    },
-    {
-      id: "status",
-      key: "status",
-      label: "Status",
-      minWidth: 200,
-      type: "status_toggle",
-    },
+    },   
     {
       id: "actions",
       key: "actions",
@@ -315,20 +310,32 @@ const Companies = () => {
       renderCell: (row: any) => (
         <div className="flex items-center gap-2">
           <button
-            id={`view-button-${row.id}`}
-            onClick={() => handleRowClick(row, "action")}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`view/${row.id}`);
+            }}
             className="p-1 text-blue-600 hover:text-blue-700 rounded-full hover:bg-blue-50"
             title="View"
           >
             <Eye size={16} />
           </button>
           <button
-            id={`edit-button-${row.id}`}
-            onClick={() => handleRowClick(row, "action")}
-            className="p-1 text-green-600 hover:text-green-700 rounded-full hover:bg-green-50"
-            title="Edit"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStatusToggle(row);
+            }}
+            className={`p-1.5 rounded-full transition-colors ${
+              row.status === "ACTIVE"
+                ? "bg-green-50 text-green-600 hover:bg-green-100"
+                : "bg-red-50 text-red-600 hover:bg-red-100"
+            }`}
+            title={`${row.status === "ACTIVE" ? "Deactivate" : "Activate"} Company`}
           >
-            <Edit size={16} />
+            {row.status === "ACTIVE" ? (
+              <ToggleRight size={16} />
+            ) : (
+              <ToggleLeft size={16} />
+            )}
           </button>
         </div>
       ),

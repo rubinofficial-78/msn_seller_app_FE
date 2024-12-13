@@ -1200,58 +1200,37 @@ export const createBranchApi = (
   };
 };
 
-export const updateBranch = (
-  id: number,
-  data: {
-    name: string;
-    email: string;
-    mobile_number: string;
-    created_by_id: number;
-    status_id: number;
-    default_address: {
-      address: string;
-      state: string;
-      city: string;
-      pincode: string;
-    };
-  }
-): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
-  return async (dispatch: Dispatch<AuthActionTypes>) => {
-    dispatch({ type: UPDATE_BRANCH_REQUEST });
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_BASE_URL}/backend_master/company_branches/${id}/update`,
-        data,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+export const updateBranch = (id: number, payload: any) => async (dispatch: any) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(
+      `${API_BASE_URL}/backend_master/company_branches/${id}/update`,
+      payload,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
-
-      if (response.data?.meta?.status) {
-        dispatch({
-          type: UPDATE_BRANCH_SUCCESS,
-          payload: response.data
-        });
-        return response.data;
-      } else {
-        throw new Error(response.data?.meta?.message || 'Failed to update branch');
       }
-
-    } catch (error) {
-      console.error('Update Branch Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update branch';
+    );
+    
+    if (response.data?.meta?.status) {
+      // Dispatch an action to update the branch in the store
       dispatch({
-        type: UPDATE_BRANCH_FAILURE,
-        payload: errorMessage
+        type: 'UPDATE_BRANCH_STATUS',
+        payload: {
+          id,
+          status_id: payload.status_id
+        }
       });
-      throw error;
+    return response.data;
+    } else {
+      throw new Error(response.data?.meta?.message || 'Failed to update branch status');
     }
-  };
+  } catch (error: any) {
+    console.error('Error updating branch:', error);
+    throw error?.response?.data?.meta?.message || error.message || 'Failed to update branch status';
+  }
 };
 
 export const getBranchById = (

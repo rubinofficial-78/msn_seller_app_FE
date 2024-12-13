@@ -90,15 +90,17 @@ const TailSelect: React.FC<TailSelectProps> = ({
                   className="inline-flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded text-sm"
                 >
                   {label}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeValue(selectedValues[idx]);
-                    }}
-                    className="hover:text-gray-700"
-                  >
-                    <X size={14} className="text-gray-400" />
-                  </button>
+                  {multiple && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeValue(selectedValues[idx]);
+                      }}
+                      className="hover:text-gray-700"
+                    >
+                      <X size={14} className="text-gray-400" />
+                    </button>
+                  )}
                 </div>
               ))
             ) : (

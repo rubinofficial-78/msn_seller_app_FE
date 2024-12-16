@@ -38,25 +38,39 @@ const OrderView = () => {
     }
   }, [dispatch, id]);
 
-  // Define status steps
-  const statusSteps = [
-    { id: 10, code: "PENDING", label: "Pending", icon: Package },
-    { id: 11, code: "PACKED", label: "Packed", icon: Package },
-    { id: 12, code: "ORDER-PICKED-UP", label: "Picked Up", icon: Truck },
-    {
-      id: 13,
-      code: "OUT-FOR-DELIVERY",
-      label: "Out for Delivery",
-      icon: Truck,
-    },
-    { id: 14, code: "ORDER-DELIVERED", label: "Delivered", icon: CheckCircle },
-  ];
+  // Define the fixed order of statuses - remove Cancelled from the base order
+  const STATUS_ORDER = ["Created", "Accepted", "In-progress", "Completed"];
 
-  // Find current status index
-  const currentStatusIndex = statusSteps.findIndex(
-    (step) =>
-      step.id === order?.sales_order_fulfillments?.[0]?.fulfillment_status?.id
-  );
+  // Update the getStatusColor function
+  const getStatusColor = (status: string, currentStatus: string) => {
+    const statusIndex = STATUS_ORDER.indexOf(status);
+    const currentStatusIndex = STATUS_ORDER.indexOf(currentStatus);
+
+    // For Completed orders - all previous steps should be green
+    if (currentStatus === "Completed") {
+      return statusIndex <= currentStatusIndex ? "bg-green-100" : "bg-gray-100";
+    }
+
+    // For Cancelled orders
+    if (currentStatus === "Cancelled") {
+      if (status === "Cancelled") return "bg-red-100";
+      return statusIndex <= STATUS_ORDER.indexOf("Accepted")
+        ? "bg-green-100"
+        : "bg-gray-100";
+    }
+
+    // For In-progress orders
+    if (currentStatus === "In-progress") {
+      return statusIndex <= currentStatusIndex ? "bg-green-100" : "bg-gray-100";
+    }
+
+    // For Accepted orders
+    if (currentStatus === "Accepted") {
+      return statusIndex <= currentStatusIndex ? "bg-green-100" : "bg-gray-100";
+    }
+
+    return "bg-gray-100";
+  };
 
   // Function to get step status
   const getStepStatus = (index: number) => {
@@ -96,64 +110,154 @@ const OrderView = () => {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (loading || !order) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header with Update Status Button for In-progress Orders */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold">
-              Order ID : {order?.sales_order_number}
-            </h1>
-            <p className="text-sm text-gray-500">
-              Please take the several essential to ensure a smooth and
-              successful transaction.
-            </p>
-          </div>
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-xl font-semibold">
+            Order ID : {order?.sales_order_number}
+          </h1>
+          <p className="text-sm text-gray-500">
+            Please take the several essential to ensure a smooth and successful
+            transaction.
+          </p>
         </div>
+      </div>
 
-        {/* Show Update Status button only for in-progress orders */}
-        {order?.status?.lookup_code === "IN-PROGRESS" && (
-          <button
-            onClick={() => setShowProcessingModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-          >
-            UPDATE STATUS
-          </button>
-        )}
+      {/* Status Cards */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm text-gray-500">Current Status</span>
+            <div
+              className={`mt-1 font-medium ${
+                order?.status?.lookup_code === "CANCELLED"
+                  ? "text-red-600"
+                  : order?.status?.lookup_code === "COMPLETED"
+                  ? "text-green-600"
+                  : order?.status?.lookup_code === "IN-PROGRESS"
+                  ? "text-blue-600"
+                  : "text-gray-600"
+              }`}
+            >
+              {order?.status?.display_name}
+            </div>
+          </div>
+
+          {/* Update Status button - Only show if not cancelled or completed */}
+          {order?.status?.lookup_code !== "CANCELLED" &&
+            order?.status?.lookup_code !== "COMPLETED" && (
+              <button
+                onClick={() => setShowProcessingModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+              >
+                Update Status
+              </button>
+            )}
+        </div>
       </div>
 
       {/* Order Status Timeline */}
-      <div className="flex justify-between items-center px-20">
-        {order?.status_history?.map((status: any, index: number) => (
-          <div key={index} className="flex flex-col items-center">
+      <div className="flex justify-between items-center px-4 max-w-3xl mx-auto">
+        {STATUS_ORDER.map((status, index) => {
+          if (!order?.status?.display_name) return null;
+
+          const isCurrentStatus = status === order.status.display_name;
+          const statusColor = getStatusColor(status, order.status.display_name);
+          const showRedStatus =
+            order.status.display_name === "Cancelled" &&
+            status === "In-progress";
+
+          // Skip Completed status when order is cancelled
+          if (
+            order.status.display_name === "Cancelled" &&
+            status === "Completed"
+          ) {
+            return null;
+          }
+
+          return (
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                status.status === order.status.display_name
-                  ? "bg-green-100"
-                  : "bg-gray-100"
-              }`}
+              key={status}
+              className="flex flex-col items-center relative w-40"
             >
-              {status.status === "Created" && <Package />}
-              {status.status === "Accepted" && <CheckCircle />}
-              {status.status === "In-progress" && <Truck />}
+              {/* Connector Line */}
+              {index < STATUS_ORDER.length - 1 && (
+                <div
+                  className={`absolute left-1/2 w-full h-1 top-6 -z-10 
+                    ${(() => {
+                      if (!order?.status?.display_name) return "bg-gray-200";
+
+                      if (order.status.display_name === "Cancelled") {
+                        if (index < STATUS_ORDER.indexOf("Accepted"))
+                          return "bg-green-200";
+                        if (index === STATUS_ORDER.indexOf("Accepted"))
+                          return "bg-red-200";
+                        return "bg-gray-200";
+                      }
+
+                      const currentIndex = STATUS_ORDER.indexOf(
+                        order.status.display_name
+                      );
+                      if (index < currentIndex) return "bg-green-200";
+                      if (index === currentIndex) return "bg-green-200";
+                      return "bg-gray-200";
+                    })()}`}
+                />
+              )}
+
+              {/* Status Icon */}
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center 
+                  ${showRedStatus ? "bg-red-100" : statusColor}`}
+              >
+                {status === "Created" && <Package />}
+                {status === "Accepted" && <CheckCircle />}
+                {status === "In-progress" && !showRedStatus && <Truck />}
+                {status === "Completed" && <CheckCircle />}
+                {showRedStatus && <X />}
+              </div>
+
+              {/* Status Label */}
+              <span
+                className={`mt-2 text-sm font-medium 
+                  ${
+                    showRedStatus
+                      ? "text-red-600"
+                      : isCurrentStatus
+                      ? "text-blue-600"
+                      : statusColor === "bg-green-100"
+                      ? "text-green-600"
+                      : "text-gray-500"
+                  }`}
+              >
+                {showRedStatus ? "Cancelled" : status}
+              </span>
+
+              {/* Timestamp */}
+              <span className="text-xs text-gray-500">
+                {order.status_history?.find((h) =>
+                  showRedStatus ? h.status === "Cancelled" : h.status === status
+                )?.updated_at || new Date().toLocaleString()}
+              </span>
             </div>
-            <span className="mt-2 text-sm font-medium">{status.status}</span>
-            <span className="text-xs text-gray-500">
-              {new Date(status.updated_at).toLocaleString()}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Order Information */}
@@ -408,12 +512,12 @@ const OrderView = () => {
         </div>
       </div>
 
-      {/* Order Processing Modal */}
+      {/* Status Update Modal */}
       {showProcessingModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-[800px]">
+          <div className="bg-white rounded-lg p-6 w-[500px]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold">Update Order Status</h2>
+              <h2 className="text-lg font-semibold">Manual status update</h2>
               <button
                 onClick={() => setShowProcessingModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -422,83 +526,120 @@ const OrderView = () => {
               </button>
             </div>
 
-            {/* Status Stepper */}
-            <div className="mb-8">
-              <div className="relative">
-                {/* Progress Bar */}
-                <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -translate-y-1/2" />
+            {/* Status Options */}
+            <div className="space-y-6 mb-6">
+              {/* Progress Bar */}
+              <div className="relative w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 transition-all duration-300"
+                  className="absolute h-full bg-blue-500 transition-all duration-300 ease-in-out"
                   style={{
                     width: `${
-                      (currentStatusIndex / (statusSteps.length - 1)) * 100
+                      (selectedStatus
+                        ? fulfillmentStatus
+                            ?.slice(1, 6)
+                            .findIndex(
+                              (s) => s.id.toString() === selectedStatus
+                            ) + 1
+                        : 0) *
+                      (100 / 5)
                     }%`,
                   }}
                 />
+              </div>
 
-                {/* Steps */}
-                <div className="relative flex justify-between">
-                  {statusSteps.map((step, index) => {
-                    const stepStatus = getStepStatus(index);
-                    const StepIcon = step.icon;
+              {/* Status Buttons */}
+              <div className="flex justify-between gap-3">
+                {fulfillmentStatus?.slice(1, 6).map((status) => (
+                  <button
+                    key={status.id}
+                    onClick={() => setSelectedStatus(status.id.toString())}
+                    className={`flex-1 relative p-4 rounded-lg transition-all duration-200 ${
+                      selectedStatus === status.id.toString()
+                        ? "bg-blue-50 border-2 border-blue-500 shadow-sm"
+                        : "bg-white border border-gray-200 hover:border-blue-200 hover:bg-blue-50"
+                    }`}
+                  >
+                    {/* Status Icon */}
+                    <div
+                      className={`mb-2 ${
+                        selectedStatus === status.id.toString()
+                          ? "text-blue-500"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {status.lookup_code === "PENDING" && (
+                        <Package size={20} />
+                      )}
+                      {status.lookup_code === "PACKED" && <Package size={20} />}
+                      {status.lookup_code === "ORDER-PICKED-UP" && (
+                        <Truck size={20} />
+                      )}
+                      {status.lookup_code === "OUT-FOR-DELIVERY" && (
+                        <Truck size={20} />
+                      )}
+                      {status.lookup_code === "ORDER-DELIVERED" && (
+                        <CheckCircle size={20} />
+                      )}
+                    </div>
 
-                    return (
-                      <div
-                        key={step.id}
-                        className="flex flex-col items-center"
-                        onClick={() => {
-                          // Only allow moving one step forward
-                          if (index === currentStatusIndex + 1) {
-                            setSelectedStatus(step.id.toString());
-                          }
-                        }}
-                      >
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center relative z-10 transition-colors cursor-pointer
-                            ${
-                              stepStatus === "completed"
-                                ? "bg-blue-500 text-white"
-                                : stepStatus === "current"
-                                ? "bg-blue-500 text-white"
-                                : "bg-white border-2 border-gray-300 text-gray-500"
-                            }
-                            ${
-                              index === currentStatusIndex + 1
-                                ? "hover:bg-blue-400"
-                                : ""
-                            }
-                          `}
-                        >
-                          <StepIcon size={20} />
-                        </div>
-                        <div className="mt-2 text-sm font-medium text-gray-600">
-                          {step.label}
+                    {/* Status Name */}
+                    <div
+                      className={`text-sm font-medium ${
+                        selectedStatus === status.id.toString()
+                          ? "text-blue-700"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {status.display_name}
+                    </div>
+
+                    {/* Selected Indicator */}
+                    {selectedStatus === status.id.toString() && (
+                      <div className="absolute -top-1 -right-1">
+                        <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                          <CheckCircle size={12} className="text-white" />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4">
+            {/* Air way bill input - with improved styling */}
+            {selectedStatus ===
+              fulfillmentStatus
+                ?.slice(1, 6)
+                .find((s) => s.lookup_code === "ORDER-PICKED-UP")
+                ?.id.toString() && (
+              <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Air way bill number
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  placeholder="Enter air way bill number"
+                />
+              </div>
+            )}
+
+            {/* Action Buttons - with improved styling */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <button
                 onClick={() => setShowProcessingModal(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-6 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleStatusUpdate}
                 disabled={!selectedStatus}
-                className={`px-4 py-2 rounded-md text-white
-                  ${
-                    selectedStatus
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : "bg-gray-400 cursor-not-allowed"
-                  }
-                `}
+                className={`px-6 py-2.5 rounded-lg transition-all duration-200 ${
+                  selectedStatus
+                    ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                }`}
               >
                 Update Status
               </button>

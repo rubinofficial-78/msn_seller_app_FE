@@ -7,7 +7,7 @@ import { getBankingDetails, updateBankingDetails } from '../../redux/Action/acti
 import { RootState } from '../../redux/types';
 import { toast } from 'react-hot-toast';
 
-const BankingDetails = () => {
+const BankingDetailsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { data: bankingData, loading } = useSelector((state: RootState) => state.data.bankingDetails);
@@ -143,4 +143,4 @@ const BankingDetails = () => {
   );
 };
 
-export default BankingDetails; 
+export default BankingDetailsPage; 

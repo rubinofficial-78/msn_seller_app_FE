@@ -44,6 +44,7 @@ import AccountDetails from "../pages/settings/AccountDetails";
 import SellerAccountDetails from "../pages/sellerSettings/SellerAccountDetails";
 import LocationServices from "../pages/settings/LocationServices";
 import BankingDetails from "../pages/sellerSettings/BankingDetails";
+import BankingDetailsPage from "../pages/settings/BankingDetailsPage";
 import AccessManagement from "../pages/settings/AccessManagement";
 import CreateRole from "../pages/settings/CreateRole";
 import CreateUser from "../pages/settings/CreateUser";
@@ -423,7 +424,7 @@ export const routes: RouteObject[] = [
             path: "banking-details",
             element: (
               <ProtectedRoute allowedRoles={["ADMIN"]}>
-                <BankingDetails />
+                <BankingDetailsPage />
               </ProtectedRoute>
             ),
           },

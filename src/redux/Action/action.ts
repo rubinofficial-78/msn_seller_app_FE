@@ -287,6 +287,9 @@ import {
   CREATE_VARIANTS_REQUEST,
   CREATE_VARIANTS_SUCCESS,
   CREATE_VARIANTS_FAILURE,
+  CREATE_INVENTORY_PRODUCT_REQUEST,
+  CREATE_INVENTORY_PRODUCT_SUCCESS,
+  CREATE_INVENTORY_PRODUCT_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -2067,28 +2070,19 @@ export const getProducts = (
   };
 };
 
-export const getmylisting = (
-  params: { 
-    status?: string;
-    page_no: number;
-    per_page: number;
-  }
-): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
-  return async (dispatch: Dispatch<AuthActionTypes>) => {
+export const getmylisting = (params: any): ThunkAction<Promise<any>, RootState, unknown, any> => {
+  return async (dispatch: Dispatch) => {
     dispatch({ type: GET_MY_LISTING_REQUEST });
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/backend_master/catalog/products`,
-        {
-          params,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/catalog/products`, {
+        params: params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      console.log('API Response:', response.data); // Add this for debugging
 
       if (response.data?.meta?.status) {
         dispatch({
@@ -2100,14 +2094,13 @@ export const getmylisting = (
         });
         return response.data;
       } else {
-        throw new Error(response.data?.meta?.message || 'Failed to fetch listings');
+        throw new Error(response.data?.meta?.message || 'Failed to fetch products');
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch listings';
+      console.error('Error in getmylisting:', error);
       dispatch({
         type: GET_MY_LISTING_FAILURE,
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to fetch products'
       });
       throw error;
     }
@@ -4813,7 +4806,7 @@ export const raiseIssue = (payload: RaiseIssuePayload): ThunkAction<Promise<any>
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
-        }
+        } // Fixed missing closing brace
       );
 
       if (response.data?.meta?.status) {
@@ -4825,7 +4818,6 @@ export const raiseIssue = (payload: RaiseIssuePayload): ThunkAction<Promise<any>
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to raise issue');
       }
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to raise issue';
       dispatch({
@@ -5111,6 +5103,52 @@ export const createVariants = (
       const errorMessage = error instanceof Error ? error.message : 'Failed to create variants';
       dispatch({
         type: CREATE_VARIANTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// Add the new action creator
+export const createInventoryProduct = (
+  productIds: number[],
+  locationId: number
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: CREATE_INVENTORY_PRODUCT_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/isn/product_create`,
+        {
+          product_ids: productIds,
+          location_id: locationId,
+          available_quantity: 10, // Constant value
+          minimum_quantity: 10    // Constant value
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: CREATE_INVENTORY_PRODUCT_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create inventory product');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create inventory product';
+      dispatch({
+        type: CREATE_INVENTORY_PRODUCT_FAILURE,
         payload: errorMessage
       });
       throw error;

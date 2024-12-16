@@ -231,7 +231,10 @@ import {
   GET_PRODUCT_CATEGORY_ATTRIBUTES_FAILURE,
   GENERATE_VARIANTS_REQUEST,
   GENERATE_VARIANTS_SUCCESS,
-  GENERATE_VARIANTS_FAILURE
+  GENERATE_VARIANTS_FAILURE,
+  CREATE_INVENTORY_PRODUCT_REQUEST,
+  CREATE_INVENTORY_PRODUCT_SUCCESS,
+  CREATE_INVENTORY_PRODUCT_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -620,6 +623,11 @@ const initialState: AuthState = {
     data: null
   },
   variantGeneration: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  inventoryProduct: {
     loading: false,
     error: null,
     data: null
@@ -1974,9 +1982,9 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         return {
           ...state,
           myListing: {
+            data: action.payload.data,
             loading: false,
             error: null,
-            data: action.payload.data,
             meta: action.payload.meta
           }
         };
@@ -2652,24 +2660,6 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
-    case 'UPDATE_COMPANY_STATUS':
-      return {
-        ...state,
-        companies: {
-          ...state.companies,
-          data: state.companies.data.map((company: any) =>
-            company.id === action.payload.id
-              ? {
-                  ...company,
-                  status: {
-                    ...company.status,
-                    lookup_code: action.payload.status_id === 425 ? 'ACTIVE' : 'INACTIVE'
-                  }
-                }
-              : company
-          )
-        }
-      };
     case GENERATE_VARIANTS_REQUEST:
       return {
         ...state,
@@ -2693,6 +2683,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         variantGeneration: {
           ...state.variantGeneration,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case CREATE_INVENTORY_PRODUCT_REQUEST:
+      return {
+        ...state,
+        inventoryProduct: {
+          ...state.inventoryProduct,
+          loading: true,
+          error: null
+        }
+      };
+    case CREATE_INVENTORY_PRODUCT_SUCCESS:
+      return {
+        ...state,
+        inventoryProduct: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case CREATE_INVENTORY_PRODUCT_FAILURE:
+      return {
+        ...state,
+        inventoryProduct: {
+          ...state.inventoryProduct,
           loading: false,
           error: action.payload
         }

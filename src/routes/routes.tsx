@@ -80,6 +80,7 @@ import BulkUploadMasterCatalogue from "../pages/bulkUploadMasterCatalogue";
 import ShippingDetailsPage from "../pages/sellerSettings/ShippingDetailsPage";
 import OrderView from "../pages/orders/OrderView";
 import CreateVariant from "../pages/products/CreateVariant";
+import MasterCatalogTable from "../pages/products/MasterCatalogTable";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -198,6 +199,10 @@ export const routes: RouteObject[] = [
           {
             path: ":id/create-variant",
             element: <CreateVariant />,
+          },
+          {
+            path: "master-catalog",
+            element: <MasterCatalogTable />,
           },
         ],
       },
@@ -564,6 +569,10 @@ export const routes: RouteObject[] = [
       {
         path: "/dashboard/orders/view/:id",
         element: <OrderView />,
+      },
+      {
+        path: "/dashboard/products/master-catalog",
+        element: <MasterCatalogTable />,
       },
     ],
   },

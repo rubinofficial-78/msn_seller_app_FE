@@ -113,6 +113,9 @@ export const CANCEL_ORDER_FAILURE = 'CANCEL_ORDER_FAILURE';
 export const UPDATE_ORDER_FULFILLMENT_REQUEST = 'UPDATE_ORDER_FULFILLMENT_REQUEST';
 export const UPDATE_ORDER_FULFILLMENT_SUCCESS = 'UPDATE_ORDER_FULFILLMENT_SUCCESS';
 export const UPDATE_ORDER_FULFILLMENT_FAILURE = 'UPDATE_ORDER_FULFILLMENT_FAILURE';
+export const CREATE_INVENTORY_PRODUCT_REQUEST = 'CREATE_INVENTORY_PRODUCT_REQUEST';
+export const CREATE_INVENTORY_PRODUCT_SUCCESS = 'CREATE_INVENTORY_PRODUCT_SUCCESS';
+export const CREATE_INVENTORY_PRODUCT_FAILURE = 'CREATE_INVENTORY_PRODUCT_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -528,6 +531,11 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
     data: any | null;
+  };
+  inventoryProduct: {
+    loading: boolean;
+    error: string | null;
+    data: any;
   };
 }
 
@@ -1162,7 +1170,10 @@ export type AuthActionTypes =
   | CancelOrderFailureAction
   | UpdateOrderFulfillmentRequestAction
   | UpdateOrderFulfillmentSuccessAction
-  | UpdateOrderFulfillmentFailureAction;
+  | UpdateOrderFulfillmentFailureAction
+  | { type: typeof CREATE_INVENTORY_PRODUCT_REQUEST }
+  | { type: typeof CREATE_INVENTORY_PRODUCT_SUCCESS; payload: any }
+  | { type: typeof CREATE_INVENTORY_PRODUCT_FAILURE; payload: string };
 
 
 export interface FileUploadPayload {

@@ -466,6 +466,9 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
   );
 };
 
+// Add this new component
+ 
+
 const MyListing = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -643,6 +646,7 @@ const MyListing = () => {
     navigate("/dashboard/products/bulk-upload");
   };
 
+  // Update the renderAddModal function
   const renderAddModal = () => {
     if (!showAddModal) return null;
 
@@ -691,6 +695,25 @@ const MyListing = () => {
                 <p className="text-sm text-gray-600">
                   Add product via .csv file. Fill all the required information
                   in a predefined template and upload.
+                </p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setShowAddModal(false);
+                navigate("/dashboard/products/master-catalog");
+              }}
+              className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
+            >
+              <div className="p-2 bg-gray-100 rounded">
+                <Search size={24} className="text-gray-600" />
+              </div>
+              <div>
+                <h3 className="font-medium">Add from Master Catalog</h3>
+                <p className="text-sm text-gray-600">
+                  Select products from our master catalog to add to your
+                  inventory.
                 </p>
               </div>
             </button>

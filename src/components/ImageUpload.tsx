@@ -235,11 +235,11 @@ export default function ImageUpload({
           )}
         </div>
 
-        <div className="text-[10px] md:text-sm font-medium">
+        {/* <div className="text-[10px] md:text-sm font-medium">
           {text
             ? text
             : "For the logo image, please ensure it has a transparent background. Additionally, the file size should not exceed 10 megabytes. Accepted formats include PNG, SVG."}
-        </div>
+        </div> */}
       </div>
 
       {uploadedImage && (

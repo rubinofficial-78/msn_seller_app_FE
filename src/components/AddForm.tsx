@@ -42,6 +42,7 @@ interface Field {
   maxLength?: number;
   validation?: (value: any) => boolean;
   error?: string;
+  preview?: string;
 }
 
 interface AddFormProps {
@@ -62,7 +63,7 @@ interface AddFormProps {
   handleLocation?: () => void;
   handleRadioChange?: (key: string, value: string) => void;
   handleSaveOnClick?: () => void;
-  handleImageLink?: (id: string, link: string | null, index?: number) => void;
+  handleImageLink?: (id: string, imageUrl: string | null, index?: number) => void;
   showDeactivateButton?: boolean;
   onDeactivate?: () => void;
 }
@@ -229,10 +230,13 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
           value={field.value}
           label={field.label}
           handleImageLink={(id, imageUrl) => {
-            handlers.handleImageLink(id, imageUrl);
+            handlers.handleImageLink(id, imageUrl, handlers.index);
           }}
           index={handlers.index}
           required={field.required}
+          uploadText={field.uploadText}
+          uploadDescription={field.uploadDescription}
+          uploadBoxStyle={field.uploadBoxStyle}
         />
       );
 
@@ -293,7 +297,27 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
       return field.component;
 
     case "file":
-      return <FileUpload field={field} />;
+      return (
+        <div className="relative">
+          <input
+            type="file"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onChange={(e) => handleInputonChange?.(field.key, e.target.files)}
+            required={field.required}
+            disabled={field.disabled}
+            accept={field.accept}
+          />
+          {field.preview && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <img 
+                src={field.preview} 
+                alt="Preview" 
+                className="w-8 h-8 object-cover rounded"
+              />
+            </div>
+          )}
+        </div>
+      );
 
     case "radio":
       return (

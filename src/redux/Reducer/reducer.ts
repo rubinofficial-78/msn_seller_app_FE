@@ -222,7 +222,16 @@ import {
   GET_CATEGORY_SALES_MATRIX_FAILURE,
   GET_PRODUCT_SALES_MATRIX_REQUEST,
   GET_PRODUCT_SALES_MATRIX_SUCCESS,
-  GET_PRODUCT_SALES_MATRIX_FAILURE
+  GET_PRODUCT_SALES_MATRIX_FAILURE,
+  GET_PRODUCT_ATTRIBUTES_REQUEST,
+  GET_PRODUCT_ATTRIBUTES_SUCCESS,
+  GET_PRODUCT_ATTRIBUTES_FAILURE,
+  GET_PRODUCT_CATEGORY_ATTRIBUTES_REQUEST,
+  GET_PRODUCT_CATEGORY_ATTRIBUTES_SUCCESS,
+  GET_PRODUCT_CATEGORY_ATTRIBUTES_FAILURE,
+  GENERATE_VARIANTS_REQUEST,
+  GENERATE_VARIANTS_SUCCESS,
+  GENERATE_VARIANTS_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -596,6 +605,21 @@ const initialState: AuthState = {
     data: null
   },
   productSalesMatrix: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  productAttributes: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  productCategoryAttributes: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  variantGeneration: {
     loading: false,
     error: null,
     data: null
@@ -2574,6 +2598,60 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: action.payload
         }
       };
+    case GET_PRODUCT_ATTRIBUTES_REQUEST:
+      return {
+        ...state,
+        productAttributes: {
+          ...state.productAttributes,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCT_ATTRIBUTES_SUCCESS:
+      return {
+        ...state,
+        productAttributes: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PRODUCT_ATTRIBUTES_FAILURE:
+      return {
+        ...state,
+        productAttributes: {
+          ...state.productAttributes,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PRODUCT_CATEGORY_ATTRIBUTES_REQUEST:
+      return {
+        ...state,
+        productCategoryAttributes: {
+          ...state.productCategoryAttributes,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_PRODUCT_CATEGORY_ATTRIBUTES_SUCCESS:
+      return {
+        ...state,
+        productCategoryAttributes: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_PRODUCT_CATEGORY_ATTRIBUTES_FAILURE:
+      return {
+        ...state,
+        productCategoryAttributes: {
+          ...state.productCategoryAttributes,
+          loading: false,
+          error: action.payload
+        }
+      };
     case 'UPDATE_COMPANY_STATUS':
       return {
         ...state,
@@ -2590,6 +2668,33 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
                 }
               : company
           )
+        }
+      };
+    case GENERATE_VARIANTS_REQUEST:
+      return {
+        ...state,
+        variantGeneration: {
+          ...state.variantGeneration,
+          loading: true,
+          error: null
+        }
+      };
+    case GENERATE_VARIANTS_SUCCESS:
+      return {
+        ...state,
+        variantGeneration: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GENERATE_VARIANTS_FAILURE:
+      return {
+        ...state,
+        variantGeneration: {
+          ...state.variantGeneration,
+          loading: false,
+          error: action.payload
         }
       };
     default:

@@ -12,7 +12,7 @@ import {
   Copy,
   Trash2,
   Edit,
-  X
+  X,
 } from "lucide-react";
 
 // Helper function to get image source
@@ -24,17 +24,17 @@ const getImageSrc = (path: string) => {
 // Add a function to get the icon component
 const getActionIcon = (iconName: string, size: number = 18) => {
   switch (iconName) {
-    case 'eye':
+    case "eye":
       return <Eye size={size} />;
-    case 'edit':
+    case "edit":
       return <Edit size={size} />;
-    case 'delete':
+    case "delete":
       return <Trash2 size={size} />;
-    case 'save':
+    case "save":
       return <Save size={size} />;
-    case 'copy':
+    case "copy":
       return <Copy size={size} />;
-    case 'close':
+    case "close":
       return <X size={size} />;
     default:
       return null;
@@ -201,7 +201,8 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {row.status?.display_name || row.status?.lookup_code}
+                            {row.status?.display_name ||
+                              row.status?.lookup_code}
                           </span>
                         ) : cell.type === "image_text" ? (
                           <div className="flex items-center">
@@ -267,13 +268,14 @@ const CustomTable: React.FC<CustomTableProps> = ({
                                     e.stopPropagation();
                                     action.onClick(row);
                                   }}
-                                  className={`p-1.5 hover:bg-gray-100 rounded-full transition-colors ${action.className || ''}`}
+                                  className={`p-1.5 hover:bg-gray-100 rounded-full transition-colors ${
+                                    action.className || ""
+                                  }`}
                                   title={action.label}
                                 >
-                                  {typeof action.icon === 'string' 
+                                  {typeof action.icon === "string"
                                     ? getActionIcon(action.icon)
-                                    : action.icon
-                                  }
+                                    : action.icon}
                                 </button>
                               );
                             })}

@@ -79,6 +79,7 @@ import CreateTicket from "../pages/support/CreateTicket";
 import BulkUploadMasterCatalogue from "../pages/bulkUploadMasterCatalogue";
 import ShippingDetailsPage from "../pages/sellerSettings/ShippingDetailsPage";
 import OrderView from "../pages/orders/OrderView";
+import CreateVariant from "../pages/products/CreateVariant";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -193,6 +194,10 @@ export const routes: RouteObject[] = [
           {
             path: "add-menu",
             element: <AddMenu />,
+          },
+          {
+            path: ":id/create-variant",
+            element: <CreateVariant />,
           },
         ],
       },

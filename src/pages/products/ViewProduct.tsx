@@ -16,6 +16,12 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import GLOBAL_CONSTANTS from "../../GlobalConstants";
 
+type VariantFormData = {
+  variantGroupName: string;
+  attributes: string[];
+  attributeValues: string[];
+};
+
 const ViewProduct = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -675,11 +681,22 @@ const ViewProduct = () => {
         </button>
       </div>
 
-      {/* Activate/Deactivate Button */}
-      <div className="flex justify-end mb-4">
+      {/* Buttons Container */}
+      <div className="flex justify-between mb-4">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => navigate(`/dashboard/products/${id}/create-variant`)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          >
+            Create Variant
+          </button>
+        </div>
+        {/* Activate/Deactivate Button */}
         <button
           onClick={toggleProductStatus}
-          className={`px-4 py-2  rounded-lg text-white ${isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+          className={`px-4 py-2 rounded-lg text-white ${
+            isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+          }`}
         >
           {isActive ? 'Deactivate' : 'Activate'}
         </button>

@@ -532,7 +532,34 @@ export interface AuthState {
 }
 
 export interface RootState {
-  data: AuthState;
+  auth: {
+    user?: {
+      role?: string;
+    };
+  };
+  data: {
+    selectedProduct: {
+      data: any;
+      loading: boolean;
+    };
+    productAttributes: {
+      data: any;
+      loading: boolean;
+    };
+    productCategoryAttributes: {
+      data: any;
+      loading: boolean;
+    };
+    uomLookup: {
+      data: any;
+      loading: boolean;
+    };
+    paymentModeLookup: {
+      data: any;
+      loading: boolean;
+    };
+  };
+  // ... other state properties
 }
 
 // Action Types

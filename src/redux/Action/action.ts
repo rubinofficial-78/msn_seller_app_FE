@@ -275,6 +275,18 @@ import {
   GET_PRODUCT_SALES_MATRIX_REQUEST,
   GET_PRODUCT_SALES_MATRIX_SUCCESS,
   GET_PRODUCT_SALES_MATRIX_FAILURE,
+  GET_PRODUCT_ATTRIBUTES_REQUEST,
+  GET_PRODUCT_ATTRIBUTES_SUCCESS,
+  GET_PRODUCT_ATTRIBUTES_FAILURE,
+  GET_PRODUCT_CATEGORY_ATTRIBUTES_REQUEST,
+  GET_PRODUCT_CATEGORY_ATTRIBUTES_SUCCESS,
+  GET_PRODUCT_CATEGORY_ATTRIBUTES_FAILURE,
+  GENERATE_VARIANTS_REQUEST,
+  GENERATE_VARIANTS_SUCCESS,
+  GENERATE_VARIANTS_FAILURE,
+  CREATE_VARIANTS_REQUEST,
+  CREATE_VARIANTS_SUCCESS,
+  CREATE_VARIANTS_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -4931,6 +4943,175 @@ export const getProductSalesMatrix = (dates?: { start_date: string; end_date: st
       dispatch({
         type: GET_PRODUCT_SALES_MATRIX_FAILURE,
         payload: error instanceof Error ? error.message : 'Failed to fetch product sales matrix'
+      });
+      throw error;
+    }
+  };
+};
+
+// Add these new actions
+export const getProductAttributes = (
+  productSkuId: string
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_ATTRIBUTES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/catalog/product_category_attribute_value`,
+        {
+          params: { product_sku_id: productSkuId },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_ATTRIBUTES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch product attributes');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch product attributes';
+      dispatch({
+        type: GET_PRODUCT_ATTRIBUTES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getProductCategoryAttributes = (
+  category: string,
+  subCategory: string
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_CATEGORY_ATTRIBUTES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/catalog/product_attribute`,
+        {
+          params: { 
+            attribute: true,
+            category: category,
+            sub_category: subCategory
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_CATEGORY_ATTRIBUTES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch category attributes');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch category attributes';
+      dispatch({
+        type: GET_PRODUCT_CATEGORY_ATTRIBUTES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+// Add this new action
+export const generateVariants = (
+  sku_id: string,
+  attributes: Record<string, any>,
+  variant_group_name: string
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GENERATE_VARIANTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/catalog/products/variant_generation`,
+        {
+          sku_id,
+          attributes,
+          variant_group_name
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GENERATE_VARIANTS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to generate variants');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate variants';
+      dispatch({
+        type: GENERATE_VARIANTS_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const createVariants = (
+  variants: any[]
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: CREATE_VARIANTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/catalog/products/variant_create`,
+        variants,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: CREATE_VARIANTS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create variants');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create variants';
+      dispatch({
+        type: CREATE_VARIANTS_FAILURE,
+        payload: errorMessage
       });
       throw error;
     }

@@ -94,6 +94,22 @@ const AddSeller = () => {
     fetchBranches();
   }, [dispatch, formData.companyName]);
 
+  // Add this useEffect to fetch partners when branch is selected
+  useEffect(() => {
+    const fetchPartners = async () => {
+      if (formData.branchName) {
+        try {
+          await dispatch(getPartnerDropdown(Number(formData.branchName)));
+        } catch (error) {
+          console.error("Error fetching partners:", error);
+          toast.error("Failed to fetch partners");
+        }
+      }
+    };
+
+    fetchPartners();
+  }, [dispatch, formData.branchName]);
+
   // Transform data for dropdowns
   const companyOptions =
     companies?.map((company) => ({

@@ -1913,21 +1913,25 @@ export const getSellerById = (
   };
 };
 
-export const getPartnerDropdown = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+export const getPartnerDropdown = (branchId?: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_PARTNER_DROPDOWN_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/get_partner_list`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+      // Construct URL with optional branch_id parameter
+      const url = `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/get_partner_list${branchId ? `?branch_id=${branchId}` : ''}`;
+      
+      console.log('Calling partner API with URL:', url);
+      
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
+      });
+
+      console.log('Partner API Response:', response.data);
 
       if (response.data?.meta?.status) {
         dispatch({

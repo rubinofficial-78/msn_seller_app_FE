@@ -203,6 +203,15 @@ const CreatePartner: React.FC = () => {
         return;
       }
 
+      // Extract IDs from selected company and branch
+      const parentCompanyId = formData.companyName;
+      const createdById = formData.branchName;
+  
+      if (!parentCompanyId || !createdById) {
+        toast.error("Please select both company and branch");
+        return;
+      }
+
       const basicData = {
         first_name: formData.partnerName,
         name: formData.partnerName,
@@ -214,8 +223,8 @@ const CreatePartner: React.FC = () => {
         city: formData.city,
         state: formData.state,
         pincode: formData.pincode,
-        created_by_id: formData.branchName.value,
-        parent_company_id: formData.companyName.value,
+        created_by_id: Number(createdById),      // Add branch ID
+        parent_company_id: Number(parentCompanyId) // Add company ID
       };
 
       const response = await dispatch(createPartnerBasic(basicData));
@@ -358,6 +367,9 @@ const CreatePartner: React.FC = () => {
       );
       if (response?.meta?.status) {
         toast.success("Affiliate settings saved successfully");
+
+        //NAVIGATE TO THE LIST PAGE OF PARTNERS
+        // navigate('/dashboard/partners');
       }
     } catch (error) {
       toast.error("Failed to save affiliate settings");

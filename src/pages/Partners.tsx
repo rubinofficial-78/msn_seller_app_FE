@@ -175,13 +175,7 @@ const Partners: React.FC = () => {
       key: "parent.name",
       label: "Branch Name",
       minWidth: 150,
-    },
-    {
-      id: "affiliate_url",
-      key: "affiliate_partners_basic_details[0].website",
-      label: "Affiliate URL",
-      minWidth: 150,
-    },
+    },   
     {
       id: "createdAt",
       key: "createdAt",
@@ -207,7 +201,7 @@ const Partners: React.FC = () => {
     },
     {
       id: "address",
-      key: "affiliate_partners_basic_details[0].address",
+      key: "affiliate_partners_basic_details.0.address",
       label: "Address",
       minWidth: 200,
     },

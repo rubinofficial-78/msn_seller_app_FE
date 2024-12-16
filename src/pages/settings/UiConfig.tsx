@@ -75,7 +75,7 @@ const UiConfig = () => {
       <div className="flex items-center gap-4">
         <button
           id="back-button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/dashboard/settings')}
           className="p-2 hover:bg-gray-100 rounded-lg"
         >
           <ArrowLeft size={20} />

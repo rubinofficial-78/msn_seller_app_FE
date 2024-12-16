@@ -290,6 +290,7 @@ import {
   CREATE_INVENTORY_PRODUCT_REQUEST,
   CREATE_INVENTORY_PRODUCT_SUCCESS,
   CREATE_INVENTORY_PRODUCT_FAILURE,
+   
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -1397,21 +1398,24 @@ export const getPartners = (
   };
 };
 
-export const getBranchDropdown = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+export const getBranchDropdown = (companyId?: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_BRANCH_DROPDOWN_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API_BASE_URL}/backend_master/company_branches/get_dropdown_list`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+      const url = `${API_BASE_URL}/backend_master/company_branches/get_dropdown_list${companyId ? `?company_id=${companyId}` : ''}`;
+      
+      console.log('Calling branch API with URL:', url);
+      
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
+      });
+
+      console.log('Branch API Response:', response.data);
 
       if (response.data?.meta?.status) {
         dispatch({
@@ -1424,6 +1428,7 @@ export const getBranchDropdown = (): ThunkAction<Promise<any>, RootState, unknow
       }
 
     } catch (error) {
+      console.error('Error in getBranchDropdown:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch branch list';
       dispatch({
         type: GET_BRANCH_DROPDOWN_FAILURE,
@@ -1526,16 +1531,15 @@ export const getAffiliateUrl = (userId: number): ThunkAction<Promise<any>, RootS
         }
       );
 
-      console.log('Affiliate URL API Raw Response:', response.data);
-
+      console.log('Full affiliate URL response:', response.data);
+      
       if (response.data?.meta?.status) {
-        console.log('Affiliate URL Data:', response.data.data);
-        return response.data.data;
+        return response.data;  // Return the full response
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch affiliate URL');
       }
     } catch (error) {
-      console.error('Affiliate URL API Error:', error);
+      console.error('Error in getAffiliateUrl:', error);
       throw error;
     }
   };
@@ -1566,12 +1570,12 @@ export const getPartnerById = (id: number): ThunkAction<Promise<any>, RootState,
   };
 };
 
-export const updatePartner = (id: number, data: any): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+export const updatePartner = (data: any): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/${id}/update`,
+        `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/update`,
         data,
         {
           headers: {
@@ -5151,6 +5155,34 @@ export const createInventoryProduct = (
         type: CREATE_INVENTORY_PRODUCT_FAILURE,
         payload: errorMessage
       });
+      throw error;
+    }
+  };
+};
+
+// Add this action creator
+export const updateAffiliateSettings = (data: any[]): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/affiliate_partners_affiliate_setting/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update affiliate settings');
+      }
+    } catch (error) {
+      console.error('Error updating affiliate settings:', error);
       throw error;
     }
   };

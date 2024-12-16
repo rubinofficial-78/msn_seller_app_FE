@@ -214,7 +214,7 @@ const NotificationSettings = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/dashboard/settings')}
           className="p-2 hover:bg-gray-100 rounded-lg"
           id="back-button"
         >

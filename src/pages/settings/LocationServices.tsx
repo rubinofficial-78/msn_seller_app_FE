@@ -1562,7 +1562,7 @@ const LocationServices = () => {
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/dashboard/settings')}
               className="p-2 hover:bg-gray-100 rounded-lg"
             >
               <ArrowLeft size={20} />

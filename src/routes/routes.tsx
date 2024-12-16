@@ -135,7 +135,14 @@ export const routes: RouteObject[] = [
       {
         path: "",
         element: (
-          <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES","AFFILIATE_PARTNER"]}>
+          <ProtectedRoute
+            allowedRoles={[
+              "ADMIN",
+              "COMPANY_PARTNER",
+              "COMPANY_BRANCHES",
+              "AFFILIATE_PARTNER",
+            ]}
+          >
             <Dashboard />
           </ProtectedRoute>
         ),
@@ -215,7 +222,9 @@ export const routes: RouteObject[] = [
           {
             path: "",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+              <ProtectedRoute
+                allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}
+              >
                 <Partners />
               </ProtectedRoute>
             ),
@@ -223,7 +232,9 @@ export const routes: RouteObject[] = [
           {
             path: "create",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+              <ProtectedRoute
+                allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}
+              >
                 <CreatePartner />
               </ProtectedRoute>
             ),
@@ -231,7 +242,9 @@ export const routes: RouteObject[] = [
           {
             path: "view/:id",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+              <ProtectedRoute
+                allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}
+              >
                 <ViewPartner />
               </ProtectedRoute>
             ),
@@ -239,7 +252,9 @@ export const routes: RouteObject[] = [
           {
             path: "edit/:id",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+              <ProtectedRoute
+                allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}
+              >
                 <EditPartner />
               </ProtectedRoute>
             ),
@@ -332,7 +347,14 @@ export const routes: RouteObject[] = [
           {
             path: "",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+              <ProtectedRoute
+                allowedRoles={[
+                  "ADMIN",
+                  "COMPANY_PARTNER",
+                  "COMPANY_BRANCHES",
+                  "AFFILIATE_PARTNER",
+                ]}
+              >
                 <Sellers />
               </ProtectedRoute>
             ),
@@ -340,7 +362,14 @@ export const routes: RouteObject[] = [
           {
             path: "add",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+              <ProtectedRoute
+                allowedRoles={[
+                  "ADMIN",
+                  "COMPANY_PARTNER",
+                  "COMPANY_BRANCHES",
+                  "AFFILIATE_PARTNER",
+                ]}
+              >
                 <AddSeller />
               </ProtectedRoute>
             ),
@@ -348,7 +377,14 @@ export const routes: RouteObject[] = [
           {
             path: "view/:id",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+              <ProtectedRoute
+                allowedRoles={[
+                  "ADMIN",
+                  "COMPANY_PARTNER",
+                  "COMPANY_BRANCHES",
+                  "AFFILIATE_PARTNER",
+                ]}
+              >
                 <ViewSeller />
               </ProtectedRoute>
             ),
@@ -356,7 +392,14 @@ export const routes: RouteObject[] = [
           {
             path: "edit/:id",
             element: (
-              <ProtectedRoute allowedRoles={["ADMIN", "COMPANY_PARTNER", "COMPANY_BRANCHES", "AFFILIATE_PARTNER"]}>
+              <ProtectedRoute
+                allowedRoles={[
+                  "ADMIN",
+                  "COMPANY_PARTNER",
+                  "COMPANY_BRANCHES",
+                  "AFFILIATE_PARTNER",
+                ]}
+              >
                 <EditSeller />
               </ProtectedRoute>
             ),
@@ -387,7 +430,7 @@ export const routes: RouteObject[] = [
           {
             path: "view/:id",
             element: <ViewTicket />,
-          }
+          },
         ],
       },
       {
@@ -493,7 +536,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "account-details",
-            element: <SellerAccountDetails/>,
+            element: <SellerAccountDetails />,
           },
           {
             path: "banking-details",
@@ -535,14 +578,21 @@ export const routes: RouteObject[] = [
           <ProtectedRoute allowedRoles={["SELLER"]}>
             <MyOrders />
           </ProtectedRoute>
-        ) 
+        ),
       },
 
       // Payouts route
       {
         path: "payouts",
         element: (
-          <ProtectedRoute allowedRoles={["ADMIN", "SELLER", "COMPANY_PARTNER", "COMPANY_BRANCHES"]}>
+          <ProtectedRoute
+            allowedRoles={[
+              "ADMIN",
+              "SELLER",
+              "COMPANY_PARTNER",
+              "COMPANY_BRANCHES",
+            ]}
+          >
             <Payouts />
           </ProtectedRoute>
         ),
@@ -561,11 +611,11 @@ export const routes: RouteObject[] = [
       // Add this route under the dashboard routes
       {
         path: "/dashboard/mastercatalogue/add-product",
-        element: <AddproductMasterCatalogue />
+        element: <AddproductMasterCatalogue />,
       },
       {
         path: "/dashboard/mastercatalogue/bulk-upload",
-        element: <BulkUploadMasterCatalogue />
+        element: <BulkUploadMasterCatalogue />,
       },
       {
         path: "/dashboard/orders/view/:id",

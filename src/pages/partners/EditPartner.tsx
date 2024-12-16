@@ -7,6 +7,7 @@ import {
   getCompanyDropdown,
   getBranchDropdown,
   getAffiliateUrl,
+  updateAffiliateSettings,
 } from "../../redux/Action/action";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
@@ -117,9 +118,10 @@ const EditPartner: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log("Starting data fetch for partner ID:", id);
+
         // First fetch dropdowns
         await dispatch(getCompanyDropdown());
-        await dispatch(getBranchDropdown());
 
         if (id) {
           const response = await dispatch(
@@ -129,6 +131,8 @@ const EditPartner: React.FC = () => {
               id: parseInt(id),
             })
           );
+
+          console.log("Partner Data Response:", response);
 
           if (response?.meta?.status) {
             const partnerData = response.data[0];
@@ -170,63 +174,64 @@ const EditPartner: React.FC = () => {
               const pharmaSetting = findCommissionSetting("Pharma");
               const homeDecorSetting = findCommissionSetting("Home & Decor");
 
-              setFormData({
-                companyName: {
-                  value: partnerData.parent_company?.id,
-                  label: partnerData.parent_company?.name,
-                },
-                branchName: {
-                  value: partnerData.parent?.id || "",
-                  label: partnerData.parent?.name || "",
-                },
-                partnerName: partnerData.name || "",
-                email: partnerData.email || "",
-                mobileNumber: partnerData.mobile_number || "",
-                website: partnerData.website || "",
-                aadhaarNumber: basicDetails.aadhaar_number || "",
-                address: basicDetails.address || "",
-                city: basicDetails.city || "",
-                state: basicDetails.state || "",
-                pincode: basicDetails.pincode || "",
-                gstNo: bankingDetails.gst_number || "",
-                panNo: bankingDetails.pan_number || "",
-                bankAccountNumber: bankingDetails.bank_account_number || "",
-                bankName: bankingDetails.bank_name || "",
-                ifscNo: bankingDetails.ifsc_code || "",
-                bankAccountHolderName:
-                  bankingDetails.bank_account_holder_name || "",
-                dynamicAffiliateUrl: "", // Initialize empty
-                // Commission settings
-                newSellerCommissionType: newSellerSetting.type,
-                newSellerCommissionValue: newSellerSetting.value,
-                fashionCommissionType: fashionSetting.type,
-                fashionCommissionValue: fashionSetting.value,
-                fnbCommissionType: fnbSetting.type,
-                fnbCommissionValue: fnbSetting.value,
-                groceriesCommissionType: groceriesSetting.type,
-                groceriesCommissionValue: groceriesSetting.value,
-                beautyCommissionType: beautySetting.type,
-                beautyCommissionValue: beautySetting.value,
-                electronicsCommissionType: electronicsSetting.type,
-                electronicsCommissionValue: electronicsSetting.value,
-                pharmaCommissionType: pharmaSetting.type,
-                pharmaCommissionValue: pharmaSetting.value,
-                homeDecorCommissionType: homeDecorSetting.type,
-                homeDecorCommissionValue: homeDecorSetting.value,
-              });
-
-              // Then fetch and update the affiliate URL separately
+              // Fetch affiliate URL
               try {
                 const affiliateUrlResponse = await dispatch(
                   getAffiliateUrl(parseInt(id))
                 );
-                console.log('Affiliate URL Data:', affiliateUrlResponse);
-                
-                if (affiliateUrlResponse?.dynamic_affiliate_url) {
-                  setFormData(prev => ({
-                    ...prev,
-                    dynamicAffiliateUrl: affiliateUrlResponse.dynamic_affiliate_url
-                  }));
+                console.log(
+                  "Affiliate URL API Response:",
+                  affiliateUrlResponse
+                );
+
+                if (affiliateUrlResponse?.meta?.status) {
+                  const affiliateUrl = affiliateUrlResponse?.data?.url;
+                  console.log("Setting Affiliate URL:", affiliateUrl);
+
+                  setFormData({
+                    companyName: {
+                      value: partnerData.parent_company_id,
+                      label: partnerData.parent_company?.name || "",
+                    },
+                    branchName: {
+                      value: partnerData.parent_id,
+                      label: partnerData.parent?.name || "",
+                    },
+                    partnerName: partnerData.name || "",
+                    email: partnerData.email || "",
+                    mobileNumber: partnerData.mobile_number || "",
+                    website: partnerData.website || "",
+                    aadhaarNumber: basicDetails.aadhaar_number || "",
+                    address: basicDetails.address || "",
+                    city: basicDetails.city || "",
+                    state: basicDetails.state || "",
+                    pincode: basicDetails.pincode || "",
+                    gstNo: bankingDetails.gst_number || "",
+                    panNo: bankingDetails.pan_number || "",
+                    bankAccountNumber: bankingDetails.bank_account_number || "",
+                    bankName: bankingDetails.bank_name || "",
+                    ifscNo: bankingDetails.ifsc_code || "",
+                    bankAccountHolderName:
+                      bankingDetails.bank_account_holder_name || "",
+                    dynamicAffiliateUrl: affiliateUrlResponse?.data?.url || "",
+                    // Commission settings
+                    newSellerCommissionType: newSellerSetting.type,
+                    newSellerCommissionValue: newSellerSetting.value,
+                    fashionCommissionType: fashionSetting.type,
+                    fashionCommissionValue: fashionSetting.value,
+                    fnbCommissionType: fnbSetting.type,
+                    fnbCommissionValue: fnbSetting.value,
+                    groceriesCommissionType: groceriesSetting.type,
+                    groceriesCommissionValue: groceriesSetting.value,
+                    beautyCommissionType: beautySetting.type,
+                    beautyCommissionValue: beautySetting.value,
+                    electronicsCommissionType: electronicsSetting.type,
+                    electronicsCommissionValue: electronicsSetting.value,
+                    pharmaCommissionType: pharmaSetting.type,
+                    pharmaCommissionValue: pharmaSetting.value,
+                    homeDecorCommissionType: homeDecorSetting.type,
+                    homeDecorCommissionValue: homeDecorSetting.value,
+                  });
                 }
               } catch (error) {
                 console.error("Error fetching affiliate URL:", error);
@@ -236,7 +241,7 @@ const EditPartner: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching partner data:", error);
         toast.error("Failed to fetch partner details");
       }
     };
@@ -764,112 +769,94 @@ const EditPartner: React.FC = () => {
 
   const handleAffiliateSave = async () => {
     try {
-      if (!affiliateSettingsId || !id) {
-        toast.error("Required IDs not found");
+      if (!affiliateSettingsId) {
+        toast.error("Affiliate settings ID not found");
         return;
       }
 
-      // Create array of settings with proper structure
-      const affiliateSettings = [
+      // Prepare the affiliate settings data
+      const affiliateData = [
         {
           id: affiliateSettingsId,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "New Seller OnBoarding",
           module_linked: "Seller Profile",
           commission_type: formData.newSellerCommissionType || null,
-          value: formData.newSellerCommissionValue
-            ? Number(formData.newSellerCommissionValue)
-            : null,
+          value: formData.newSellerCommissionValue ? Number(formData.newSellerCommissionValue) : null
         },
         {
           id: affiliateSettingsId + 1,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "Fashion",
           module_linked: "Order Module (On Completed Order Only)",
           commission_type: formData.fashionCommissionType || null,
-          value: formData.fashionCommissionValue
-            ? Number(formData.fashionCommissionValue)
-            : null,
+          value: formData.fashionCommissionValue ? Number(formData.fashionCommissionValue) : null
         },
         {
           id: affiliateSettingsId + 2,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "F&B",
           module_linked: "Order Module (On Completed Order Only)",
           commission_type: formData.fnbCommissionType || null,
-          value: formData.fnbCommissionValue
-            ? Number(formData.fnbCommissionValue)
-            : null,
+          value: formData.fnbCommissionValue ? Number(formData.fnbCommissionValue) : null
         },
         {
           id: affiliateSettingsId + 3,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "Groceries",
           module_linked: "Order Module (On Completed Order Only)",
           commission_type: formData.groceriesCommissionType || null,
-          value: formData.groceriesCommissionValue
-            ? Number(formData.groceriesCommissionValue)
-            : null,
+          value: formData.groceriesCommissionValue ? Number(formData.groceriesCommissionValue) : null
         },
         {
           id: affiliateSettingsId + 4,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "Beauty & Personal Care",
           module_linked: "Order Module (On Completed Order Only)",
           commission_type: formData.beautyCommissionType || null,
-          value: formData.beautyCommissionValue
-            ? Number(formData.beautyCommissionValue)
-            : null,
+          value: formData.beautyCommissionValue ? Number(formData.beautyCommissionValue) : null
         },
         {
           id: affiliateSettingsId + 5,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "Electronics",
           module_linked: "Order Module (On Completed Order Only)",
           commission_type: formData.electronicsCommissionType || null,
-          value: formData.electronicsCommissionValue
-            ? Number(formData.electronicsCommissionValue)
-            : null,
+          value: formData.electronicsCommissionValue ? Number(formData.electronicsCommissionValue) : null
         },
         {
           id: affiliateSettingsId + 6,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "Pharma",
           module_linked: "Order Module (On Completed Order Only)",
           commission_type: formData.pharmaCommissionType || null,
-          value: formData.pharmaCommissionValue
-            ? Number(formData.pharmaCommissionValue)
-            : null,
+          value: formData.pharmaCommissionValue ? Number(formData.pharmaCommissionValue) : null
         },
         {
           id: affiliateSettingsId + 7,
           dynamic_affiliate_url: formData.dynamicAffiliateUrl,
-          core_user_id: parseInt(id),
+          core_user_id: parseInt(id as string),
           category_type: "Home & Decor",
           module_linked: "Order Module (On Completed Order Only)",
           commission_type: formData.homeDecorCommissionType || null,
-          value: formData.homeDecorCommissionValue
-            ? Number(formData.homeDecorCommissionValue)
-            : null,
-        },
+          value: formData.homeDecorCommissionValue ? Number(formData.homeDecorCommissionValue) : null
+        }
       ];
 
-      const response = await dispatch(
-        updatePartner(affiliateSettingsId, affiliateSettings)
-      );
+      const response = await dispatch(updateAffiliateSettings(affiliateData));
       if (response?.meta?.status) {
         toast.success("Affiliate settings updated successfully");
       }
     } catch (error) {
+      console.error('Error updating affiliate settings:', error);
       toast.error("Failed to update affiliate settings");
-      console.error(error);
     }
   };
 

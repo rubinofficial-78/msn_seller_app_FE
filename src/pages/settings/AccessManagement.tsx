@@ -300,7 +300,7 @@ const AccessManagement = () => {
         <nav className="-mb-px flex space-x-8">
           <button
             id="back-button"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/dashboard/settings')}
             className="p-2 hover:bg-gray-100 rounded-lg"
           >
             <ArrowLeft size={20} />

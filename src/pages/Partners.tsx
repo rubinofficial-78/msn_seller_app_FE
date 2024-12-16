@@ -233,7 +233,7 @@ const Partners: React.FC = () => {
       renderCell: (row: any) => (
         <div className="flex gap-2">
           <button
-            id={`eye-icon-${row.id}`}
+            id={`view-button-${row.id}`}
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/dashboard/partners/view/${row.id}`);
@@ -416,7 +416,6 @@ const Partners: React.FC = () => {
         </div>
 
         <button
-          
           onClick={() => navigate("/dashboard/partners/create")}
           className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-md text-sm"
         >

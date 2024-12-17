@@ -443,11 +443,8 @@ export interface AuthState {
     error: string | null;
     data: Array<{
       id: number;
-      display_name: string;
       lookup_code: string;
-      is_active: boolean;
-      createdAt: string;
-      updatedAt: string | null;
+      display_name: string;
     }>;
   };
   orderFulfillmentStatus: {
@@ -537,6 +534,32 @@ export interface AuthState {
     error: string | null;
     data: any;
   };
+  reports: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: {
+      pagination?: {
+        total_rows: number;
+        total_pages: number;
+        page_no: number;
+        per_page: number;
+      }
+    };
+  };
+  sellerDropdown: {
+    loading: boolean;
+    error: string | null;
+    data: Array<{
+      id: number;
+      first_name: string | null;
+      last_name: string | null;
+      name: string;
+      code: string;
+      email: string;
+      mobile_number: string;
+    }>;
+  };
 }
 
 export interface RootState {
@@ -565,6 +588,26 @@ export interface RootState {
     paymentModeLookup: {
       data: any;
       loading: boolean;
+    };
+    notificationCount: {
+      loading: boolean;
+      error: string | null;
+      data: {
+        unread_count: number;
+      } | null;
+    };
+    reports: {
+      loading: boolean;
+      error: string | null;
+      data: any[];
+      meta: {
+        pagination?: {
+          total_rows: number;
+          total_pages: number;
+          page_no: number;
+          per_page: number;
+        }
+      };
     };
   };
   // ... other state properties

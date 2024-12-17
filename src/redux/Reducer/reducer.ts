@@ -234,7 +234,16 @@ import {
   GENERATE_VARIANTS_FAILURE,
   CREATE_INVENTORY_PRODUCT_REQUEST,
   CREATE_INVENTORY_PRODUCT_SUCCESS,
-  CREATE_INVENTORY_PRODUCT_FAILURE
+  CREATE_INVENTORY_PRODUCT_FAILURE,
+  GET_NOTIFICATION_COUNT_REQUEST,
+  GET_NOTIFICATION_COUNT_SUCCESS,
+  GET_NOTIFICATION_COUNT_FAILURE,
+  GET_REPORTS_REQUEST,
+  GET_REPORTS_SUCCESS,
+  GET_REPORTS_FAILURE,
+  GET_SELLER_DROPDOWN_REQUEST,
+  GET_SELLER_DROPDOWN_SUCCESS,
+  GET_SELLER_DROPDOWN_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -631,6 +640,22 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  notificationCount: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  reports: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: {}
+  },
+  sellerDropdown: {
+    loading: false,
+    error: null,
+    data: []
   }
 };
 
@@ -2710,6 +2735,90 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         inventoryProduct: {
           ...state.inventoryProduct,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_NOTIFICATION_COUNT_REQUEST:
+      return {
+        ...state,
+        notificationCount: {
+          ...state.notificationCount,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_NOTIFICATION_COUNT_SUCCESS:
+      return {
+        ...state,
+        notificationCount: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_NOTIFICATION_COUNT_FAILURE:
+      return {
+        ...state,
+        notificationCount: {
+          ...state.notificationCount,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_REPORTS_REQUEST:
+      return {
+        ...state,
+        reports: {
+          ...state.reports,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_REPORTS_SUCCESS:
+      return {
+        ...state,
+        reports: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_REPORTS_FAILURE:
+      return {
+        ...state,
+        reports: {
+          ...state.reports,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_SELLER_DROPDOWN_REQUEST:
+      return {
+        ...state,
+        sellerDropdown: {
+          ...state.sellerDropdown,
+          loading: true,
+          error: null
+        }
+      };
+    
+    case GET_SELLER_DROPDOWN_SUCCESS:
+      return {
+        ...state,
+        sellerDropdown: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    
+    case GET_SELLER_DROPDOWN_FAILURE:
+      return {
+        ...state,
+        sellerDropdown: {
+          ...state.sellerDropdown,
           loading: false,
           error: action.payload
         }

@@ -290,6 +290,15 @@ import {
   CREATE_INVENTORY_PRODUCT_REQUEST,
   CREATE_INVENTORY_PRODUCT_SUCCESS,
   CREATE_INVENTORY_PRODUCT_FAILURE,
+  GET_NOTIFICATION_COUNT_REQUEST,
+  GET_NOTIFICATION_COUNT_SUCCESS,
+  GET_NOTIFICATION_COUNT_FAILURE,
+  GET_REPORTS_REQUEST,
+  GET_REPORTS_SUCCESS,
+  GET_REPORTS_FAILURE,
+  GET_SELLER_DROPDOWN_REQUEST,
+  GET_SELLER_DROPDOWN_SUCCESS,
+  GET_SELLER_DROPDOWN_FAILURE,
    
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
@@ -2448,11 +2457,12 @@ export const getOrderStatusLookup = (): ThunkAction<Promise<any>, RootState, unk
     dispatch({ type: GET_ORDER_STATUS_LOOKUP_REQUEST });
 
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/core/lookup_code/list/SALES_ORDER_STATUS`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -2463,9 +2473,10 @@ export const getOrderStatusLookup = (): ThunkAction<Promise<any>, RootState, unk
           type: GET_ORDER_STATUS_LOOKUP_SUCCESS,
           payload: response.data.data
         });
-        return response.data.data;
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch order status lookup');
       }
-      throw new Error(response.data?.meta?.message || 'Failed to fetch order status lookup');
 
     } catch (error) {
       dispatch({
@@ -5187,6 +5198,121 @@ export const updateAffiliateSettings = (data: any[]): ThunkAction<Promise<any>, 
       }
     } catch (error) {
       console.error('Error updating affiliate settings:', error);
+      throw error;
+    }
+  };
+};
+
+export const getNotificationCount = () => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/notification_history/count`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_NOTIFICATION_COUNT_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+      dispatch({
+        type: GET_NOTIFICATION_COUNT_FAILURE,
+        payload: error instanceof Error ? error.message : 'An error occurred'
+      });
+    }
+  };
+};
+
+export const getReports = (params: {
+  page_no: number;
+  per_page: number;
+  search?: string;
+  seller_id?: string;
+  status?: string;
+  start_date?: string;  // Changed from from_date
+  end_date?: string;    // Changed from to_date
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_REPORTS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/sales_orders/reports/list`,
+        {
+          params,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_REPORTS_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch reports');
+      }
+
+    } catch (error) {
+      dispatch({
+        type: GET_REPORTS_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch reports'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getSellerDropdown = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_SELLER_DROPDOWN_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/seller/dropdown`,
+        {
+          params: { per_page: -1 },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_SELLER_DROPDOWN_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch seller dropdown');
+      }
+
+    } catch (error) {
+      dispatch({
+        type: GET_SELLER_DROPDOWN_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch seller dropdown'
+      });
       throw error;
     }
   };

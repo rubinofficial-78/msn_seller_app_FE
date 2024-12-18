@@ -299,11 +299,19 @@ import {
   GET_SELLER_DROPDOWN_REQUEST,
   GET_SELLER_DROPDOWN_SUCCESS,
   GET_SELLER_DROPDOWN_FAILURE,
-   
+  GET_STORE_DETAILS_REQUEST,
+  GET_STORE_DETAILS_SUCCESS,
+  GET_STORE_DETAILS_FAILURE,
+  GET_USER_STORE_DETAILS_REQUEST,
+  GET_USER_STORE_DETAILS_SUCCESS,
+  GET_USER_STORE_DETAILS_FAILURE,
+  GET_FULFILLMENT_TYPES_REQUEST,
+  GET_FULFILLMENT_TYPES_SUCCESS,
+  GET_FULFILLMENT_TYPES_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
+import GLOBAL_CONSTANTS from "../../GlobalConstants";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const loginUser = (
@@ -571,8 +579,8 @@ interface UpdateStoreDetailsPayload {
 }
 
 export const updateUserDetails = (
-  userId: number,
-  data: UpdateUserDetailsPayload
+  userId: string, 
+  payload: any
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: UPDATE_USER_DETAILS_REQUEST });
@@ -581,7 +589,7 @@ export const updateUserDetails = (
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${API_BASE_URL}/backend_master/auth/${userId}/update`,
-        data,
+        payload,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -590,12 +598,15 @@ export const updateUserDetails = (
         }
       );
 
-      dispatch({
-        type: UPDATE_USER_DETAILS_SUCCESS,
-        payload: response.data
-      });
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_USER_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      }
 
-      return response.data;
+      throw new Error(response.data?.meta?.message || 'Failed to update user details');
 
     } catch (error) {
       dispatch({
@@ -744,39 +755,17 @@ export const updateBusinessSettings = (
 };
 
 export const updateBankDetails = (
-  userId: number,
-  data: {
-    account_holder_name: string;
-    account_number: string;
-    canceller_cheque: string;
-    ifsc_code: string;
-    bank_name: string;
-    section_key: string;
-  }
+  bankId: number,
+  payload: any
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: UPDATE_BANK_DETAILS_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
-
-      // Log request details for debugging
-      console.log('Making bank details update request:', {
-        url: `${API_BASE_URL}/backend_master/auth/bank_details/${userId}/update`,
-        data,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
       const response = await axios.post(
-        `${API_BASE_URL}/backend_master/auth/bank_details/${userId}/update`,
-        data,
+        `${API_BASE_URL}/backend_master/auth/bank_details/${bankId}/update`,
+        payload,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -785,41 +774,22 @@ export const updateBankDetails = (
         }
       );
 
-      console.log('Bank Details Update Response:', response.data);
-
       if (response.data?.meta?.status) {
         dispatch({
           type: UPDATE_BANK_DETAILS_SUCCESS,
-          payload: response.data
+          payload: response.data.data
         });
-        return {
-          payload: response.data,
-          type: UPDATE_BANK_DETAILS_SUCCESS
-        };
-      } else {
-        throw new Error(response.data?.meta?.message || 'Failed to update bank details');
+        return response.data;
       }
 
-    } catch (error: any) {
-      console.error('Bank details update error:', error);
-      const errorMessage = error?.response?.data?.meta?.message || 
-                          error?.message || 
-                          'Failed to update bank details';
-                          
+      throw new Error(response.data?.meta?.message || 'Failed to update bank details');
+
+    } catch (error) {
       dispatch({
         type: UPDATE_BANK_DETAILS_FAILURE,
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to update bank details'
       });
-
-      return {
-        payload: {
-          meta: {
-            status: false,
-            message: errorMessage
-          }
-        },
-        type: UPDATE_BANK_DETAILS_FAILURE
-      };
+      throw error;
     }
   };
 };
@@ -4825,7 +4795,7 @@ export const raiseIssue = (payload: RaiseIssuePayload): ThunkAction<Promise<any>
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
-        } // Fixed missing closing brace
+        }
       );
 
       if (response.data?.meta?.status) {
@@ -5312,6 +5282,168 @@ export const getSellerDropdown = (): ThunkAction<Promise<any>, RootState, unknow
       dispatch({
         type: GET_SELLER_DROPDOWN_FAILURE,
         payload: error instanceof Error ? error.message : 'Failed to fetch seller dropdown'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getStoreDetails = (storeId: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_STORE_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/auth/store_details/get/${storeId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_STORE_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch store details');
+      }
+
+    } catch (error) {
+      dispatch({
+        type: GET_STORE_DETAILS_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch store details'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getUserStoreDetails = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    console.log('getUserStoreDetails action started');
+    dispatch({ type: GET_STORE_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      
+
+      const storeId = GLOBAL_CONSTANTS.storeId;
+      console.log('Extracted storeId:', storeId);
+      
+      if (!storeId) {
+        throw new Error('Store ID not found in user details');
+      }
+
+      console.log('Making store_details/get API call...');
+      // Updated API endpoint
+      const storeResponse = await axios.get(
+        `${API_BASE_URL}/backend_master/auth/store_details/get/${storeId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      console.log('Store response:', storeResponse.data);
+
+      if (storeResponse.data?.meta?.status) {
+        console.log('Dispatching success with store details');
+        dispatch({
+          type: GET_STORE_DETAILS_SUCCESS,
+          payload: storeResponse.data.data
+        });
+        return storeResponse.data;
+      }
+
+      throw new Error(storeResponse.data?.meta?.message || 'Failed to fetch store details');
+
+    } catch (error) {
+      console.error('Error in getUserStoreDetails:', error);
+      dispatch({
+        type: GET_STORE_DETAILS_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch store details'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getFulfillmentTypes = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_FULFILLMENT_TYPES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/PRODUCT_FULFILLMENT_TYPE`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_FULFILLMENT_TYPES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      }
+
+      throw new Error(response.data?.meta?.message || 'Failed to fetch fulfillment types');
+
+    } catch (error) {
+      dispatch({
+        type: GET_FULFILLMENT_TYPES_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to fetch fulfillment types'
+      });
+      throw error;
+    }
+  };
+};
+
+export const updateLoginDetails = (userId: string, payload: { mobile_number?: string, email?: string }): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_USER_DETAILS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/auth/${userId}/update`,
+        {
+          ...payload,
+          section_key: "LOGIN_DETAILS"
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_USER_DETAILS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      }
+
+      throw new Error(response.data?.meta?.message || 'Failed to update login details');
+
+    } catch (error) {
+      dispatch({
+        type: UPDATE_USER_DETAILS_FAILURE,
+        payload: error instanceof Error ? error.message : 'Failed to update login details'
       });
       throw error;
     }

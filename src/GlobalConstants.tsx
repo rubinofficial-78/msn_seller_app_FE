@@ -44,6 +44,7 @@ const determineUserType = (): UserRole => {
   console.log("Token Roles Array:", decoded_token?.roles);
   console.log("User Types Array:", decoded_token?.user_types);
   console.log("Affiliate User Role:", decoded_token?.affiliate_details?.user_role);
+  const storeId = decoded_token?.store_id;
 
   // Try to get role from token in different ways
   const role = decoded_token?.roles?.[0] || 
@@ -73,6 +74,8 @@ const GLOBAL_CONSTANTS = {
   // Use decoded_token that we stored earlier
   id: decoded_token?.id,
   roles: decoded_token?.roles,
+  storeId:decoded_token?.store_id,
+  bankId: decoded_token?.bank_id,
   userType,
   parent_company_id: decoded_token?.parent_company_id,
   affiliate_details: decoded_token?.affiliate_details,

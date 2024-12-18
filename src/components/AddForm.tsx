@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   TextField,
   Autocomplete,
@@ -67,6 +67,83 @@ interface AddFormProps {
   showDeactivateButton?: boolean;
   onDeactivate?: () => void;
 }
+
+const TimePickerWithAMPM: React.FC<{
+  value: string;
+  onChange: (key: string, value: string) => void;
+  fieldKey: string;
+  required?: boolean;
+}> = ({ value, onChange, fieldKey, required }) => {
+  const [hour, setHour] = useState('06');
+  const [minute, setMinute] = useState('00');
+  const [period, setPeriod] = useState('AM');
+
+  useEffect(() => {
+    // Initialize from value prop if exists
+    if (value) {
+      const time = new Date(`2000-01-01T${value}`);
+      const hours = time.getHours();
+      setHour(hours > 12 ? String(hours - 12).padStart(2, '0') : String(hours).padStart(2, '0'));
+      setMinute(String(time.getMinutes()).padStart(2, '0'));
+      setPeriod(hours >= 12 ? 'PM' : 'AM');
+    }
+  }, [value]);
+
+  const handleChange = (type: 'hour' | 'minute' | 'period', newValue: string) => {
+    if (type === 'hour') setHour(newValue);
+    if (type === 'minute') setMinute(newValue);
+    if (type === 'period') setPeriod(newValue);
+
+    // Convert to 24-hour format for the onChange event
+    let hours = parseInt(hour);
+    if (period === 'PM' && hours < 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    const timeString = `${String(hours).padStart(2, '0')}:${minute}`;
+    onChange(fieldKey, timeString);
+  };
+
+  return (
+    <div className="flex items-center space-x-2">
+      <div className="relative">
+        <select
+          value={hour}
+          onChange={(e) => handleChange('hour', e.target.value)}
+          className="w-16 px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required={required}
+        >
+          {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+      </div>
+      <span>:</span>
+      <div className="relative">
+        <select
+          value={minute}
+          onChange={(e) => handleChange('minute', e.target.value)}
+          className="w-16 px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required={required}
+        >
+          {['00', '10', '20', '30', '40', '50'].map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      </div>
+      <div className="relative">
+        <select
+          value={period}
+          onChange={(e) => handleChange('period', e.target.value)}
+          className="w-20 px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required={required}
+        >
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
+      </div>
+    </div>
+  );
+};
 
 const AddForm: React.FC<AddFormProps> = ({
   index,
@@ -270,27 +347,12 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
 
     case "time":
       return (
-        <div className="relative">
-          <input
-            type="text"
-            value={field.value || ""}
-            onClick={(e) => {
-              const timePickerDialog = document.createElement("input");
-              timePickerDialog.type = "time";
-              timePickerDialog.onchange = (event) => {
-                handlers.handleInputonChange(
-                  field.key,
-                  (event.target as HTMLInputElement).value,
-                  handlers.index
-                );
-              };
-              timePickerDialog.click();
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary-500"
-            placeholder={field.placeholder}
-            readOnly
-          />
-        </div>
+        <TimePickerWithAMPM
+          value={field.value}
+          onChange={handlers.handleInputonChange}
+          fieldKey={field.key}
+          required={field.required}
+        />
       );
 
     case "custom":

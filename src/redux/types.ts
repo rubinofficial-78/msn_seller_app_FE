@@ -116,6 +116,9 @@ export const UPDATE_ORDER_FULFILLMENT_FAILURE = 'UPDATE_ORDER_FULFILLMENT_FAILUR
 export const CREATE_INVENTORY_PRODUCT_REQUEST = 'CREATE_INVENTORY_PRODUCT_REQUEST';
 export const CREATE_INVENTORY_PRODUCT_SUCCESS = 'CREATE_INVENTORY_PRODUCT_SUCCESS';
 export const CREATE_INVENTORY_PRODUCT_FAILURE = 'CREATE_INVENTORY_PRODUCT_FAILURE';
+export const GET_FULFILLMENT_TYPES_REQUEST = 'GET_FULFILLMENT_TYPES_REQUEST';
+export const GET_FULFILLMENT_TYPES_SUCCESS = 'GET_FULFILLMENT_TYPES_SUCCESS';
+export const GET_FULFILLMENT_TYPES_FAILURE = 'GET_FULFILLMENT_TYPES_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -559,6 +562,46 @@ export interface AuthState {
       email: string;
       mobile_number: string;
     }>;
+  };
+  storeDetails: {
+    loading: boolean;
+    error: string | null;
+    data: {
+      id: number;
+      name: string;
+      code: string;
+      short_desc: string;
+      long_desc: string;
+      order_minimum_value: number;
+      website: string;
+      fssai_number: string;
+      store_symbols: string;
+      store_banner: string;
+      store_images: string[];
+      store_contact_number: string;
+      store_email: string;
+      default_address: {
+        city: string;
+        state: string;
+        pin_code: string;
+        address_line_1: string;
+      };
+      fulfillment_type: {
+        id: number;
+        lookup_code: string;
+        display_name: string;
+      };
+      core_user: {
+        email: string;
+        mobile_number: string;
+        name: string;
+      };
+    } | null;
+  };
+  fulfillmentTypes: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
   };
 }
 
@@ -1601,5 +1644,19 @@ interface UpdateOrderFulfillmentSuccessAction {
 
 interface UpdateOrderFulfillmentFailureAction {
   type: typeof UPDATE_ORDER_FULFILLMENT_FAILURE;
+  payload: string;
+}
+
+interface GetFulfillmentTypesRequestAction {
+  type: typeof GET_FULFILLMENT_TYPES_REQUEST;
+}
+
+interface GetFulfillmentTypesSuccessAction {
+  type: typeof GET_FULFILLMENT_TYPES_SUCCESS;
+  payload: any;
+}
+
+interface GetFulfillmentTypesFailureAction {
+  type: typeof GET_FULFILLMENT_TYPES_FAILURE;
   payload: string;
 }

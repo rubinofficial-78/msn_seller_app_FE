@@ -243,7 +243,19 @@ import {
   GET_REPORTS_FAILURE,
   GET_SELLER_DROPDOWN_REQUEST,
   GET_SELLER_DROPDOWN_SUCCESS,
-  GET_SELLER_DROPDOWN_FAILURE
+  GET_SELLER_DROPDOWN_FAILURE,
+  GET_STORE_DETAILS_REQUEST,
+  GET_STORE_DETAILS_SUCCESS,
+  GET_STORE_DETAILS_FAILURE,
+  GET_FULFILLMENT_TYPES_REQUEST,
+  GET_FULFILLMENT_TYPES_SUCCESS,
+  GET_FULFILLMENT_TYPES_FAILURE,
+  UPDATE_USER_DETAILS_REQUEST,
+  UPDATE_USER_DETAILS_SUCCESS,
+  UPDATE_USER_DETAILS_FAILURE,
+  UPDATE_BANK_DETAILS_REQUEST,
+  UPDATE_BANK_DETAILS_SUCCESS,
+  UPDATE_BANK_DETAILS_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -656,6 +668,21 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: []
+  },
+  storeDetails: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  fulfillmentTypes: {
+    loading: false,
+    error: null,
+    data: []
+  },
+  bankDetails: {
+    loading: false,
+    error: null,
+    data: null
   }
 };
 
@@ -2819,6 +2846,120 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         sellerDropdown: {
           ...state.sellerDropdown,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_STORE_DETAILS_REQUEST:
+      return {
+        ...state,
+        storeDetails: {
+          ...state.storeDetails,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_STORE_DETAILS_SUCCESS:
+      return {
+        ...state,
+        storeDetails: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_STORE_DETAILS_FAILURE:
+      return {
+        ...state,
+        storeDetails: {
+          ...state.storeDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_FULFILLMENT_TYPES_REQUEST:
+      return {
+        ...state,
+        fulfillmentTypes: {
+          ...state.fulfillmentTypes,
+          loading: true,
+          error: null
+        }
+      };
+
+    case GET_FULFILLMENT_TYPES_SUCCESS:
+      return {
+        ...state,
+        fulfillmentTypes: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+
+    case GET_FULFILLMENT_TYPES_FAILURE:
+      return {
+        ...state,
+        fulfillmentTypes: {
+          ...state.fulfillmentTypes,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case UPDATE_USER_DETAILS_REQUEST:
+      return {
+        ...state,
+        userDetails: {
+          ...state.userDetails,
+          loading: true,
+          error: null
+        }
+      };
+
+    case UPDATE_USER_DETAILS_SUCCESS:
+      return {
+        ...state,
+        userDetails: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+
+    case UPDATE_USER_DETAILS_FAILURE:
+      return {
+        ...state,
+        userDetails: {
+          ...state.userDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case UPDATE_BANK_DETAILS_REQUEST:
+      return {
+        ...state,
+        bankDetails: {
+          ...state.bankDetails,
+          loading: true,
+          error: null
+        }
+      };
+
+    case UPDATE_BANK_DETAILS_SUCCESS:
+      return {
+        ...state,
+        bankDetails: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+
+    case UPDATE_BANK_DETAILS_FAILURE:
+      return {
+        ...state,
+        bankDetails: {
+          ...state.bankDetails,
           loading: false,
           error: action.payload
         }

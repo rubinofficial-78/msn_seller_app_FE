@@ -430,3 +430,38 @@ export const GET_SELLER_DROPDOWN_REQUEST = 'GET_SELLER_DROPDOWN_REQUEST';
 export const GET_SELLER_DROPDOWN_SUCCESS = 'GET_SELLER_DROPDOWN_SUCCESS';
 export const GET_SELLER_DROPDOWN_FAILURE = 'GET_SELLER_DROPDOWN_FAILURE';
 
+export const GET_STORE_DETAILS_REQUEST = 'GET_STORE_DETAILS_REQUEST';
+export const GET_STORE_DETAILS_SUCCESS = 'GET_STORE_DETAILS_SUCCESS';
+export const GET_STORE_DETAILS_FAILURE = 'GET_STORE_DETAILS_FAILURE';
+
+export const GET_USER_STORE_DETAILS_REQUEST = 'GET_USER_STORE_DETAILS_REQUEST';
+export const GET_USER_STORE_DETAILS_SUCCESS = 'GET_USER_STORE_DETAILS_SUCCESS';
+export const GET_USER_STORE_DETAILS_FAILURE = 'GET_USER_STORE_DETAILS_FAILURE';
+
+// Add these new action types for fulfillment types
+export const GET_FULFILLMENT_TYPES_REQUEST = 'GET_FULFILLMENT_TYPES_REQUEST';
+export const GET_FULFILLMENT_TYPES_SUCCESS = 'GET_FULFILLMENT_TYPES_SUCCESS';
+export const GET_FULFILLMENT_TYPES_FAILURE = 'GET_FULFILLMENT_TYPES_FAILURE';
+
+// Also update the AuthActionTypes interface in types.ts to include these new actions
+interface GetFulfillmentTypesRequestAction {
+  type: typeof GET_FULFILLMENT_TYPES_REQUEST;
+}
+
+interface GetFulfillmentTypesSuccessAction {
+  type: typeof GET_FULFILLMENT_TYPES_SUCCESS;
+  payload: any;
+}
+
+interface GetFulfillmentTypesFailureAction {
+  type: typeof GET_FULFILLMENT_TYPES_FAILURE;
+  payload: string;
+}
+
+// Add these to the AuthActionTypes union type
+export type AuthActionTypes = 
+  | GetFulfillmentTypesRequestAction
+  | GetFulfillmentTypesSuccessAction
+  | GetFulfillmentTypesFailureAction
+  // ... other existing action types
+

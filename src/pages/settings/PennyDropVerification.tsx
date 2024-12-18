@@ -1,38 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, ExternalLink, MapPin } from "lucide-react";
+import { ArrowLeft, ExternalLink, Banknote } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getEmailSettings,activateEmailProvider, updateEmailProvider } from "../../redux/Action/action";
+import {
+  getEmailSettings,
+  activateEmailProvider,
+  updateEmailProvider,
+} from "../../redux/Action/action";
 import { RootState } from "../../redux/types";
- 
 
-interface MapConfigurationForm {
-  googleApiKey: string;
-  googleMapsApi: string;
-  googleGeoCodeApi: string;
-}
-
-const MapSettings = () => {
+const PennyDropVerification = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [editedFields, setEditedFields] = useState<{ [key: string]: any }>({});
   const [hasChanges, setHasChanges] = useState(false);
-  
-  const mapSettings = useSelector((state: RootState) => state.data.emailSettings);
+
+  const pennyDropSettings = useSelector(
+    (state: RootState) => state.data.emailSettings
+  );
   const activateProviderStatus = useSelector(
     (state: RootState) => state.data.activateEmailProvider
   );
 
   useEffect(() => {
-    dispatch(getEmailSettings("MAPS"));
+    dispatch(getEmailSettings("PENNY_DROP"));
   }, [dispatch]);
 
-  const handleFieldChange = (sectionKey: string, fieldKey: string, value: string) => {
-    setEditedFields(prev => ({
+  const handleFieldChange = (
+    sectionKey: string,
+    fieldKey: string,
+    value: string
+  ) => {
+    setEditedFields((prev) => ({
       ...prev,
-      [`${sectionKey}.${fieldKey}`]: value
+      [`${sectionKey}.${fieldKey}`]: value,
     }));
     setHasChanges(true);
   };
@@ -50,57 +53,72 @@ const MapSettings = () => {
   };
 
   const handleVerify = () => {
-    // Add verification logic here
     setShowConfigDialog(false);
   };
 
   const handleActivateProvider = async (providerId: number) => {
     try {
-      await dispatch(activateEmailProvider(providerId, "MAPS"));
-      dispatch(getEmailSettings("MAPS")); // Refresh the list after activation
+      await dispatch(activateEmailProvider(providerId, "PENNY_DROP"));
+      dispatch(getEmailSettings("PENNY_DROP")); // Refresh the list after activation
     } catch (error) {
-      console.error('Failed to activate provider:', error);
+      console.error("Failed to activate provider:", error);
     }
   };
 
   const handleSave = async () => {
     if (!selectedProvider || !hasChanges) return;
 
-    const provider = mapSettings?.data?.find(p => p.code === selectedProvider);
+    const provider = pennyDropSettings?.data?.find(
+      (p) => p.code === selectedProvider
+    );
     if (!provider) return;
 
     try {
+      // Get the original sections from the provider
+      const updatedSections = provider.sections?.map((section) => ({
+        section_key: section.section_key,
+        section_name: section.section_name,
+        section_sequence: section.section_sequence,
+        section_description: section.section_description,
+        fields: section.fields.map((field) => {
+          // Check if this field has been edited
+          const editedValue =
+            editedFields[`${section.section_key}.${field.field_key}`];
+
+          return {
+            ...field,
+            value: editedValue ? { value: editedValue } : field.value,
+          };
+        }),
+      }));
+
       const formattedData = {
-        provider_id: provider.id,
-        setting_type: "MAPS",
-        sections: provider.sections?.map(section => ({
-          section_key: section.section_key,
-          fields: section.fields?.map(field => ({
-            field_key: field.field_key,
-            value: editedFields[`${section.section_key}.${field.field_key}`] || field.value?.value || ''
-          }))
-        }))
+        sections: updatedSections,
       };
 
-      await dispatch(updateEmailProvider(formattedData));
-      dispatch(getEmailSettings("MAPS")); // Refresh the data
+      await dispatch(updateEmailProvider(provider.id, formattedData));
+      dispatch(getEmailSettings("PENNY_DROP")); // Refresh the data
       setHasChanges(false);
       handleBackToProviders();
     } catch (error) {
-      console.error('Failed to update provider:', error);
+      console.error("Failed to update provider:", error);
     }
   };
 
   const renderProviderList = () => {
-    if (!mapSettings?.data) return null;
+    if (!pennyDropSettings?.data) return null;
 
-    const activeProviders = mapSettings.data.filter(provider => provider.status === 'ACTIVATED');
-    const inactiveProviders = mapSettings.data.filter(provider => provider.status === 'DEACTIVATED');
+    const activeProviders = pennyDropSettings.data.filter(
+      (provider) => provider.status === "ACTIVATED"
+    );
+    const inactiveProviders = pennyDropSettings.data.filter(
+      (provider) => provider.status === "DEACTIVATED"
+    );
 
     return (
       <>
         {/* Active Providers */}
-        {activeProviders.map(provider => (
+        {activeProviders.map((provider) => (
           <div key={provider.id} className="border rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -118,7 +136,9 @@ const MapSettings = () => {
                   <div className="text-green-500 text-sm font-medium">
                     Active Now
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">{provider.name}</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {provider.name}
+                  </div>
                 </div>
               </div>
             </div>
@@ -128,15 +148,17 @@ const MapSettings = () => {
         {/* Inactive Providers */}
         {inactiveProviders.length > 0 && (
           <div className="mt-8">
-            <h3 className="text-lg font-medium mb-4">All Maps Service providers</h3>
+            <h3 className="text-lg font-medium mb-4">
+              All Penny Drop Verification Providers
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {inactiveProviders.map(provider => (
+              {inactiveProviders.map((provider) => (
                 <div
                   key={provider.id}
                   className="border rounded-lg p-4 hover:border-blue-500 transition-colors"
                 >
                   <div className="flex items-center justify-between">
-                    <div 
+                    <div
                       className="flex items-center gap-4 cursor-pointer"
                       onClick={() => handleProviderClick(provider.code)}
                     >
@@ -149,7 +171,9 @@ const MapSettings = () => {
                       </div>
                       <div>
                         <div className="font-medium">{provider.name}</div>
-                        <div className="text-sm text-gray-600 mt-1">{provider.tag_text}</div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          {provider.tag_text}
+                        </div>
                       </div>
                     </div>
                     <button
@@ -160,7 +184,9 @@ const MapSettings = () => {
                       className="px-4 py-2 bg-[#800000] text-white rounded-md text-sm hover:bg-[#600000]"
                       disabled={activateProviderStatus?.loading}
                     >
-                      {activateProviderStatus?.loading ? 'Activating...' : 'Set as Active'}
+                      {activateProviderStatus?.loading
+                        ? "Activating..."
+                        : "Set as Active"}
                     </button>
                   </div>
                 </div>
@@ -173,9 +199,11 @@ const MapSettings = () => {
   };
 
   const renderProviderDetails = () => {
-    if (!mapSettings?.data || !selectedProvider) return null;
+    if (!pennyDropSettings?.data || !selectedProvider) return null;
 
-    const provider = mapSettings.data.find(p => p.code === selectedProvider);
+    const provider = pennyDropSettings.data.find(
+      (p) => p.code === selectedProvider
+    );
     if (!provider) return null;
 
     return (
@@ -187,7 +215,7 @@ const MapSettings = () => {
               onClick={handleBackToProviders}
               className="hover:text-blue-600"
             >
-              Maps Service provider
+              Penny Drop Verification Provider
             </button>
             <span>/</span>
             <span className="text-gray-900">{provider.name}</span>
@@ -244,22 +272,37 @@ const MapSettings = () => {
           {/* Right Column - Configuration Form */}
           <div className="space-y-6">
             {provider.sections && Array.isArray(provider.sections) ? (
-              provider.sections.map(section => (
+              provider.sections.map((section) => (
                 <div key={section.section_key}>
                   <h3 className="text-xl font-semibold text-blue-600 mb-6">
                     {section.section_name}
                   </h3>
                   <div className="space-y-4">
                     {section.fields && Array.isArray(section.fields) ? (
-                      section.fields.map(field => (
+                      section.fields.map((field) => (
                         <div key={field.field_key}>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {field.field_name} {field.is_mandatory && <span className="text-red-500">*</span>}
+                            {field.field_name}{" "}
+                            {field.is_mandatory && (
+                              <span className="text-red-500">*</span>
+                            )}
                           </label>
                           <input
                             type="text"
-                            value={editedFields[`${section.section_key}.${field.field_key}`] || field.value?.value || ''}
-                            onChange={(e) => handleFieldChange(section.section_key, field.field_key, e.target.value)}
+                            value={
+                              editedFields[
+                                `${section.section_key}.${field.field_key}`
+                              ] ||
+                              field.value?.value ||
+                              ""
+                            }
+                            onChange={(e) =>
+                              handleFieldChange(
+                                section.section_key,
+                                field.field_key,
+                                e.target.value
+                              )
+                            }
                             placeholder={field.placeholder}
                             className="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           />
@@ -275,7 +318,7 @@ const MapSettings = () => {
               <p>No configuration sections available</p>
             )}
 
-            {/* Add Cancel and Save & Update buttons */}
+            {/* Cancel and Save & Update buttons */}
             <div className="flex justify-end gap-4 mt-8">
               <button
                 onClick={handleBackToProviders}
@@ -287,9 +330,9 @@ const MapSettings = () => {
                 onClick={handleSave}
                 disabled={!hasChanges}
                 className={`px-6 py-2 rounded uppercase text-sm font-medium ${
-                  hasChanges 
-                    ? 'bg-[#800000] text-white hover:bg-[#600000]' 
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  hasChanges
+                    ? "bg-[#800000] text-white hover:bg-[#600000]"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 Save & Update
@@ -301,30 +344,28 @@ const MapSettings = () => {
     );
   };
 
-  // ... rest of your component code
-
   return (
-          <div className="space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-              <button
-          onClick={() => navigate('/dashboard/settings')}
+        <button
+          onClick={() => navigate("/dashboard/settings")}
           className="p-2 hover:bg-gray-100 rounded-lg"
-              >
+        >
           <ArrowLeft size={20} />
-              </button>
-        <h1 className="text-2xl font-bold">Maps Service providers</h1>
+        </button>
+        <h1 className="text-2xl font-bold">Penny Drop Verification</h1>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <p className="text-gray-600 mb-6">
-          Integrate our developer-friendly MAPS API to send and receive text
-          messages. Our distributed carrier network and intelligent routing
-          ensure the highest delivery and lowest latency.
+          Integrate our penny drop verification service to verify bank accounts
+          instantly. Our secure verification process ensures reliable and quick
+          account validation.
         </p>
 
         {selectedProvider ? renderProviderDetails() : renderProviderList()}
-            </div>
+      </div>
 
       {/* Test Configuration Dialog */}
       {showConfigDialog && (
@@ -332,21 +373,33 @@ const MapSettings = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <MapPin className="text-green-600" size={20} />
+                <Banknote className="text-green-600" size={20} />
               </div>
-              <h3 className="text-lg font-semibold">MAP PROVIDER DETAILS</h3>
+              <h3 className="text-lg font-semibold">PENNY DROP TEST</h3>
             </div>
-            <p className="text-gray-600 mb-4">Test map provider configuration</p>
+            <p className="text-gray-600 mb-4">Test penny drop configuration</p>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pincode <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                className="w-full px-4 py-2 border rounded-md"
-                placeholder="Enter pincode"
-              />
+            <div className="space-y-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Account Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-md"
+                  placeholder="Enter account number"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  IFSC Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-md"
+                  placeholder="Enter IFSC code"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-4">
@@ -370,4 +423,4 @@ const MapSettings = () => {
   );
 };
 
-export default MapSettings;
+export default PennyDropVerification;

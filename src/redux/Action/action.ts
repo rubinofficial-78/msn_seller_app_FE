@@ -323,6 +323,9 @@ import {
   GET_TEMPLATES_REQUEST,
   GET_TEMPLATES_SUCCESS,
   GET_TEMPLATES_FAILURE,
+  GET_UI_CONFIG,
+  GET_UI_CONFIG_SUCCESS,
+  GET_UI_CONFIG_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -5649,4 +5652,38 @@ export const getTemplates = (page: number = 1, perPage: number = 10): ThunkActio
       throw error;
     }
   };
+};
+
+export const getUiConfig = () => async (dispatch: any) => {
+  dispatch({ type: GET_UI_CONFIG });
+
+  try {
+    const response = await fetch(
+      'http://20.197.4.12:7001/api/v1/backend_master/settings/user_server_settings/get/NP_UI_COMPONENTS',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.meta.status) {
+      dispatch({
+        type: GET_UI_CONFIG_SUCCESS,
+        payload: data.data,
+      });
+    } else {
+      dispatch({
+        type: GET_UI_CONFIG_FAILURE,
+        payload: data.meta.message,
+      });
+    }
+  } catch (error) {
+    dispatch({
+      type: GET_UI_CONFIG_FAILURE,
+      payload: 'Failed to fetch UI configuration',
+    });
+  }
 };

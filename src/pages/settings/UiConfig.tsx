@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ImageUpload from '../../components/ImageUpload';
+import { useDispatch, useSelector } from 'react-redux';
+import { getUiConfig, updateEmailProvider } from '../../redux/Action/action';
+import { RootState } from '../../redux/types';
 
 interface ColorConfig {
   headerBackground: string;
@@ -14,6 +17,10 @@ interface ColorConfig {
 
 const UiConfig = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { data: uiConfigData, loading, error } = useSelector(
+    (state: RootState) => state.data.uiConfig
+  );
   const [colors, setColors] = useState<ColorConfig>({
     headerBackground: '#1F2937',
     headerText: '#FFFFFF',
@@ -22,6 +29,73 @@ const UiConfig = () => {
     tableHeader: '#E5E7EB',
     tableHeaderText: '#000000',
   });
+  const [uploadedImages, setUploadedImages] = useState({
+    logo: '',
+    favicon: ''
+  });
+  const [currentImages, setCurrentImages] = useState({
+    logo: '',
+    favicon: ''
+  });
+
+  useEffect(() => {
+    dispatch(getUiConfig());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (uiConfigData) {
+      // Find the brand colors section
+      const brandColors = uiConfigData.sections.find(
+        section => section.section_key === 'brand_colors'
+      );
+
+      if (brandColors) {
+        const newColors = {
+          headerBackground: brandColors.fields.find(f => f.field_key === 'background_color')?.value?.value || '#1F2937',
+          headerText: brandColors.fields.find(f => f.field_key === 'text_color')?.value?.value || '#FFFFFF',
+          buttonBackground: brandColors.fields.find(f => f.field_key === 'button_bg_color')?.value?.value || '#1D4ED8',
+          buttonText: brandColors.fields.find(f => f.field_key === 'button_text_color')?.value?.value || '#FFFFFF',
+          tableHeader: brandColors.fields.find(f => f.field_key === 'table_header_color')?.value?.value || '#E5E7EB',
+          tableHeaderText: brandColors.fields.find(f => f.field_key === 'table_header_text_color')?.value?.value || '#000000',
+        };
+        setColors(newColors);
+      }
+
+      // Handle images
+      const uiConfig = uiConfigData.sections.find(
+        section => section.section_key === 'ui_configuration'
+      );
+
+      console.log('Full UI Config Data:', uiConfigData);
+      console.log('UI Config Section:', uiConfig);
+      
+      if (uiConfig?.fields) {
+        console.log('UI Config Fields:', uiConfig.fields);
+        
+        const logoField = uiConfig.fields.find(f => f.field_key === 'U');
+        const faviconField = uiConfig.fields.find(f => f.field_key === 'B');
+        
+        console.log('Logo Field:', logoField);
+        console.log('Favicon Field:', faviconField);
+        
+        const logoValue = logoField?.value;
+        const faviconValue = faviconField?.value;
+        
+        console.log('Raw Logo Value:', logoValue);
+        console.log('Raw Favicon Value:', faviconValue);
+
+        setCurrentImages({
+          logo: typeof logoValue === 'string' ? logoValue : logoValue?.value || '',
+          favicon: typeof faviconValue === 'string' ? faviconValue : faviconValue?.value || ''
+        });
+      }
+    }
+  }, [uiConfigData]);
+
+  // Add this to track currentImages changes
+  useEffect(() => {
+    console.log('Current Images State:', currentImages);
+  }, [currentImages]);
 
   const handleColorChange = (key: keyof ColorConfig, value: string) => {
     setColors(prev => ({
@@ -30,9 +104,86 @@ const UiConfig = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    // TODO: Implement API call to save UI configuration
-    console.log('Saving UI configuration:', colors);
+  const handleImageUpload = (type: 'logo' | 'favicon', file: string) => {
+    setUploadedImages(prev => ({
+      ...prev,
+      [type]: file
+    }));
+    setCurrentImages(prev => ({
+      ...prev,
+      [type]: file
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (!uiConfigData) return;
+
+    try {
+      const updatedSections = uiConfigData.sections.map(section => {
+        if (section.section_key === 'brand_colors') {
+          // Update color values
+          return {
+            section_key: section.section_key,
+            section_name: section.section_name,
+            section_sequence: section.section_sequence,
+            section_description: section.section_description,
+            fields: section.fields.map(field => ({
+              env_key: field.env_key,
+              field_key: field.field_key,
+              field_name: field.field_name,
+              field_type: field.field_type,
+              is_editable: field.is_editable,
+              placeholder: field.placeholder,
+              is_mandatory: field.is_mandatory,
+              allowed_values: field.allowed_values,
+              field_sequence: field.field_sequence,
+              attributes: field.attributes,
+              value: {
+                value: field.field_key === 'background_color' ? colors.headerBackground :
+                       field.field_key === 'text_color' ? colors.headerText :
+                       field.field_key === 'button_bg_color' ? colors.buttonBackground :
+                       field.field_key === 'button_text_color' ? colors.buttonText :
+                       field.field_key === 'table_header_color' ? colors.tableHeader :
+                       field.field_key === 'table_header_text_color' ? colors.tableHeaderText :
+                       field.value.value
+              }
+            }))
+          };
+        } else if (section.section_key === 'ui_configuration') {
+          // Update image values
+          return {
+            section_key: section.section_key,
+            section_name: section.section_name,
+            section_sequence: section.section_sequence,
+            section_description: section.section_description,
+            fields: section.fields.map(field => ({
+              env_key: field.env_key,
+              field_key: field.field_key,
+              field_name: field.field_name,
+              field_type: field.field_type,
+              is_editable: field.is_editable,
+              placeholder: field.placeholder,
+              is_mandatory: field.is_mandatory,
+              allowed_values: field.allowed_values,
+              field_sequence: field.field_sequence,
+              attributes: field.attributes,
+              value: {
+                value: field.field_key === 'U' && uploadedImages.logo ? uploadedImages.logo :
+                       field.field_key === 'B' && uploadedImages.favicon ? uploadedImages.favicon :
+                       field.value.value
+              }
+            }))
+          };
+        }
+        return section;
+      });
+
+      // Send sections directly as an array
+      await dispatch(updateEmailProvider(uiConfigData.id, updatedSections));
+      dispatch(getUiConfig()); // Refresh the UI config data
+    } catch (error) {
+      console.error('Failed to update UI configuration:', error);
+    }
   };
 
   const ColorInput = ({ 
@@ -53,7 +204,7 @@ const UiConfig = () => {
           <input
             id="color-input"
             type="color"
-            value={value}
+            value={value || '#000000'}
             onChange={(e) => handleColorChange(colorKey, e.target.value)}
             className="w-12 h-12 rounded cursor-pointer border p-1"
           />
@@ -61,7 +212,7 @@ const UiConfig = () => {
         <input 
           id="color-input-text"
           type="text"
-          value={value.toUpperCase()}
+          value={(value || '#000000').toUpperCase()}
           onChange={(e) => handleColorChange(colorKey, e.target.value)}
           className="border rounded px-3 py-2 w-32 text-sm"
           placeholder="#000000"
@@ -69,6 +220,20 @@ const UiConfig = () => {
       </div>
     </div>
   );
+
+  const handleImageLink = (id: string, imageUrl: string, index?: number) => {
+    if (id === 'logo-image-upload') {
+      setCurrentImages(prev => ({
+        ...prev,
+        logo: imageUrl
+      }));
+    } else if (id === 'favicon-image-upload') {
+      setCurrentImages(prev => ({
+        ...prev,
+        favicon: imageUrl
+      }));
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto p-6">
@@ -87,24 +252,32 @@ const UiConfig = () => {
         <div className="space-y-6">
           <div>
             <h2 className="text-lg font-semibold mb-4">Upload Your Logo</h2>
-            <ImageUpload
-              id="logo-image-upload"
-              onImageUpload={(file) => console.log('Logo uploaded:', file)}
-              accept="image/png,image/svg+xml"
-              maxSize={10}
-              helpText="For the logo image, please ensure it has a transparent background. Additionally, the file size should not exceed 10 megabytes. Accepted formats include PNG, SVG."
-            />
+            <div className="flex gap-4 items-start">
+              <ImageUpload
+                id="logo-image-upload"
+                value={currentImages.logo}
+                label="Upload Your Logo"
+                handleImageLink={handleImageLink}
+                showLable={false}
+                text="For the logo image, please ensure it has a transparent background. Additionally, the file size should not exceed 10 megabytes. Accepted formats include PNG, SVG."
+              />
+      
+            </div>
           </div>
 
           <div>
             <h2 className="text-lg font-semibold mb-4">Browser Favicon Image</h2>
-            <ImageUpload
-              id="favicon-image-upload"
-              onImageUpload={(file) => console.log('Favicon uploaded:', file)}
-              accept="image/png,image/svg+xml"
-              maxSize={10}
-              helpText="For the logo image, please ensure it has a transparent background. Additionally, the file size should not exceed 10 megabytes. Accepted formats include PNG, SVG."
-            />
+            <div className="flex gap-4 items-start">
+              <ImageUpload
+                id="favicon-image-upload"
+                value={currentImages.favicon}
+                label="Browser Favicon Image"
+                handleImageLink={handleImageLink}
+                showLable={false}
+                text="For the logo image, please ensure it has a transparent background. Additionally, the file size should not exceed 10 megabytes. Accepted formats include PNG, SVG."
+              />
+              
+            </div>
           </div>
         </div>
 

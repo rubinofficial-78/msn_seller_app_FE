@@ -267,7 +267,10 @@ import {
   GET_MESSAGE_TYPES_FAILURE,
   GET_TEMPLATES_REQUEST,
   GET_TEMPLATES_SUCCESS,
-  GET_TEMPLATES_FAILURE
+  GET_TEMPLATES_FAILURE,
+  GET_UI_CONFIG,
+  GET_UI_CONFIG_SUCCESS,
+  GET_UI_CONFIG_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -716,7 +719,12 @@ const initialState: AuthState = {
     error: null,
     data: [],
     meta: null
-  }
+  },
+  uiConfig: {
+    loading: false,
+    error: null,
+    data: null,
+  },
 };
 
 const authReducer = (state = initialState, action: AuthActionTypes): AuthState => {
@@ -3105,6 +3113,35 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           loading: false,
           error: action.payload
         }
+      };
+    case GET_UI_CONFIG:
+      return {
+        ...state,
+        uiConfig: {
+          ...state.uiConfig,
+          loading: true,
+          error: null,
+        },
+      };
+
+    case GET_UI_CONFIG_SUCCESS:
+      return {
+        ...state,
+        uiConfig: {
+          loading: false,
+          error: null,
+          data: action.payload,
+        },
+      };
+
+    case GET_UI_CONFIG_FAILURE:
+      return {
+        ...state,
+        uiConfig: {
+          ...state.uiConfig,
+          loading: false,
+          error: action.payload,
+        },
       };
     default:
       return state;

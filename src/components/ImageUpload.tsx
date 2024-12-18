@@ -139,7 +139,7 @@ const ImagePreviewDialog = ({ open, onClose, imageUrl }) => {
 export default function ImageUpload({
   id,
   value = null,
-  label = "Image Upload",
+  label = "",
   handleImageLink = () => {},
   index,
   showLable = true,
@@ -152,7 +152,7 @@ export default function ImageUpload({
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (value && typeof value === 'string' && value.trim() !== '') {
+    if (value && typeof value === "string" && value.trim() !== "") {
       setUploadedImage(value);
     }
   }, [value]);

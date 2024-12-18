@@ -52,6 +52,7 @@ import NotificationSettings from "../pages/settings/NotificationSettings";
 import MapSettings from "../pages/settings/MapSettings";
 import UiConfig from "../pages/settings/UiConfig";
 import EmailAndSmsSettings from "../pages/settings/EmailAndSmsSettings";
+import PennyDropVerification from "../pages/settings/PennyDropVerification";
 
 // Partner and Company Related Pages
 import CreatePartner from "../components/CreatePartner";
@@ -450,11 +451,7 @@ export const routes: RouteObject[] = [
       // Admin Settings Routes
       {
         path: "settings",
-        element: (
-          <ProtectedRoute allowedRoles={["ADMIN"]}>
-            <Settings />
-          </ProtectedRoute>
-        ),
+        element: <Settings />,
         children: [
           {
             path: "account-details",
@@ -517,6 +514,14 @@ export const routes: RouteObject[] = [
             element: (
               <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <UiConfig />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "penny-drop-verification",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <PennyDropVerification />
               </ProtectedRoute>
             ),
           },

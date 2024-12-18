@@ -8,6 +8,7 @@ import {
   Map,
   Eye,
   Users,
+  Banknote,
 } from "lucide-react";
 
 const Settings = () => {
@@ -54,7 +55,13 @@ const Settings = () => {
       title: "UI Configuration",
       description: "Customize the look and feel of the platform.",
       path: "ui-config"
-    }
+    },
+    {
+      icon: <Banknote size={24} className="text-blue-600" />,
+      title: "Penny Drop Verification",
+      description: "Configure penny drop verification providers for bank account validation",
+      path: "penny-drop-verification"
+    },
   ];
 
   return (
@@ -77,7 +84,7 @@ const Settings = () => {
           {settings.map((setting, index) => (
             <div
               key={index}
-              onClick={() => navigate(setting.path)}
+              onClick={() => navigate(`/dashboard/settings/${setting.path}`)}
               className="bg-white rounded-lg p-6 hover:shadow-md transition-all duration-200 
                        cursor-pointer border border-gray-200 hover:border-blue-200 group"
             >

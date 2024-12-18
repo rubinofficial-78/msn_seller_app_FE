@@ -119,6 +119,9 @@ export const CREATE_INVENTORY_PRODUCT_FAILURE = 'CREATE_INVENTORY_PRODUCT_FAILUR
 export const GET_FULFILLMENT_TYPES_REQUEST = 'GET_FULFILLMENT_TYPES_REQUEST';
 export const GET_FULFILLMENT_TYPES_SUCCESS = 'GET_FULFILLMENT_TYPES_SUCCESS';
 export const GET_FULFILLMENT_TYPES_FAILURE = 'GET_FULFILLMENT_TYPES_FAILURE';
+export const GET_UI_CONFIG = 'GET_UI_CONFIG';
+export const GET_UI_CONFIG_SUCCESS = 'GET_UI_CONFIG_SUCCESS';
+export const GET_UI_CONFIG_FAILURE = 'GET_UI_CONFIG_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -603,6 +606,35 @@ export interface AuthState {
     error: string | null;
     data: any[];
   };
+  uiConfig: {
+    loading: boolean;
+    error: string | null;
+    data: {
+      id: number;
+      code: string;
+      logo: string;
+      name: string;
+      sections: Array<{
+        section_key: string;
+        section_name: string;
+        section_sequence: number;
+        section_description: string;
+        fields: Array<{
+          value: string;
+          env_key: string;
+          field_key: string;
+          attributes: any;
+          field_name: string;
+          field_type: string;
+          is_editable: boolean;
+          placeholder: string;
+          is_mandatory: boolean;
+          allowed_values: any[];
+          field_sequence: number;
+        }>;
+      }>;
+    } | null;
+  };
 }
 
 export interface RootState {
@@ -653,6 +685,35 @@ export interface RootState {
       };
     };
     userDetails: UserDetailsState;
+    uiConfig: {
+      loading: boolean;
+      error: string | null;
+      data: {
+        id: number;
+        code: string;
+        logo: string;
+        name: string;
+        sections: Array<{
+          section_key: string;
+          section_name: string;
+          section_sequence: number;
+          section_description: string;
+          fields: Array<{
+            value: string;
+            env_key: string;
+            field_key: string;
+            attributes: any;
+            field_name: string;
+            field_type: string;
+            is_editable: boolean;
+            placeholder: string;
+            is_mandatory: boolean;
+            allowed_values: any[];
+            field_sequence: number;
+          }>;
+        }>;
+      } | null;
+    };
   };
   // ... other state properties
 }
@@ -1737,6 +1798,35 @@ export interface RootState {
       };
     };
     userDetails: UserDetailsState;
+    uiConfig: {
+      loading: boolean;
+      error: string | null;
+      data: {
+        id: number;
+        code: string;
+        logo: string;
+        name: string;
+        sections: Array<{
+          section_key: string;
+          section_name: string;
+          section_sequence: number;
+          section_description: string;
+          fields: Array<{
+            value: string;
+            env_key: string;
+            field_key: string;
+            attributes: any;
+            field_name: string;
+            field_type: string;
+            is_editable: boolean;
+            placeholder: string;
+            is_mandatory: boolean;
+            allowed_values: any[];
+            field_sequence: number;
+          }>;
+        }>;
+      } | null;
+    };
   };
   // ... other state properties
 }

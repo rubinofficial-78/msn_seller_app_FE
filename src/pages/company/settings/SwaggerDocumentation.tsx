@@ -58,7 +58,8 @@ const SwaggerDocumentation = () => {
               target="_blank" 
               rel="noreferrer"
             >
-              {GLOBAL_CONSTANTS.url}api-docs/
+              {/* {GLOBAL_CONSTANTS.url}api-docs/ */}
+              http://preprod.ondc.adya.ai/api-docs/
               <ExternalLink size={16} />
             </a>
           </div>

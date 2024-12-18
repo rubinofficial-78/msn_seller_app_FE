@@ -62,6 +62,12 @@ const Settings = () => {
       description: "Configure penny drop verification providers for bank account validation",
       path: "penny-drop-verification"
     },
+    {
+      icon: <Banknote size={24} className="text-blue-600" />,
+      title: "Catalog Services",
+      description: "This information will help us to setup your catalog in our seller application and ensure smooth running",
+      path: "common-settings"
+    },
   ];
 
   return (

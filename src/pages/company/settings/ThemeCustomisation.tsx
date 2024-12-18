@@ -7,6 +7,7 @@ import { getCompanyById, updateCompany } from "../../../redux/Action/action";
 import { RootState } from "../../../redux/types";
 import GLOBAL_CONSTANTS from "../../../GlobalConstants";
 import { toast } from "react-toastify";
+import AddForm from "../../../components/AddForm";
 
 interface ColorConfig {
   headerBackground: string;
@@ -20,8 +21,12 @@ interface ColorConfig {
 const ThemeCustomisation = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { data: companyData, loading, error } = useSelector((state: RootState) => state.data.companyDetails);
-  
+  const {
+    data: companyData,
+    loading,
+    error,
+  } = useSelector((state: RootState) => state.data.companyDetails);
+
   const [colors, setColors] = useState<ColorConfig>({
     headerBackground: "#1F2937",
     headerText: "#FFFFFF",
@@ -35,6 +40,16 @@ const ThemeCustomisation = () => {
     logo: "",
     favicon: "",
   });
+
+  const [selectedFont, setSelectedFont] = useState("Roboto");
+
+  const fonts = [
+    { label: "Inter", value: "Inter" },
+    { label: "Poppins", value: "Poppins" },
+    { label: "Montserrat", value: "Montserrat" },
+    { label: "Roboto", value: "Roboto" },
+    { label: "Lato", value: "Lato" },
+  ];
 
   useEffect(() => {
     if (GLOBAL_CONSTANTS.company_id) {
@@ -62,6 +77,8 @@ const ThemeCustomisation = () => {
         logo: headerStyle.logo || "",
         favicon: partner.favicon_icon || "",
       });
+
+      setSelectedFont(partner.font_family?.font_family || "Roboto");
     }
   }, [companyData]);
 
@@ -86,6 +103,28 @@ const ThemeCustomisation = () => {
     }
   };
 
+  const fontFormFields = [
+    {
+      type: "select",
+      key: "fontFamily",
+      label: "Font Family",
+      required: true,
+      value: selectedFont,
+      placeholder: "Select Font Family",
+      options: [
+        { value: "Inter", label: "Inter" },
+        { value: "Poppins", label: "Poppins" },
+        { value: "Montserrat", label: "Montserrat" },
+        { value: "Roboto", label: "Roboto" },
+        { value: "Lato", label: "Lato" }
+      ]
+    }
+  ];
+
+  const handleFontChange = (key: string, value: string) => {
+    setSelectedFont(value);
+  };
+
   const handleSubmit = async () => {
     try {
       const payload = {
@@ -93,29 +132,27 @@ const ThemeCustomisation = () => {
         header_style: {
           background_color: colors.headerBackground,
           text_color: colors.headerText,
-          logo: currentImages.logo
+          logo: currentImages.logo,
         },
         table_style: {
           head_background_color: colors.tableHeader,
-          head_text_color: colors.tableHeaderText
+          head_text_color: colors.tableHeaderText,
         },
         font_family: {
-          font_family: "Roboto"
+          font_family: selectedFont,
         },
         button_style: {
           background_color: colors.buttonBackground,
-          text_color: colors.buttonText
+          text_color: colors.buttonText,
         },
-        company_images: [
-          currentImages.logo
-        ]
+        company_images: [currentImages.logo],
       };
 
       await dispatch(updateCompany(GLOBAL_CONSTANTS.company_id, payload));
-      toast.success('Theme updated successfully');
-      dispatch(getCompanyById(GLOBAL_CONSTANTS.company_id)); // Refresh data
+      toast.success("Theme updated successfully");
+      dispatch(getCompanyById(GLOBAL_CONSTANTS.company_id));
     } catch (error) {
-      toast.error('Failed to update theme');
+      toast.error("Failed to update theme");
     }
   };
 
@@ -186,7 +223,9 @@ const ThemeCustomisation = () => {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold mb-4">Browser Favicon Image</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              Browser Favicon Image
+            </h2>
             <div className="flex gap-4 items-start">
               <ImageUpload
                 id="favicon-image-upload"
@@ -197,6 +236,15 @@ const ThemeCustomisation = () => {
                 text="For the favicon image, please ensure it has a transparent background. Additionally, the file size should not exceed 10 megabytes. Accepted formats include PNG, ICO."
               />
             </div>
+          </div>
+
+          {/* Font Family Selection */}
+          <div className="p-4 bg-white rounded-lg shadow-sm border">
+            <h2 className="text-lg font-semibold mb-4">Font Family</h2>
+            <AddForm
+              data={fontFormFields}
+              handleSelectonChange={handleFontChange}
+            />
           </div>
         </div>
 

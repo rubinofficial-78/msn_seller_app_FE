@@ -122,6 +122,9 @@ export const GET_FULFILLMENT_TYPES_FAILURE = 'GET_FULFILLMENT_TYPES_FAILURE';
 export const GET_UI_CONFIG = 'GET_UI_CONFIG';
 export const GET_UI_CONFIG_SUCCESS = 'GET_UI_CONFIG_SUCCESS';
 export const GET_UI_CONFIG_FAILURE = 'GET_UI_CONFIG_FAILURE';
+export const GET_ALL_PRODUCT_CATEGORIES_REQUEST = 'GET_ALL_PRODUCT_CATEGORIES_REQUEST';
+export const GET_ALL_PRODUCT_CATEGORIES_SUCCESS = 'GET_ALL_PRODUCT_CATEGORIES_SUCCESS';
+export const GET_ALL_PRODUCT_CATEGORIES_FAILURE = 'GET_ALL_PRODUCT_CATEGORIES_FAILURE';
 
 // State Types
 export interface AuthState {
@@ -635,6 +638,17 @@ export interface AuthState {
       }>;
     } | null;
   };
+  allProductCategories: {
+    loading: boolean;
+    error: string | null;
+    data: any[];
+    meta: {
+      per_page: number;
+      page_no: number;
+      total_rows: number;
+      total_pages: number;
+    } | null;
+  };
 }
 
 export interface RootState {
@@ -712,6 +726,17 @@ export interface RootState {
             field_sequence: number;
           }>;
         }>;
+      } | null;
+    };
+    allProductCategories: {
+      loading: boolean;
+      error: string | null;
+      data: any[];
+      meta: {
+        per_page: number;
+        page_no: number;
+        total_rows: number;
+        total_pages: number;
       } | null;
     };
   };
@@ -1825,6 +1850,17 @@ export interface RootState {
             field_sequence: number;
           }>;
         }>;
+      } | null;
+    };
+    allProductCategories: {
+      loading: boolean;
+      error: string | null;
+      data: any[];
+      meta: {
+        per_page: number;
+        page_no: number;
+        total_rows: number;
+        total_pages: number;
       } | null;
     };
   };

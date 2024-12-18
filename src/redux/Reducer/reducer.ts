@@ -273,7 +273,13 @@ import {
   GET_UI_CONFIG_FAILURE,
   GET_SWAGGER_KEY_REQUEST,
   GET_SWAGGER_KEY_SUCCESS,
-  GET_SWAGGER_KEY_FAILURE
+  GET_SWAGGER_KEY_FAILURE,
+  GET_ALL_PRODUCT_CATEGORIES_REQUEST,
+  GET_ALL_PRODUCT_CATEGORIES_SUCCESS,
+  GET_ALL_PRODUCT_CATEGORIES_FAILURE,
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_REQUEST,
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_SUCCESS,
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -733,6 +739,18 @@ const initialState: AuthState = {
     data: null,
     error: null,
   },
+  allProductCategories: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
+  },
+  categoryAttributes: {
+    loading: false,
+    error: null,
+    data: {},
+    meta: null
+  }
 };
 
 const authReducer = (state = initialState, action: AuthActionTypes): AuthState => {
@@ -3176,6 +3194,67 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           data: null,
           error: action.payload,
         },
+      };
+    case GET_ALL_PRODUCT_CATEGORIES_REQUEST:
+      return {
+        ...state,
+        allProductCategories: {
+          ...state.allProductCategories,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_ALL_PRODUCT_CATEGORIES_SUCCESS:
+      return {
+        ...state,
+        allProductCategories: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_ALL_PRODUCT_CATEGORIES_FAILURE:
+      return {
+        ...state,
+        allProductCategories: {
+          ...state.allProductCategories,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_REQUEST:
+      return {
+        ...state,
+        categoryAttributes: {
+          ...state.categoryAttributes,
+          loading: true,
+          error: null
+        }
+      };
+
+    case GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_SUCCESS:
+      return {
+        ...state,
+        categoryAttributes: {
+          loading: false,
+          error: null,
+          data: {
+            ...state.categoryAttributes.data,
+            [action.payload.category]: action.payload.data
+          },
+          meta: action.payload.meta
+        }
+      };
+
+    case GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE:
+      return {
+        ...state,
+        categoryAttributes: {
+          ...state.categoryAttributes,
+          loading: false,
+          error: action.payload
+        }
       };
     default:
       return state;

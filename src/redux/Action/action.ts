@@ -334,7 +334,13 @@ import {
   GET_COMPANY_DETAILS_FAILURE,
   CREATE_COMPANY_USER_REQUEST,
   CREATE_COMPANY_USER_SUCCESS,
-  CREATE_COMPANY_USER_FAILURE
+  CREATE_COMPANY_USER_FAILURE,
+  GET_ALL_PRODUCT_CATEGORIES_REQUEST,
+  GET_ALL_PRODUCT_CATEGORIES_SUCCESS,
+  GET_ALL_PRODUCT_CATEGORIES_FAILURE,
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_REQUEST,
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_SUCCESS,
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -5769,4 +5775,156 @@ export const createCompanyUser = (userData: {
     });
     throw error;
   }
+};
+
+// Add this action creator
+export const getProductCategoriesWithSubCategories = (
+  params: { 
+    page_no: number; 
+    per_page: number; 
+    is_active_check: boolean;
+    parent_category_id: number | null;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_CATEGORIES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const queryParams = new URLSearchParams({
+        ...params,
+        parent_category_id: params.parent_category_id === null ? 'null' : params.parent_category_id.toString()
+      }).toString();
+
+      const response = await axios.get(
+        `${API_BASE_URL}/catalog/product_category/?${queryParams}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_CATEGORIES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch categories');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch categories';
+      dispatch({
+        type: GET_PRODUCT_CATEGORIES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getAllProductCategories = (
+  params: { 
+    page_no: number; 
+    per_page: number;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_ALL_PRODUCT_CATEGORIES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/catalog/product_category/all_categories`,
+        {
+          params: {
+            page_no: params.page_no,
+            per_page: params.per_page
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_ALL_PRODUCT_CATEGORIES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch categories');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch categories';
+      dispatch({
+        type: GET_ALL_PRODUCT_CATEGORIES_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
+};
+
+export const getProductAttributesByCategory = (
+  category: string,
+  subCategory: string
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/catalog/product_attribute`,
+        {
+          params: {
+            attribute: true,
+            category: category,
+            sub_category: subCategory
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination,
+            category,
+            subCategory
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch attributes');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch attributes';
+      dispatch({
+        type: GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE,
+        payload: errorMessage
+      });
+      throw error;
+    }
+  };
 };

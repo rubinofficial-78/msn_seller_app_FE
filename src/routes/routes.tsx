@@ -90,6 +90,7 @@ import ThemeCustomisation from "../pages/company/settings/ThemeCustomisation";
 import MyCompanyUsersList from "../pages/company/settings/MyCompanyUsersList";
 import SwaggerDocumentation from "../pages/company/settings/SwaggerDocumentation";
 import BankingDetailsCompany from "../pages/company/settings/BankingDetailsCompany";
+import CatalogueServices from "../pages/settings/CatalogueServices/CatalogueServices";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -528,6 +529,14 @@ export const routes: RouteObject[] = [
             element: (
               <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <PennyDropVerification />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "catalogue-services",
+            element: (
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <CatalogueServices />
               </ProtectedRoute>
             ),
           },

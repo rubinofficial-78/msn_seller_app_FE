@@ -66,7 +66,7 @@ const Settings = () => {
       icon: <Banknote size={24} className="text-blue-600" />,
       title: "Catalog Services",
       description: "This information will help us to setup your catalog in our seller application and ensure smooth running",
-      path: "common-settings"
+      path: "catalogue-services"
     },
   ];
 

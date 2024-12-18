@@ -270,7 +270,10 @@ import {
   GET_TEMPLATES_FAILURE,
   GET_UI_CONFIG,
   GET_UI_CONFIG_SUCCESS,
-  GET_UI_CONFIG_FAILURE
+  GET_UI_CONFIG_FAILURE,
+  GET_SWAGGER_KEY_REQUEST,
+  GET_SWAGGER_KEY_SUCCESS,
+  GET_SWAGGER_KEY_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -724,6 +727,11 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null,
+  },
+  swaggerKey: {
+    loading: false,
+    data: null,
+    error: null,
   },
 };
 
@@ -3140,6 +3148,32 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         uiConfig: {
           ...state.uiConfig,
           loading: false,
+          error: action.payload,
+        },
+      };
+    case GET_SWAGGER_KEY_REQUEST:
+      return {
+        ...state,
+        swaggerKey: {
+          ...state.swaggerKey,
+          loading: true,
+        },
+      };
+    case GET_SWAGGER_KEY_SUCCESS:
+      return {
+        ...state,
+        swaggerKey: {
+          loading: false,
+          data: action.payload,
+          error: null,
+        },
+      };
+    case GET_SWAGGER_KEY_FAILURE:
+      return {
+        ...state,
+        swaggerKey: {
+          loading: false,
+          data: null,
           error: action.payload,
         },
       };

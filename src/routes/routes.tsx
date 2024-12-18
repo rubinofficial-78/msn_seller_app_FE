@@ -84,6 +84,12 @@ import ShippingDetailsPage from "../pages/sellerSettings/ShippingDetailsPage";
 import OrderView from "../pages/orders/OrderView";
 import CreateVariant from "../pages/products/CreateVariant";
 import MasterCatalogTable from "../pages/products/MasterCatalogTable";
+import CompanySettings from "../pages/company/CompanySettings";
+import BasicDetails from "../pages/company/settings/BasicDetails";
+import ThemeCustomisation from "../pages/company/settings/ThemeCustomisation";
+import MyCompanyUsersList from "../pages/company/settings/MyCompanyUsersList";
+import SwaggerDocumentation from "../pages/company/settings/SwaggerDocumentation";
+import BankingDetailsCompany from "../pages/company/settings/BankingDetailsCompany";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -630,6 +636,59 @@ export const routes: RouteObject[] = [
       {
         path: "/dashboard/products/master-catalog",
         element: <MasterCatalogTable />,
+      },
+      {
+        path: "/dashboard/company-settings",
+        children: [
+          {
+            path: "",
+            element: (
+              <ProtectedRoute allowedRoles={["COMPANY_PARTNER"]}>
+                <CompanySettings />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "basic-details",
+            element: (
+              <ProtectedRoute allowedRoles={["COMPANY_PARTNER"]}>
+                <BasicDetails />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "banking-details",
+            element: (
+              <ProtectedRoute allowedRoles={["COMPANY_PARTNER"]}>
+                <BankingDetailsCompany />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "ui-config",
+            element: (
+              <ProtectedRoute allowedRoles={["COMPANY_PARTNER"]}>
+                <ThemeCustomisation />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "system-users",
+            element: (
+              <ProtectedRoute allowedRoles={["COMPANY_PARTNER"]}>
+                <MyCompanyUsersList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "swagger-docs",
+            element: (
+              <ProtectedRoute allowedRoles={["COMPANY_PARTNER"]}>
+                <SwaggerDocumentation />
+              </ProtectedRoute>
+            ),
+          },
+        ],
       },
     ],
   },

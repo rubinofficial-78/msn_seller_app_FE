@@ -325,7 +325,16 @@ import {
   GET_TEMPLATES_FAILURE,
   GET_UI_CONFIG,
   GET_UI_CONFIG_SUCCESS,
-  GET_UI_CONFIG_FAILURE
+  GET_UI_CONFIG_FAILURE,
+  GET_SWAGGER_KEY_REQUEST,
+  GET_SWAGGER_KEY_SUCCESS,
+  GET_SWAGGER_KEY_FAILURE,
+  GET_COMPANY_DETAILS_REQUEST,
+  GET_COMPANY_DETAILS_SUCCESS,
+  GET_COMPANY_DETAILS_FAILURE,
+  CREATE_COMPANY_USER_REQUEST,
+  CREATE_COMPANY_USER_SUCCESS,
+  CREATE_COMPANY_USER_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -5685,5 +5694,79 @@ export const getUiConfig = () => async (dispatch: any) => {
       type: GET_UI_CONFIG_FAILURE,
       payload: 'Failed to fetch UI configuration',
     });
+  }
+};
+
+// Add this with your other actions
+export const getSwaggerKey = () => async (dispatch: AppDispatch) => {
+  try {
+    dispatch({ type: GET_SWAGGER_KEY_REQUEST });
+
+    const response = await fetch(
+      `${API_BASE_URL}/company_partners/getkey`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: GLOBAL_CONSTANTS.token,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.meta.status) {
+      dispatch({
+        type: GET_SWAGGER_KEY_SUCCESS,
+        payload: data.data,
+      });
+    } else {
+      throw new Error(data.meta.message);
+    }
+  } catch (error) {
+    dispatch({
+      type: GET_SWAGGER_KEY_FAILURE,
+      payload: error.message,
+    });
+  }
+};
+
+export const createCompanyUser = (userData: {
+  name: string;
+  email: string;
+  mobile_number: string;
+  user_company_id: number;
+}) => async (dispatch: AppDispatch) => {
+  try {
+    dispatch({ type: CREATE_COMPANY_USER_REQUEST });
+
+    const response = await fetch(
+      `${API_BASE_URL}/backend_master/company_partners_users/create`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: GLOBAL_CONSTANTS.token,
+        },
+        body: JSON.stringify(userData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.meta.status) {
+      dispatch({
+        type: CREATE_COMPANY_USER_SUCCESS,
+        payload: data.data,
+      });
+      return data;
+    } else {
+      throw new Error(data.meta.message);
+    }
+  } catch (error) {
+    dispatch({
+      type: CREATE_COMPANY_USER_FAILURE,
+      payload: error.message,
+    });
+    throw error;
   }
 };

@@ -93,6 +93,19 @@ const DashboardLayout = () => {
     }
   };
 
+  const handleSettingsNavigation = () => {
+    const userRole = localStorage.getItem("userRole");
+    
+    if (userRole === "COMPANY_PARTNER") {
+      navigate("/dashboard/company-settings");
+    } else if (isAdmin) {
+      navigate("/dashboard/settings");
+    } else {
+      navigate("/dashboard/seller-settings");
+    }
+    setIsProfileMenuOpen(false);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
@@ -135,14 +148,7 @@ const DashboardLayout = () => {
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                     <button
-                      onClick={() => {
-                        navigate(
-                          isAdmin
-                            ? "/dashboard/settings"
-                            : "/dashboard/seller-settings"
-                        );
-                        setIsProfileMenuOpen(false);
-                      }}
+                      onClick={handleSettingsNavigation}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                     >
                       <Settings size={16} />

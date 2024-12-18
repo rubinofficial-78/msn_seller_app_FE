@@ -8,6 +8,7 @@ interface DecodedToken {
   user_types?: Array<{ name: string }>;
   affiliate_details?: {
     user_role?: string;
+    company_partner_id?: number;
   };
   [key: string]: any;
 }
@@ -74,7 +75,9 @@ const GLOBAL_CONSTANTS = {
   // Use decoded_token that we stored earlier
   id: decoded_token?.id,
   roles: decoded_token?.roles,
-  storeId:decoded_token?.store_id,
+  // Update company_id to use company_partner_id from affiliate_details
+  company_id: decoded_token?.affiliate_details?.company_partner_id || decoded_token?.company_id,
+  storeId: decoded_token?.store_id,
   bankId: decoded_token?.bank_id,
   userType,
   parent_company_id: decoded_token?.parent_company_id,

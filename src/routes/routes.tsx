@@ -51,6 +51,7 @@ import CreateUser from "../pages/settings/CreateUser";
 import NotificationSettings from "../pages/settings/NotificationSettings";
 import MapSettings from "../pages/settings/MapSettings";
 import UiConfig from "../pages/settings/UiConfig";
+import EmailAndSmsSettings from "../pages/settings/EmailAndSmsSettings";
 
 // Partner and Company Related Pages
 import CreatePartner from "../components/CreatePartner";
@@ -496,10 +497,10 @@ export const routes: RouteObject[] = [
             ),
           },
           {
-            path: "notification-settings",
+            path: "email-sms",
             element: (
               <ProtectedRoute allowedRoles={["ADMIN"]}>
-                <NotificationSettings />
+                <EmailAndSmsSettings />
               </ProtectedRoute>
             ),
           },

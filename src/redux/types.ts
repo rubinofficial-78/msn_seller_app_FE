@@ -652,6 +652,7 @@ export interface RootState {
         }
       };
     };
+    userDetails: UserDetailsState;
   };
   // ... other state properties
 }
@@ -1659,4 +1660,83 @@ interface GetFulfillmentTypesSuccessAction {
 interface GetFulfillmentTypesFailureAction {
   type: typeof GET_FULFILLMENT_TYPES_FAILURE;
   payload: string;
+}
+
+// First add the UserDetails interface
+interface UserDetails {
+  id: number;
+  code: string;
+  provider_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  name: string;
+}
+
+// Then add the UserDetailsResponse interface
+interface UserDetailsResponse {
+  meta: {
+    status: boolean;
+    message: string;
+  };
+  data: UserDetails;
+}
+
+// Then add the UserDetailsState interface
+interface UserDetailsState {
+  loading: boolean;
+  error: string | null;
+  data: UserDetailsResponse | null;
+}
+
+// Finally update the RootState interface to include userDetails
+export interface RootState {
+  auth: {
+    user?: {
+      role?: string;
+    };
+  };
+  data: {
+    selectedProduct: {
+      data: any;
+      loading: boolean;
+    };
+    productAttributes: {
+      data: any;
+      loading: boolean;
+    };
+    productCategoryAttributes: {
+      data: any;
+      loading: boolean;
+    };
+    uomLookup: {
+      data: any;
+      loading: boolean;
+    };
+    paymentModeLookup: {
+      data: any;
+      loading: boolean;
+    };
+    notificationCount: {
+      loading: boolean;
+      error: string | null;
+      data: {
+        unread_count: number;
+      } | null;
+    };
+    reports: {
+      loading: boolean;
+      error: string | null;
+      data: any[];
+      meta: {
+        pagination?: {
+          total_rows: number;
+          total_pages: number;
+          page_no: number;
+          per_page: number;
+        }
+      };
+    };
+    userDetails: UserDetailsState;
+  };
+  // ... other state properties
 }

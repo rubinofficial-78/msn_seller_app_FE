@@ -308,6 +308,21 @@ import {
   GET_FULFILLMENT_TYPES_REQUEST,
   GET_FULFILLMENT_TYPES_SUCCESS,
   GET_FULFILLMENT_TYPES_FAILURE,
+  GET_EMAIL_SETTINGS_REQUEST,
+  GET_EMAIL_SETTINGS_SUCCESS,
+  GET_EMAIL_SETTINGS_FAILURE,
+  ACTIVATE_EMAIL_PROVIDER_REQUEST,
+  ACTIVATE_EMAIL_PROVIDER_SUCCESS,
+  ACTIVATE_EMAIL_PROVIDER_FAILURE,
+  UPDATE_EMAIL_PROVIDER_REQUEST,
+  UPDATE_EMAIL_PROVIDER_SUCCESS,
+  UPDATE_EMAIL_PROVIDER_FAILURE,
+  GET_MESSAGE_TYPES_REQUEST,
+  GET_MESSAGE_TYPES_SUCCESS,
+  GET_MESSAGE_TYPES_FAILURE,
+  GET_TEMPLATES_REQUEST,
+  GET_TEMPLATES_SUCCESS,
+  GET_TEMPLATES_FAILURE,
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -5444,6 +5459,192 @@ export const updateLoginDetails = (userId: string, payload: { mobile_number?: st
       dispatch({
         type: UPDATE_USER_DETAILS_FAILURE,
         payload: error instanceof Error ? error.message : 'Failed to update login details'
+      });
+      throw error;
+    }
+  };
+};
+
+export const getEmailSettings = (settingType: 'EMAIL' | 'SMS'): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_EMAIL_SETTINGS_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/settings/user_server_settings?setting_type=${settingType}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_EMAIL_SETTINGS_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch settings');
+      }
+    } catch (error: any) {
+      dispatch({
+        type: GET_EMAIL_SETTINGS_FAILURE,
+        payload: error.message
+      });
+      throw error;
+    }
+  };
+};
+
+export const activateEmailProvider = (providerId: number, settingTypeId: number): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: ACTIVATE_EMAIL_PROVIDER_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/settings/user_server_setting/${providerId}/activation`,
+        {
+          setting_type_id: settingTypeId
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: ACTIVATE_EMAIL_PROVIDER_SUCCESS,
+          payload: response.data.data
+        });
+        // Refresh email settings after activation
+        dispatch(getEmailSettings(settingType));
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to activate email provider');
+      }
+    } catch (error: any) {
+      dispatch({
+        type: ACTIVATE_EMAIL_PROVIDER_FAILURE,
+        payload: error.message
+      });
+      throw error;
+    }
+  };
+};
+
+export const updateEmailProvider = (providerId: number, sections: any[]): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: UPDATE_EMAIL_PROVIDER_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/backend_master/settings/user_server_settings/${providerId}/update`,
+        { sections },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: UPDATE_EMAIL_PROVIDER_SUCCESS,
+          payload: response.data.data
+        });
+        // Refresh email settings after update
+        dispatch(getEmailSettings(settingType));
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update email provider');
+      }
+    } catch (error: any) {
+      dispatch({
+        type: UPDATE_EMAIL_PROVIDER_FAILURE,
+        payload: error.message
+      });
+      throw error;
+    }
+  };
+};
+
+export const getMessageTypes = (): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_MESSAGE_TYPES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/core/lookup_code/list/MESSAGE_TYPE`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_MESSAGE_TYPES_SUCCESS,
+          payload: response.data.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch message types');
+      }
+    } catch (error: any) {
+      dispatch({
+        type: GET_MESSAGE_TYPES_FAILURE,
+        payload: error.message
+      });
+      throw error;
+    }
+  };
+};
+
+export const getTemplates = (page: number = 1, perPage: number = 10): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    dispatch({ type: GET_TEMPLATES_REQUEST });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_BASE_URL}/backend_master/templates?per_page=${perPage}&page_no=${page}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: GET_TEMPLATES_SUCCESS,
+          payload: {
+            data: response.data.data,
+            meta: response.data.meta.pagination
+          }
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to fetch templates');
+      }
+    } catch (error: any) {
+      dispatch({
+        type: GET_TEMPLATES_FAILURE,
+        payload: error.message
       });
       throw error;
     }

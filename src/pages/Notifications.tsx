@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
-
+import { getNotificationCount } from '../redux/Action/action';
 // Sample notification data
 const allNotifications = [
   {

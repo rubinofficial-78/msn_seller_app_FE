@@ -255,7 +255,19 @@ import {
   UPDATE_USER_DETAILS_FAILURE,
   UPDATE_BANK_DETAILS_REQUEST,
   UPDATE_BANK_DETAILS_SUCCESS,
-  UPDATE_BANK_DETAILS_FAILURE
+  UPDATE_BANK_DETAILS_FAILURE,
+  GET_EMAIL_SETTINGS_REQUEST,
+  GET_EMAIL_SETTINGS_SUCCESS,
+  GET_EMAIL_SETTINGS_FAILURE,
+  ACTIVATE_EMAIL_PROVIDER_REQUEST,
+  ACTIVATE_EMAIL_PROVIDER_SUCCESS,
+  ACTIVATE_EMAIL_PROVIDER_FAILURE,
+  GET_MESSAGE_TYPES_REQUEST,
+  GET_MESSAGE_TYPES_SUCCESS,
+  GET_MESSAGE_TYPES_FAILURE,
+  GET_TEMPLATES_REQUEST,
+  GET_TEMPLATES_SUCCESS,
+  GET_TEMPLATES_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -683,6 +695,27 @@ const initialState: AuthState = {
     loading: false,
     error: null,
     data: null
+  },
+  emailSettings: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  activateEmailProvider: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  messageTypes: {
+    loading: false,
+    error: null,
+    data: null
+  },
+  templates: {
+    loading: false,
+    error: null,
+    data: [],
+    meta: null
   }
 };
 
@@ -2960,6 +2993,115 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         ...state,
         bankDetails: {
           ...state.bankDetails,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_EMAIL_SETTINGS_REQUEST:
+      return {
+        ...state,
+        emailSettings: {
+          ...state.emailSettings,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_EMAIL_SETTINGS_SUCCESS:
+      return {
+        ...state,
+        emailSettings: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_EMAIL_SETTINGS_FAILURE:
+      return {
+        ...state,
+        emailSettings: {
+          ...state.emailSettings,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case ACTIVATE_EMAIL_PROVIDER_REQUEST:
+      return {
+        ...state,
+        activateEmailProvider: {
+          ...state.activateEmailProvider,
+          loading: true,
+          error: null
+        }
+      };
+    case ACTIVATE_EMAIL_PROVIDER_SUCCESS:
+      return {
+        ...state,
+        activateEmailProvider: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case ACTIVATE_EMAIL_PROVIDER_FAILURE:
+      return {
+        ...state,
+        activateEmailProvider: {
+          ...state.activateEmailProvider,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_MESSAGE_TYPES_REQUEST:
+      return {
+        ...state,
+        messageTypes: {
+          ...state.messageTypes,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_MESSAGE_TYPES_SUCCESS:
+      return {
+        ...state,
+        messageTypes: {
+          loading: false,
+          error: null,
+          data: action.payload
+        }
+      };
+    case GET_MESSAGE_TYPES_FAILURE:
+      return {
+        ...state,
+        messageTypes: {
+          ...state.messageTypes,
+          loading: false,
+          error: action.payload
+        }
+      };
+    case GET_TEMPLATES_REQUEST:
+      return {
+        ...state,
+        templates: {
+          ...state.templates,
+          loading: true,
+          error: null
+        }
+      };
+    case GET_TEMPLATES_SUCCESS:
+      return {
+        ...state,
+        templates: {
+          loading: false,
+          error: null,
+          data: action.payload.data,
+          meta: action.payload.meta
+        }
+      };
+    case GET_TEMPLATES_FAILURE:
+      return {
+        ...state,
+        templates: {
+          ...state.templates,
           loading: false,
           error: action.payload
         }

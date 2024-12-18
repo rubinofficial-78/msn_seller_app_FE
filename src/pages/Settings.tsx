@@ -8,7 +8,6 @@ import {
   Map,
   Eye,
   Users,
-  Bell,
 } from "lucide-react";
 
 const Settings = () => {
@@ -39,10 +38,10 @@ const Settings = () => {
     },
     
     {
-      icon: <Bell id="notification-settings" size={24} />,
-      title: "Notification Settings",
-      description: "Configure notification preferences and settings.",
-      path: "notification-settings"
+      icon: <Mail id="email-sms" size={24} />,
+      title: "Email & SMS Services",
+      description: "Configure email and SMS service providers and templates.",
+      path: "email-sms"
     },
     {
       icon: <Map id="map-settings" size={24} />,

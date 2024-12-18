@@ -13,6 +13,7 @@ import {
 } from "../../redux/Action/action";
 import { toast } from "react-hot-toast";
 import { Save, Trash2, Copy } from "lucide-react";
+import TailSelect from "../../components/TailSelect";
 
 interface RegionState {
   [key: string]: boolean;
@@ -590,23 +591,22 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Categories
               </label>
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-                multiple
+              <TailSelect
+                fieldKey="categories"
+                Data={availableCategories.map(category => ({
+                  label: category,
+                  value: category
+                }))}
+                placeholder="Select Categories"
                 value={shippingServices?.[0]?.formData?.categories || []}
-                onChange={(e) => {
-                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                  handleInputChange('categories', selectedOptions, shippingServices?.[0]?.id || 0);
-                }}
-              >
-                {availableCategories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+                handleSelectonChange={(key, value) => 
+                  handleInputChange('categories', value, shippingServices?.[0]?.id || 0)
+                }
+                multiple={true}
+                required={true}
+              />
               <p className="mt-1 text-xs text-gray-500">
-                Hold Ctrl (Windows) or Command (Mac) to select multiple categories
+                Select one or more categories
               </p>
             </div>
 
@@ -827,31 +827,22 @@ const ShippingDetailsPage = ({ locationId }: { locationId: number }) => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Categories
                       </label>
-                      <select
-                        className="w-full border border-gray-300 rounded-md px-3 py-2"
-                        multiple
+                      <TailSelect
+                        fieldKey="categories"
+                        Data={availableCategories.map(category => ({
+                          label: category,
+                          value: category
+                        }))}
+                        placeholder="Select Categories"
                         value={service.formData?.categories || []}
-                        onChange={(e) => {
-                          const selectedOptions = Array.from(
-                            e.target.selectedOptions,
-                            (option) => option.value
-                          );
-                          handleInputChange(
-                            "categories",
-                            selectedOptions,
-                            service.id
-                          );
-                        }}
-                      >
-                        {availableCategories.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </select>
+                        handleSelectonChange={(key, value) => 
+                          handleInputChange('categories', value, service.id)
+                        }
+                        multiple={true}
+                        required={true}
+                      />
                       <p className="mt-1 text-xs text-gray-500">
-                        Hold Ctrl (Windows) or Command (Mac) to select multiple
-                        categories
+                        Select one or more categories
                       </p>
                     </div>
 

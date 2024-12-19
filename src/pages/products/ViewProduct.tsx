@@ -142,6 +142,11 @@ const ViewProduct = () => {
           break;
 
         case "pricing":
+          if (Number(formData.mrp) <= Number(formData.salesPrice)) {
+            toast.error("MRP must be greater than Sales Price");
+            return;
+          }
+
           await dispatch(
             saveBasicDetails({
               section_key: "PRICING_DETAILS",

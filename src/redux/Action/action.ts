@@ -340,7 +340,10 @@ import {
   GET_ALL_PRODUCT_CATEGORIES_FAILURE,
   GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_REQUEST,
   GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_SUCCESS,
-  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE,
+  GET_RETURN_DETAILS_REQUEST,
+  GET_RETURN_DETAILS_SUCCESS,
+  GET_RETURN_DETAILS_FAILURE
 } from './action.types';
 import { RootState, AuthActionTypes, FileUploadPayload, FileUploadResponse } from '../types';
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -6058,4 +6061,38 @@ export const updateAttribute = (
       throw error;
     }
   };
+};
+
+export const getReturnDetails = (id: string) => async (dispatch: Dispatch) => {
+  try {
+    dispatch({ type: GET_RETURN_DETAILS_REQUEST });
+
+    const response = await axios.get(
+      // Update the API URL to match the correct endpoint
+      `${API_BASE_URL}/backend_master/sales_returns/get/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }
+    );
+
+    if (response.data?.meta?.status) {
+      dispatch({
+        type: GET_RETURN_DETAILS_SUCCESS,
+        payload: response.data.data,
+      });
+    } else {
+      throw new Error(response.data?.meta?.message || 'Failed to fetch return details');
+    }
+  } catch (error: any) {
+    const errorMessage = error?.response?.data?.meta?.message || 
+                        error?.message || 
+                        'Failed to fetch return details';
+    dispatch({
+      type: GET_RETURN_DETAILS_FAILURE,
+      payload: errorMessage,
+    });
+    toast.error(errorMessage);
+  }
 };

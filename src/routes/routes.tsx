@@ -91,6 +91,7 @@ import MyCompanyUsersList from "../pages/company/settings/MyCompanyUsersList";
 import SwaggerDocumentation from "../pages/company/settings/SwaggerDocumentation";
 import BankingDetailsCompany from "../pages/company/settings/BankingDetailsCompany";
 import CatalogueServices from "../pages/settings/CatalogueServices/CatalogueServices";
+import ReturnView from "../pages/returns/ReturnView";
 
 const checkAuth = () => {
   const token = localStorage.getItem("token");
@@ -698,6 +699,10 @@ export const routes: RouteObject[] = [
             ),
           },
         ],
+      },
+      {
+        path: "/dashboard/returns/view/:id",
+        element: <ReturnView />,
       },
     ],
   },

@@ -305,8 +305,7 @@ const MyOrders = () => {
       label: "Seller Name",
     },
     {
-      id: "actions",
-      key: "actions",
+      id: "action",
       label: "Action",
       type: "actions",
       actions: [

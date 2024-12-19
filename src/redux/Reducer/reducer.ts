@@ -279,7 +279,10 @@ import {
   GET_ALL_PRODUCT_CATEGORIES_FAILURE,
   GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_REQUEST,
   GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_SUCCESS,
-  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE
+  GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE,
+  GET_RETURN_DETAILS_REQUEST,
+  GET_RETURN_DETAILS_SUCCESS,
+  GET_RETURN_DETAILS_FAILURE
 } from '../Action/action.types';
 import { AuthState, AuthActionTypes, GET_MY_LISTING_FAILURE, GET_MY_LISTING_SUCCESS, GET_MY_LISTING_REQUEST } from '../types';
 
@@ -750,6 +753,11 @@ const initialState: AuthState = {
     error: null,
     data: {},
     meta: null
+  },
+  returnDetails: {
+    loading: false,
+    error: null,
+    data: null
   }
 };
 
@@ -3255,6 +3263,32 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           loading: false,
           error: action.payload
         }
+      };
+    case GET_RETURN_DETAILS_REQUEST:
+      return {
+        ...state,
+        returnDetails: {
+          ...state.returnDetails,
+          loading: true,
+        },
+      };
+    case GET_RETURN_DETAILS_SUCCESS:
+      return {
+        ...state,
+        returnDetails: {
+          data: action.payload,
+          loading: false,
+          error: null,
+        },
+      };
+    case GET_RETURN_DETAILS_FAILURE:
+      return {
+        ...state,
+        returnDetails: {
+          ...state.returnDetails,
+          loading: false,
+          error: action.payload,
+        },
       };
     default:
       return state;

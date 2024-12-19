@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Edit, Plus, Search } from "lucide-react";
+import { Eye, Edit, Plus, Search, X } from "lucide-react";
 import CustomTable, { Column } from "../components/CustomTable";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -51,13 +51,48 @@ const Partners: React.FC = () => {
     (state: RootState) => state.data.partnerCounts || {}
   );
 
+  // Add search state
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Add debounce function
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+
+  // Add search handler
+  const handleSearch = debounce((value: string) => {
+    setParams(prev => ({
+      ...prev,
+      page_no: 1,
+      search: value ? value : undefined
+    }));
+  }, 500);
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    handleSearch(value);
+  };
+
   // Fetch data on mount
   useEffect(() => {
     dispatch(getCompanyDropdown());
-    dispatch(getBranchDropdown());
     dispatch(getPartnerStatusLookup());
     dispatch(getPartnerCounts());
   }, [dispatch]);
+
+  // Add useEffect for branch dropdown
+  useEffect(() => {
+    if (params.company_id) {
+      dispatch(getBranchDropdown(params.company_id)); // Fetch branches when company is selected
+    }
+  }, [dispatch, params.company_id]);
 
   // Handle tab change with debug logging
   const handleTabChange = (tab: string) => {
@@ -251,6 +286,20 @@ const Partners: React.FC = () => {
     },
   ];
 
+  // Add clear filters function
+  const handleClearFilters = () => {
+    setParams({
+      page_no: 1,
+      per_page: 10,
+      company_id: undefined,
+      branch_id: undefined,
+      status_id: undefined,
+      search: undefined
+    });
+    setSearchTerm(''); // Clear search input
+    setActiveTab('all'); // Reset active tab
+  };
+
   return (
     <div className="p-6">
       {/* Partner Count Cards */}
@@ -367,7 +416,7 @@ const Partners: React.FC = () => {
 
       {/* Search and Actions Bar */}
       <div className="mt-4 flex items-center justify-between">
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
           <div className="relative">
             <Search
               id="search-icon-partners"
@@ -379,6 +428,8 @@ const Partners: React.FC = () => {
               type="text"
               placeholder="Search Partner Name"
               className="pl-10 pr-4 py-2 border rounded-md text-sm w-64"
+              value={searchTerm}
+              onChange={handleSearchInputChange}
             />
           </div>
           <select
@@ -399,6 +450,7 @@ const Partners: React.FC = () => {
             className="px-4 py-2 border rounded-md text-sm min-w-[200px]"
             onChange={handleBranchChange}
             value={params.branch_id || ""}
+            disabled={!params.company_id}
           >
             <option value="">All Branches</option>
             {branches.map((branch) => (
@@ -407,6 +459,14 @@ const Partners: React.FC = () => {
               </option>
             ))}
           </select>
+          {(searchTerm || params.company_id || params.branch_id || params.status_id) && (
+            <button
+              onClick={handleClearFilters}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2"
+            >
+              <X size={16} /> Clear Filters
+            </button>
+          )}
         </div>
 
         <button

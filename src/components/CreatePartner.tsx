@@ -74,7 +74,7 @@ const validateAadhaar = (aadhaar: string) => {
 };
 
 const validatePincode = (pincode: string) => {
-  const pincodeRegex = /^\d{6}$/;
+  const pincodeRegex = /^[1-9][0-9]{5}$/;
   return pincodeRegex.test(pincode);
 };
 
@@ -229,7 +229,7 @@ const CreatePartner: React.FC = () => {
 
       const response = await dispatch(createPartnerBasic(basicData));
       if (response?.meta?.status) {
-        toast.success("Partner basic details saved successfully");
+        toast.success(response.meta.message || "Partner basic details saved successfully");
         const newUserId = response.data.id;
         setUserId(newUserId);
         setBasicCompleted(true);
@@ -254,9 +254,14 @@ const CreatePartner: React.FC = () => {
           console.error("Error fetching affiliate URL:", error);
           toast.error("Failed to fetch affiliate URL");
         }
+      } else {
+        toast.error(response?.meta?.message || "Failed to save partner basic details");
       }
-    } catch (error) {
-      toast.error("Failed to save partner basic details");
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.meta?.message || 
+                          error.message || 
+                          "Failed to save partner basic details";
+      toast.error(errorMessage);
       console.error(error);
     }
   };
@@ -317,11 +322,16 @@ const CreatePartner: React.FC = () => {
 
       const response = await dispatch(createPartnerBanking(bankingData));
       if (response?.meta?.status) {
-        toast.success("Partner banking details saved successfully");
+        toast.success(response.meta.message || "Partner banking details saved successfully");
         setBankingCompleted(true);
+      } else {
+        toast.error(response?.meta?.message || "Failed to save banking details");
       }
-    } catch (error) {
-      toast.error("Failed to save banking details");
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.meta?.message || 
+                          error.message || 
+                          "Failed to save banking details";
+      toast.error(errorMessage);
       console.error(error);
     }
   };
@@ -366,13 +376,18 @@ const CreatePartner: React.FC = () => {
         createPartnerAffiliate(affiliateSettings)
       );
       if (response?.meta?.status) {
-        toast.success("Affiliate settings saved successfully");
+        toast.success(response.meta.message || "Affiliate settings saved successfully");
 
         //NAVIGATE TO THE LIST PAGE OF PARTNERS
         // navigate('/dashboard/partners');
+      } else {
+        toast.error(response?.meta?.message || "Failed to save affiliate settings");
       }
-    } catch (error) {
-      toast.error("Failed to save affiliate settings");
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.meta?.message || 
+                          error.message || 
+                          "Failed to save affiliate settings";
+      toast.error(errorMessage);
       console.error(error);
     }
   };

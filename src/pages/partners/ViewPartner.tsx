@@ -33,16 +33,13 @@ interface PartnerData {
     ifsc_code: string;
     bank_account_holder_name: string;
   }];
-  seller_counts: number;
-  status: {
-    lookup_code: string;
-    display_name: string;
-  };
-  affiliate_partners_affiliate_settings: [{
-    category_type: string;
-    commission_type: string;
-    value: string | number;
+  affiliate_partners_setting_details: [{
+    id: number;
     dynamic_affiliate_url: string;
+    category_type: string;
+    module_linked: string;
+    commission_type: string | null;
+    value: number;
   }];
 }
 
@@ -85,6 +82,43 @@ const ViewPartner: React.FC = () => {
 
   const basicDetails = partnerData.affiliate_partners_basic_details[0] || {};
   const bankingDetails = partnerData.affiliate_partners_banking_details[0] || {};
+
+  const dynamicUrl = partnerData.affiliate_partners_setting_details?.[0]?.dynamic_affiliate_url || 'No URL available';
+
+  const categoryMapping = {
+    'Electronics': {
+      display: 'Electronics',
+      subtext: 'Order Module (On Completed Order Only)'
+    },
+    'Pharma': {
+      display: 'Pharma',
+      subtext: 'Order Module (On Completed Order Only)'
+    },
+    'Home & Decor': {
+      display: 'Home & Decor',
+      subtext: 'Order Module (On Completed Order Only)'
+    },
+    'New Seller OnBoarding': {
+      display: 'New Seller OnBoarding',
+      subtext: 'Seller Profile'
+    },
+    'Fashion': {
+      display: 'Fashion',
+      subtext: 'Order Module (On Completed Order Only)'
+    },
+    'F&B': {
+      display: 'F&B',
+      subtext: 'Order Module (On Completed Order Only)'
+    },
+    'Groceries': {
+      display: 'Groceries',
+      subtext: 'Order Module (On Completed Order Only)'
+    },
+    'Beauty & Personal Care': {
+      display: 'Beauty & Personal Care',
+      subtext: 'Order Module (On Completed Order Only)'
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -191,8 +225,14 @@ const ViewPartner: React.FC = () => {
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-600">Dynamic Affiliate URL</label>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-gray-900">{partnerData.website}</p>
-                <button className="text-gray-400 hover:text-gray-600">
+                <p className="text-gray-900">{dynamicUrl}</p>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(dynamicUrl);
+                    toast.success('URL copied to clipboard!');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -210,40 +250,27 @@ const ViewPartner: React.FC = () => {
               </div>
 
               <div className="space-y-4 mt-2">
-                {[
-                  'Electronics',
-                  'Pharma',
-                  'Home & Decor',
-                  'New Seller OnBoarding',
-                  'Fashion',
-                  'F&B',
-                  'Groceries',
-                  'Beauty & Personal Care'
-                ].map((category) => {
-                  const setting = partnerData.affiliate_partners_affiliate_settings?.find(
+                {Object.entries(categoryMapping).map(([category, { display, subtext }]) => {
+                  const setting = partnerData.affiliate_partners_setting_details?.find(
                     s => s.category_type === category
                   );
 
                   return (
                     <div key={category} className="grid grid-cols-3 gap-4 px-4 py-2 border-b">
                       <div>
-                        <div className="font-medium text-gray-900">{category}</div>
-                        <div className="text-sm text-gray-500">
-                          {category === 'New Seller OnBoarding' 
-                            ? 'Seller Profile'
-                            : 'Order Module (On Completed Order Only)'}
-                        </div>
+                        <div className="font-medium text-gray-900">{display}</div>
+                        <div className="text-sm text-gray-500">{subtext}</div>
                       </div>
                       <div className="flex items-center">
                         {setting ? (
-                          <span className="text-gray-900">{setting.value}</span>
+                          <span className="text-gray-900">{setting.value}%</span>
                         ) : (
                           <span className="text-gray-400">-</span>
                         )}
                       </div>
                       <div className="flex items-center">
                         {setting ? (
-                          <span className="text-gray-900">{setting.commission_type}</span>
+                          <span className="text-gray-900">{setting.commission_type || '-'}</span>
                         ) : (
                           <span className="text-gray-400">-</span>
                         )}

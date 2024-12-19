@@ -82,6 +82,12 @@ const CreateCompany: React.FC = () => {
       return false;
     }
 
+    // Validate company name length
+    if (formData.companyName.length > 50) {
+      toast.error("Company name should not exceed 50 characters");
+      return false;
+    }
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
@@ -96,18 +102,33 @@ const CreateCompany: React.FC = () => {
       return false;
     }
 
-    // Validate GST number
-    const gstRegex =
-      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    // Validate Aadhar number (if provided)
+    if (formData.contactPersonAadhar) {
+      const aadharRegex = /^\d{12}$/;
+      if (!aadharRegex.test(formData.contactPersonAadhar)) {
+        toast.error("Please enter a valid 12-digit Aadhar number");
+        return false;
+      }
+    }
+
+    // Validate GST number (15 characters)
+    const gstRegex = /^[0-9A-Z]{15}$/;
     if (!gstRegex.test(formData.gstNo)) {
-      toast.error("Please enter a valid GST number");
+      toast.error("Please enter a valid 15-character GST number");
       return false;
     }
 
-    // Validate PAN number
+    // Validate PAN number (10 characters)
     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
     if (!panRegex.test(formData.panNo)) {
-      toast.error("Please enter a valid PAN number");
+      toast.error("Please enter a valid 10-character PAN number");
+      return false;
+    }
+
+    // Validate pincode
+    const pincodeRegex = /^[1-9][0-9]{5}$/;
+    if (!pincodeRegex.test(formData.pincode)) {
+      toast.error("Please enter a valid 6-digit pincode (should not start with 0)");
       return false;
     }
 
@@ -479,6 +500,7 @@ const CreateCompany: React.FC = () => {
           type: "image",
           key: "headerLogo",
           label: "Header Logo",
+          required: true,
           value: formData.headerLogo,
           placeholder: "Upload or drag and drop logo image",
           id: "header-logo-input",
@@ -487,7 +509,7 @@ const CreateCompany: React.FC = () => {
           type: "custom",
           key: "headerColor",
           component: <ColorPickerField />,
-        },
+        }
       ],
     },
   ];

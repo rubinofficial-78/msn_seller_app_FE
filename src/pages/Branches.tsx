@@ -11,6 +11,7 @@ import {
 } from "../redux/Action/action";
 import { AppDispatch, RootState } from "../redux/types";
 import { toast } from "react-hot-toast";
+import BranchGrid from '../components/BranchGrid';
 
 const Branches: React.FC = () => {
   const navigate = useNavigate();
@@ -355,11 +356,16 @@ const Branches: React.FC = () => {
         </div>
       </div>
 
-      {/* Branches Table */}
+      {/* Branches Table/Grid */}
       {loading ? (
         <div className="flex justify-center items-center h-64">Loading...</div>
       ) : error ? (
         <div className="text-red-500 text-center">{error}</div>
+      ) : viewMode === "grid" ? (
+        <BranchGrid 
+          data={branches} 
+          onStatusToggle={handleStatusToggle}
+        />
       ) : (
         <div className="bg-white rounded-lg shadow">
           <CustomTable

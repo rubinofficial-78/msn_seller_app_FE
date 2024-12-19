@@ -56,16 +56,36 @@ const Companies = () => {
     page_no: 1,
     per_page: 10,
     status_id: null as number | null,
+    search: ''
   });
 
   // Add state for filtered status ID
   const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
+
+  // Add debounce function to prevent too many API calls
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return function (...args: any[]) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
+  };
+
+  // Add handleSearch function
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setParams(prev => ({
+      ...prev,
+      search: e.target.value,
+      page_no: 1 // Reset to first page on new search
+    }));
+  };
 
   // Create a fetchCompanies function that can be called to refresh the list
   const fetchCompanies = useCallback(() => {
     const queryParams = {
       ...params,
       status_id: params.status_id || undefined, // Only include if not null
+      search: params.search // Always include search parameter
     };
     dispatch(getCompanies(queryParams));
   }, [dispatch, params]);
@@ -431,6 +451,7 @@ const Companies = () => {
               type="text"
               placeholder="Search by Company Name"
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={handleSearch}
             />
           </div>
         </div>
@@ -459,14 +480,16 @@ const Companies = () => {
           >
             <Table id="table-view-button-companies" size={20} />
           </button>
-          <button
-            id="add-button-companies"
-            onClick={handleAddClick}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <Plus id="add-button-companies" size={20} />
-            <span>ADD</span>
-          </button>
+          {activeTab !== "System Users" && (
+            <button
+              id="add-button-companies"
+              onClick={handleAddClick}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus id="add-button-companies" size={20} />
+              <span>ADD</span>
+            </button>
+          )}
         </div>
       </div>
 

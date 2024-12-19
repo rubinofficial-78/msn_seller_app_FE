@@ -877,6 +877,7 @@ export const getCompanies = (
     page_no: number; 
     per_page: number;
     status_id?: number;
+    search?: string;
   }
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
@@ -890,7 +891,8 @@ export const getCompanies = (
           params: {
             per_page: params.per_page,
             page_no: params.page_no,
-            status_id: params.status_id // Include status_id in query params
+            status_id: params.status_id,
+            search: params.search // Add search parameter to API call
           },
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1157,20 +1159,25 @@ export const getCompanyDropdown = (): ThunkAction<Promise<any>, RootState, unkno
       );
 
       if (response.data?.meta?.status) {
+        const formattedData = response.data.data.map((company: any) => ({
+          id: company.id,
+          name: company.name,
+          // Add any other needed fields
+        }));
+
         dispatch({
           type: GET_COMPANY_DROPDOWN_SUCCESS,
-          payload: response.data.data
+          payload: formattedData
         });
-        return response.data.data;
+
+        return response.data;
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch company list');
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch company list';
       dispatch({
         type: GET_COMPANY_DROPDOWN_FAILURE,
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to fetch company list'
       });
       throw error;
     }
@@ -1352,6 +1359,7 @@ export const getPartners = (
     company_id?: number;
     branch_id?: number;
     status_id?: number;
+    search?: string;
   }
 ): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
@@ -1361,20 +1369,22 @@ export const getPartners = (
       const token = localStorage.getItem('token');
       
       // Create base query parameters
-      const queryParams = {
+      const queryParams: Record<string, string> = {
         per_page: params.per_page.toString(),
         page_no: params.page_no.toString()
       };
 
-      // Add optional parameters only if they are defined
-      if (params.company_id) queryParams['company_id'] = params.company_id.toString();
-      if (params.branch_id) queryParams['branch_id'] = params.branch_id.toString();
-      if (params.status_id) queryParams['status_id'] = params.status_id.toString();
+      // Only add search if it exists
+      if (params.search) {
+        queryParams.search = params.search;
+      }
 
-      // Convert to URLSearchParams
+      // Add other optional parameters only if they are defined
+      if (params.company_id) queryParams.company_id = params.company_id.toString();
+      if (params.branch_id) queryParams.branch_id = params.branch_id.toString();
+      if (params.status_id) queryParams.status_id = params.status_id.toString();
+
       const searchParams = new URLSearchParams(queryParams);
-
-      console.log('API Request URL:', `${API_BASE_URL}/backend_master/affiliate_partners_basic_details?${searchParams.toString()}`);
 
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/affiliate_partners_basic_details?${searchParams.toString()}`,
@@ -1418,8 +1428,6 @@ export const getBranchDropdown = (companyId?: number): ThunkAction<Promise<any>,
       const token = localStorage.getItem('token');
       const url = `${API_BASE_URL}/backend_master/company_branches/get_dropdown_list${companyId ? `?company_id=${companyId}` : ''}`;
       
-      console.log('Calling branch API with URL:', url);
-      
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1427,24 +1435,20 @@ export const getBranchDropdown = (companyId?: number): ThunkAction<Promise<any>,
         }
       });
 
-      console.log('Branch API Response:', response.data);
-
       if (response.data?.meta?.status) {
         dispatch({
           type: GET_BRANCH_DROPDOWN_SUCCESS,
           payload: response.data.data
         });
-        return response.data.data;
+        return response.data;
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch branch list');
       }
 
     } catch (error) {
-      console.error('Error in getBranchDropdown:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch branch list';
       dispatch({
         type: GET_BRANCH_DROPDOWN_FAILURE,
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to fetch branch list'
       });
       throw error;
     }
@@ -1682,28 +1686,33 @@ export const getPartnerCounts = (): ThunkAction<Promise<any>, RootState, unknown
   };
 };
 
-export const getSellers = (
-  params: { 
-    search: string;
-    status_id: number;
-    page_no: number; 
-    per_page: number;
-  }
-): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+export const getSellers = (params: {
+  page_no: number;
+  per_page: number;
+  parent_company_id?: number | null;
+  company_branch_id?: number | null;
+  partner_id?: number | null;
+  status_id?: number | null;
+  search?: string;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_SELLERS_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
+      const queryParams = {
+        ...params,
+        parent_company_id: params.parent_company_id || undefined,
+        company_branch_id: params.company_branch_id || undefined,
+        partner_id: params.partner_id || undefined,
+        status_id: params.status_id || undefined,
+        search: params.search || undefined
+      };
+
       const response = await axios.get(
         `${API_BASE_URL}/backend_master/seller`,
         {
-          params: {
-            search: params.search,
-            status_id: params.status_id,
-            per_page: params.per_page,
-            page_no: params.page_no
-          },
+          params: queryParams,
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -1725,10 +1734,9 @@ export const getSellers = (
       }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch sellers';
       dispatch({
         type: GET_SELLERS_FAILURE,
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to fetch sellers'
       });
       throw error;
     }
@@ -1931,10 +1939,7 @@ export const getPartnerDropdown = (branchId?: number): ThunkAction<Promise<any>,
 
     try {
       const token = localStorage.getItem('token');
-      // Construct URL with optional branch_id parameter
       const url = `${API_BASE_URL}/backend_master/affiliate_partners_basic_details/get_partner_list${branchId ? `?branch_id=${branchId}` : ''}`;
-      
-      console.log('Calling partner API with URL:', url);
       
       const response = await axios.get(url, {
         headers: {
@@ -1943,8 +1948,6 @@ export const getPartnerDropdown = (branchId?: number): ThunkAction<Promise<any>,
         }
       });
 
-      console.log('Partner API Response:', response.data);
-
       if (response.data?.meta?.status) {
         dispatch({
           type: GET_PARTNER_DROPDOWN_SUCCESS,
@@ -1952,15 +1955,12 @@ export const getPartnerDropdown = (branchId?: number): ThunkAction<Promise<any>,
         });
         return response.data;
       } else {
-        throw new Error(response.data?.meta?.message || 'Failed to fetch partner dropdown');
+        throw new Error(response.data?.meta?.message || 'Failed to fetch partner list');
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch partner dropdown';
-      
       dispatch({
         type: GET_PARTNER_DROPDOWN_FAILURE,
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to fetch partner list'
       });
       throw error;
     }

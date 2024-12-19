@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Search, Eye, Edit, Plus, LayoutGrid, Table } from "lucide-react";
+import { Search, Eye, Edit, Plus, LayoutGrid, Table, X } from "lucide-react";
 import CustomTable from "../components/CustomTable";
 import {
   getSellers,
@@ -147,7 +147,7 @@ const columns = [
   },
   {
     id: "companyName",
-    key: "company_details.name",
+    key: "parent.parent.parent.name",
     label: "Company Name",
     minWidth: 150,
     format: (name: string) => name || "-",
@@ -173,6 +173,9 @@ const Sellers = () => {
   const { data: sellerCounts } = useSelector(
     (state: RootState) => state.data.sellerCounts
   );
+  const { data: companyDropdownData } = useSelector((state: RootState) => state.data.companyDropdown);
+  const { data: branchDropdownData } = useSelector((state: RootState) => state.data.branchDropdown);
+  const { data: partnerDropdownData } = useSelector((state: RootState) => state.data.partnerDropdown);
 
   const [activeTab, setActiveTab] = useState("All Sellers");
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
@@ -183,20 +186,45 @@ const Sellers = () => {
   const [params, setParams] = useState({
     page_no: 1,
     per_page: 10,
+    parent_company_id: null as number | null,
+    company_branch_id: null as number | null,
+    partner_id: null as number | null,
     status_id: null as number | null,
     search: "",
-    company_id: null as number | null,
-    branch_id: null as number | null,
-    partner_id: null as number | null,
   });
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+
+  const handleSearch = debounce((value: string) => {
+    setParams(prev => ({
+      ...prev,
+      page_no: 1,
+      search: value ? value : undefined
+    }));
+  }, 500);
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    handleSearch(value);
+  };
 
   // Fetch sellers with updated params
   useEffect(() => {
     const queryParams = {
       ...params,
       status_id: params.status_id || undefined,
-      company_id: params.company_id || undefined,
-      branch_id: params.branch_id || undefined,
+      parent_company_id: params.parent_company_id || undefined,
+      company_branch_id: params.company_branch_id || undefined,
       partner_id: params.partner_id || undefined,
     };
     dispatch(getSellers(queryParams));
@@ -204,31 +232,52 @@ const Sellers = () => {
 
   // Fetch dropdown data on mount
   useEffect(() => {
-    const fetchDropdownData = async () => {
-      try {
-        const [companyResponse, branchResponse, partnerResponse] =
-          await Promise.all([
-            dispatch(getCompanyDropdown()),
-            dispatch(getBranchDropdown()),
-            dispatch(getPartnerDropdown()),
-          ]);
-
-        if (companyResponse?.data) {
-          setCompanyOptions(companyResponse.data);
+    // Fetch company dropdown on mount
+    dispatch(getCompanyDropdown())
+      .then((response) => {
+        if (response?.data) {
+          setCompanyOptions(response.data);
         }
-        if (branchResponse?.data) {
-          setBranchOptions(branchResponse.data);
-        }
-        if (partnerResponse?.data) {
-          setPartnerOptions(partnerResponse.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch dropdown data:", error);
-      }
-    };
-
-    fetchDropdownData();
+      })
+      .catch((error) => {
+        console.error("Failed to fetch companies:", error);
+      });
   }, [dispatch]);
+
+  useEffect(() => {
+    // Fetch branch dropdown when company is selected
+    if (params.parent_company_id) {
+      dispatch(getBranchDropdown(params.parent_company_id))
+        .then((response) => {
+          if (response?.data) {
+            setBranchOptions(response.data);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch branches:", error);
+        });
+    } else {
+      setBranchOptions([]);
+      setPartnerOptions([]);
+    }
+  }, [dispatch, params.parent_company_id]);
+
+  useEffect(() => {
+    // Fetch partner dropdown when branch is selected
+    if (params.company_branch_id) {
+      dispatch(getPartnerDropdown(params.company_branch_id))
+        .then((response) => {
+          if (response?.data) {
+            setPartnerOptions(response.data);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch partners:", error);
+        });
+    } else {
+      setPartnerOptions([]);
+    }
+  }, [dispatch, params.company_branch_id]);
 
   // Fetch status lookup on mount
   useEffect(() => {
@@ -278,16 +327,6 @@ const Sellers = () => {
     navigate(`edit/${id}`);
   };
 
-  // Handle search
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const searchValue = event.target.value;
-    setParams((prev) => ({
-      ...prev,
-      search: searchValue,
-      page_no: 1, // Reset to first page when searching
-    }));
-  };
-
   // Handle tab change with status filtering
   const handleTabChange = (tabLabel: string) => {
     setActiveTab(tabLabel);
@@ -328,8 +367,8 @@ const Sellers = () => {
     const companyId = event.target.value ? Number(event.target.value) : null;
     setParams((prev) => ({
       ...prev,
-      company_id: companyId,
-      branch_id: null, // Reset dependent filters
+      parent_company_id: companyId,
+      company_branch_id: null, // Reset dependent filters
       partner_id: null,
       page_no: 1,
     }));
@@ -339,7 +378,7 @@ const Sellers = () => {
     const branchId = event.target.value ? Number(event.target.value) : null;
     setParams((prev) => ({
       ...prev,
-      branch_id: branchId,
+      company_branch_id: branchId,
       partner_id: null, // Reset dependent filter
       page_no: 1,
     }));
@@ -352,6 +391,20 @@ const Sellers = () => {
       partner_id: partnerId,
       page_no: 1,
     }));
+  };
+
+  const handleClearFilters = () => {
+    setParams({
+      page_no: 1,
+      per_page: 10,
+      parent_company_id: null,
+      company_branch_id: null,
+      partner_id: null,
+      status_id: null,
+      search: ""
+    });
+    setSearchTerm(''); // Clear search input
+    setActiveTab('All Sellers'); // Reset active tab
   };
 
   const renderContent = () => {
@@ -521,23 +574,22 @@ const Sellers = () => {
               />
               <input
                 type="text"
-                value={params.search}
-                onChange={handleSearch}
+                value={searchTerm}
+                onChange={handleSearchInputChange}
                 placeholder="Search by Seller Name"
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
                 id="search-input-sellers"
               />
             </div>
-            <div className="flex flex-wrap gap-4 mb-6"></div>
 
             <select
               id="company-select-sellers"
-              value={params.company_id || ""}
+              value={params.parent_company_id || ""}
               onChange={handleCompanyChange}
               className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select Company</option>
-              {companyOptions.map((company) => (
+              {companyDropdownData?.map((company: any) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
                 </option>
@@ -546,42 +598,42 @@ const Sellers = () => {
 
             <select
               id="branch-select-sellers"
-              value={params.branch_id || ""}
+              value={params.company_branch_id || ""}
               onChange={handleBranchChange}
               className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!params.parent_company_id}
             >
               <option value="">Select Branch</option>
-              {branchOptions
-                .filter(
-                  (branch) =>
-                    !params.company_id ||
-                    branch.company_id === params.company_id
-                )
-                .map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
+              {branchDropdownData?.map((branch: any) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
             </select>
+
             <select
               id="partner-select-sellers"
-              value={params.branch_id || ""}
+              value={params.partner_id || ""}
               onChange={handlePartnerChange}
               className="border rounded-lg px-4 py-2 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!params.company_branch_id}
             >
-              <option value="">Select partner</option>
-              {branchOptions
-                .filter(
-                  (branch) =>
-                    !params.company_id ||
-                    branch.company_id === params.company_id
-                )
-                .map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
+              <option value="">Select Partner</option>
+              {partnerDropdownData?.map((partner: any) => (
+                <option key={partner.id} value={partner.id}>
+                  {partner.name}
+                </option>
+              ))}
             </select>
+
+            {(searchTerm || params.parent_company_id || params.company_branch_id || params.partner_id || params.status_id) && (
+              <button
+                onClick={handleClearFilters}
+                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2"
+              >
+                <X size={16} /> Clear Filters
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

@@ -71,6 +71,36 @@ const EditBranch: React.FC = () => {
     }
   };
 
+  const validateForm = (showError = true): boolean => {
+    let isValid = true;
+
+    if (formData.branchName) {
+      if (formData.branchName.length > 20) {
+        if (showError)
+          toast.error("Branch name should not exceed 20 characters");
+        isValid = false;
+      }
+    }
+
+    if (formData.state) {
+      if (formData.state.length > 20) {
+        if (showError) 
+          toast.error("State should not exceed 20 characters");
+        isValid = false;
+      }
+    }
+
+    // Validate pincode
+    const pincodeRegex = /^[1-9][0-9]{5}$/;
+    if (!pincodeRegex.test(formData.pincode)) {
+      if (showError)
+        toast.error("Please enter a valid 6-digit pincode (should not start with 0)");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async () => {
     try {
       if (!id) {
@@ -78,8 +108,7 @@ const EditBranch: React.FC = () => {
         return;
       }
 
-      if (!formData.branchName || !formData.email || !formData.mobileNumber) {
-        toast.error('Please fill all required fields');
+      if (!validateForm()) {
         return;
       }
 
@@ -87,7 +116,7 @@ const EditBranch: React.FC = () => {
         name: formData.branchName,
         email: formData.email,
         mobile_number: formData.mobileNumber,
-        created_by_id: formData.created_by_id, // Use the stored ID
+        created_by_id: formData.created_by_id,
         default_address: {
           address: formData.address || '',
           state: formData.state || '',
@@ -95,8 +124,6 @@ const EditBranch: React.FC = () => {
           pincode: formData.pincode || ''
         }
       };
-
-      console.log('Submitting payload:', payload);
 
       const response = await dispatch(updateBranch(parseInt(id), payload));
       
@@ -137,7 +164,8 @@ const EditBranch: React.FC = () => {
       label: 'Email',
       required: true,
       value: formData.email,
-      placeholder: 'Enter Email'
+      placeholder: 'Enter Email',
+      disabled: true
     },
     {
       type: 'text',
@@ -145,7 +173,8 @@ const EditBranch: React.FC = () => {
       label: 'Mobile Number',
       required: true,
       value: formData.mobileNumber,
-      placeholder: 'Enter Mobile Number'
+      placeholder: 'Enter Mobile Number',
+      disabled: true
     },
     {
       type: 'textarea',

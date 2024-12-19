@@ -96,11 +96,11 @@ const CreateBranch: React.FC = () => {
     //     isValid = false;
     //   }
     // }
-    if (formData.pincode) {
-      if (formData.pincode.length > 6) {
-        if (showError) toast.error("Pincode should be 6 digits");
-        isValid = false;
-      }
+    // Validate pincode
+    const pincodeRegex = /^[1-9][0-9]{5}$/;
+    if (!pincodeRegex.test(formData.pincode)) {
+      toast.error("Please enter a valid 6-digit pincode (should not start with 0)");
+      return false;
     }
     setIsFormValid(isValid);
     return isValid;

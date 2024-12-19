@@ -31,6 +31,7 @@ import {
 import { RootState } from "../../redux/types";
 import { AppDispatch } from "../../redux/store";
 import { toast } from "react-hot-toast";
+import { useDebounce } from "../../hooks/useDebounce";
 
 interface Product {
   id: number;
@@ -405,7 +406,7 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       type: "custom",
       renderCell: (row: any) => (
         <div className="relative group">
-          <span 
+          <span
             className={`px-2 py-1 text-sm rounded-full ${
               row.status?.lookup_code === "ACTIVE"
                 ? "bg-green-100 text-green-600"
@@ -500,7 +501,6 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
 };
 
 // Add this new component
- 
 
 const MyListing = () => {
   const navigate = useNavigate();
@@ -519,15 +519,17 @@ const MyListing = () => {
   const productCounts = useSelector(
     (state: RootState) => state.data.productCounts?.data
   );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 500); // 500ms delay
+
   useEffect(() => {
     dispatch(getProductCounts());
   }, [dispatch]);
 
-  // Update the useEffect to include status parameter based on active tab
+  // Update useEffect to use debouncedSearchQuery instead of searchQuery
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        // Get status based on active tab
         let statusParam;
         switch (activeTab) {
           case "Active":
@@ -543,27 +545,30 @@ const MyListing = () => {
             statusParam = undefined;
         }
 
-        // Call API with status parameter
         await dispatch(
           getmylisting({
             page_no: 1,
             per_page: 10,
-            ...(statusParam && { status: statusParam }), // Only include status if it's defined
+            ...(statusParam && { status: statusParam }),
+            ...(debouncedSearchQuery && { search: debouncedSearchQuery }), // Use debounced value
           })
         );
 
-        // Fetch counts
         await dispatch(getmylistingCounts());
       } catch (error) {
         console.error("Error fetching listings:", error);
       }
     };
 
-    // Only fetch for product-related tabs
     if (["All Products", "Active", "Inactive", "Draft"].includes(activeTab)) {
       fetchListings();
     }
-  }, [dispatch, activeTab]); // Add activeTab to dependencies
+  }, [dispatch, activeTab, debouncedSearchQuery]); // Use debouncedSearchQuery in dependencies
+
+  // Search handler remains the same
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   // Update the tabs with counts from API
   const updatedTabs = tabs.map((tab) => {
@@ -586,24 +591,21 @@ const MyListing = () => {
 
   // Update the renderFiltersAndActions function
   const renderFiltersAndActions = () => {
-    // Only show filters for product-related tabs
-    if (["All Products", "Active", "Inactive", "Draft"].includes(activeTab)) {
-      return (
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <div className="flex gap-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search
-                id="search-icon-listing"
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-                size={16}
-              />
-              <input
-                id="search-input-listing"
-                type="text"
-                placeholder="Search products"
-                className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
-              />
-            </div>
+    return (
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder="Search products"
+              value={searchQuery}
+              onChange={handleSearch}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-64"
+            />
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -635,11 +637,8 @@ const MyListing = () => {
             </button>
           </div>
         </div>
-      );
-    }
-
-    // Return null for other tabs as they handle their own filters
-    return null;
+      </div>
+    );
   };
 
   const renderContent = () => {

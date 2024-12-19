@@ -2090,15 +2090,25 @@ export const getProducts = (
   };
 };
 
-export const getmylisting = (params: any): ThunkAction<Promise<any>, RootState, unknown, any> => {
-  return async (dispatch: Dispatch) => {
+export const getmylisting = (params: {
+  page_no: number;
+  per_page: number;
+  search?: string;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_MY_LISTING_REQUEST });
 
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${API_BASE_URL}/catalog/products`, {
-        params: params,
+        params: {
+          page_no: params.page_no,
+          per_page: params.per_page,
+          search: params.search // Add search parameter
+        },
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 

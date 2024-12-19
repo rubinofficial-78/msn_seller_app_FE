@@ -15,11 +15,18 @@ import AddForm from "../../components/AddForm";
 import toast from "react-hot-toast";
 import axios from "axios";
 import GLOBAL_CONSTANTS from "../../GlobalConstants";
+import { PRODUCT_STATUS } from "../../utils/constants";
 
 type VariantFormData = {
   variantGroupName: string;
   attributes: string[];
   attributeValues: string[];
+};
+
+type ProductStatus = {
+  id: number;
+  lookup_code: string;
+  display_name: string;
 };
 
 const ViewProduct = () => {
@@ -69,6 +76,7 @@ const ViewProduct = () => {
 
   // State to track product status
   const [isActive, setIsActive] = useState<boolean>(product?.is_active || false);
+  const [productStatus, setProductStatus] = useState<ProductStatus | null>(null);
 
   const handleInputChange = (key: string, value: any) => {
     setFormData((prev: typeof formData) => {
@@ -239,15 +247,23 @@ const ViewProduct = () => {
   // Function to toggle product status
   const toggleProductStatus = async () => {
     try {
-      const statusId = isActive ? 34 : 33; // 34 for deactivating, 33 for activating
+      const newStatusId = productStatus?.lookup_code === "ACTIVE" ? 34 : 33;
+      
       await dispatch(
         saveBasicDetails({
           sku_id: product.sku_id,
-          status_id: statusId,
+          status_id: newStatusId,
         })
       );
-      setIsActive(!isActive); // Toggle the status in the UI
-      toast.success(`Product status updated successfully!`);
+
+      const newStatus = newStatusId === 33 
+        ? { id: 33, lookup_code: "ACTIVE", display_name: "Active" }
+        : { id: 34, lookup_code: "INACTIVE", display_name: "Inactive" };
+      
+      setProductStatus(newStatus);
+      setIsActive(newStatus.lookup_code === "ACTIVE");
+      
+      toast.success(`Product ${newStatus.lookup_code === "ACTIVE" ? "activated" : "deactivated"} successfully!`);
     } catch (error) {
       console.error('Failed to update product status:', error);
       toast.error('Failed to update product status. Please try again.');
@@ -258,7 +274,7 @@ const ViewProduct = () => {
     {
       type: "image",
       key: "productImages",
-      label: "Images List",
+      label: "Images List *",
       required: true,
       accept: "image/*",
       uploadText: "Upload product image",
@@ -266,7 +282,7 @@ const ViewProduct = () => {
       aspect_ratio: "free",
       value: formData.productImages?.[0]
         ? [formData.productImages[0]]
-        : product.image_arr?.[0]
+        : product?.image_arr?.[0]
         ? [product.image_arr[0]]
         : [],
       handleImageLink: handleImageUpload,
@@ -278,10 +294,10 @@ const ViewProduct = () => {
     {
       type: "select",
       key: "uomType",
-      label: "UOM Type",
+      label: "UOM Type *",
       required: true,
       placeholder: "UOM Type",
-      value: formData.uomType || product.uom?.id,
+      value: formData.uomType || product?.uom?.id,
       options: uomLoading
         ? []
         : uomTypes?.map((uom) => ({
@@ -292,10 +308,10 @@ const ViewProduct = () => {
     {
       type: "text",
       key: "uomValue",
-      label: "UOM Value",
+      label: "UOM Value *",
       required: true,
       placeholder: "UOM Value",
-      value: formData.uomValue || product.uom_value,
+      value: formData.uomValue || product?.uom_value,
     },
   ];
 
@@ -303,28 +319,28 @@ const ViewProduct = () => {
     {
       type: "text",
       key: "mrp",
-      label: "MRP",
+      label: "MRP *",
       required: true,
       placeholder: "MRP",
       startIcon: <span>₹</span>,
-      value: formData.mrp || product.mrp,
+      value: formData.mrp || product?.mrp,
     },
     {
       type: "text",
       key: "salesPrice",
-      label: "Sales Price",
+      label: "Sales Price *",
       required: true,
       placeholder: "Sales Price",
       startIcon: <span>₹</span>,
-      value: formData.salesPrice || product.sales_price,
+      value: formData.salesPrice || product?.sales_price,
     },
     {
       type: "select",
       key: "paymentMode",
-      label: "Payment Mode",
+      label: "Payment Mode *",
       required: true,
       placeholder: "Select Payment Mode",
-      value: formData.paymentMode || product.payment_type?.id,
+      value: formData.paymentMode || product?.payment_type?.id,
       options: paymentModesLoading
         ? []
         : paymentModes?.map((mode) => ({
@@ -446,6 +462,8 @@ const ViewProduct = () => {
         paymentMode: product.payment_type?.id || "",
         ...ondcInitialValues,
       });
+      setProductStatus(product.status || null);
+      setIsActive(product.status?.lookup_code === "ACTIVE");
     }
   }, [product]);
 
@@ -487,28 +505,14 @@ const ViewProduct = () => {
     return <div>Product not found</div>;
   }
 
-  const renderField = (label: string, value: any, required?: boolean) => {
-    let displayValue = "--";
-
-    if (value !== null && value !== undefined) {
-      if (typeof value === "boolean") {
-        displayValue = value ? "YES" : "NO";
-      } else if (typeof value === "object") {
-        displayValue =
-          value.display_name || value.name || JSON.stringify(value);
-      } else if (Array.isArray(value)) {
-        displayValue = value.join(", ");
-      } else {
-        displayValue = String(value);
-      }
-    }
-
+  const renderField = (label: string, value: any, required: boolean = false) => {
     return (
-      <div className="space-y-1">
-        <div className="text-sm text-gray-600">
-          {label} {required && <span className="text-red-500">*</span>}
-        </div>
-        <div className="font-medium">{displayValue}</div>
+      <div>
+        <dt className="text-sm font-medium text-gray-500">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </dt>
+        <dd className="mt-1 text-sm text-gray-900">{value || "-"}</dd>
       </div>
     );
   };
@@ -546,13 +550,15 @@ const ViewProduct = () => {
   };
 
   const getOndcFields = () => {
-    if (!product.category_attributes) return [];
+    if (!product?.category_attributes) return [];
 
     const fields = product.category_attributes.map((field: any) => {
+      if (!field) return null;
+
       const baseField = {
         key: field.field_key,
-        label: field.field_name,
-        required: field.category_id.is_mandatory,
+        label: `${field.field_name}${field.category_id?.is_mandatory ? ' *' : ''}`,
+        required: field.category_id?.is_mandatory || false,
         placeholder: field.placeholder || field.field_name,
       };
 
@@ -563,10 +569,7 @@ const ViewProduct = () => {
         "seller_pickup_return",
       ];
 
-      if (
-        checkboxFields.includes(field.field_key) ||
-        field.type === "checkbox"
-      ) {
+      if (checkboxFields.includes(field.field_key) || field.type === "checkbox") {
         const currentValue =
           formData[field.field_key] !== undefined
             ? formData[field.field_key]
@@ -649,13 +652,9 @@ const ViewProduct = () => {
             value: formData[field.field_key] || field.value || "",
           };
       }
-    });
+    }).filter(Boolean);
 
-    return fields.sort((a: any, b: any) => {
-      if (a.type === "checkbox" && b.type !== "checkbox") return -1;
-      if (a.type !== "checkbox" && b.type === "checkbox") return 1;
-      return 0;
-    });
+    return fields;
   };
 
   const isTimeRelatedField = (fieldName: string): boolean => {
@@ -666,6 +665,35 @@ const ViewProduct = () => {
       "Expected Delivery_time",
     ];
     return timeFields.includes(fieldName);
+  };
+
+  const renderStatusButton = () => {
+    if (!productStatus) return null;
+
+    switch (productStatus.lookup_code) {
+      case "ACTIVE":
+        return (
+          <button
+            onClick={toggleProductStatus}
+            className="px-4 py-2 rounded-lg text-white bg-red-600 hover:bg-red-700"
+          >
+            Deactivate
+          </button>
+        );
+      case "INACTIVE":
+        return (
+          <button
+            onClick={toggleProductStatus}
+            className="px-4 py-2 rounded-lg text-white bg-green-600 hover:bg-green-700"
+          >
+            Activate
+          </button>
+        );
+      case "DRAFT":
+        return null; // Don't show any button for draft status
+      default:
+        return null;
+    }
   };
 
   return (
@@ -691,15 +719,7 @@ const ViewProduct = () => {
             Create Variant
           </button>
         </div>
-        {/* Activate/Deactivate Button */}
-        <button
-          onClick={toggleProductStatus}
-          className={`px-4 py-2 rounded-lg text-white ${
-            isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
-          }`}
-        >
-          {isActive ? 'Deactivate' : 'Activate'}
-        </button>
+        {renderStatusButton()}
       </div>
 
       {/* Basic Information */}
@@ -707,13 +727,13 @@ const ViewProduct = () => {
         "Basic Information",
         "Product basic details and identification information.",
         <div className="grid grid-cols-2 gap-6">
-          {renderField("Product Title", product.name, true)}
-          {renderField("SKU ID", product.sku_id, true)}
-          {renderField("Category", product.level1_category?.name, true)}
-          {renderField("Sub Category", product.level2_category?.name, true)}
-          {renderField("HSN Code", product.hsn?.hsn_code, true)}
-          {renderField("Short Description", product.short_desc, true)}
-          {renderField("Product Description", product.long_desc, true)}
+          {renderField("Product Title", product?.name, true)}
+          {renderField("SKU ID", product?.sku_id, true)}
+          {renderField("Category", product?.level1_category?.name, true)}
+          {renderField("Sub Category", product?.level2_category?.name, true)}
+          {renderField("HSN Code", product?.hsn?.hsn_code, true)}
+          {renderField("Short Description", product?.short_desc, true)}
+          {renderField("Product Description", product?.long_desc, true)}
         </div>
       )}
 
@@ -722,7 +742,7 @@ const ViewProduct = () => {
         "Product Images",
         "Product images and visual content.",
         <div className="grid grid-cols-4 gap-4">
-          {product.image_arr?.[0] && (
+          {product?.image_arr?.[0] && (
             <img
               src={product.image_arr[0]}
               alt="Product"
@@ -738,8 +758,8 @@ const ViewProduct = () => {
         "Unit of Measurement",
         "This information will help us to make the Measurement of your product.",
         <div className="grid grid-cols-2 gap-6">
-          {renderField("UOM Type", product.uom?.display_name, true)}
-          {renderField("UOM Value", product.uom_value, true)}
+          {renderField("UOM Type", product?.uom?.display_name, true)}
+          {renderField("UOM Value", product?.uom_value, true)}
         </div>,
         "measurement"
       )}
@@ -749,15 +769,15 @@ const ViewProduct = () => {
         "Pricing Details",
         "This information is product pricing which will be shown to your customers.",
         <div className="grid grid-cols-2 gap-6">
-          {renderField("MRP", product.mrp ? `₹${product.mrp}` : null, true)}
+          {renderField("MRP", product?.mrp ? `₹${product.mrp}` : null, true)}
           {renderField(
             "Sales Price",
-            product.sales_price ? `₹${product.sales_price}` : null,
+            product?.sales_price ? `₹${product.sales_price}` : null,
             true
           )}
           {renderField(
             "Payment Mode",
-            product.payment_type?.display_name,
+            product?.payment_type?.display_name,
             true
           )}
         </div>,
@@ -820,18 +840,9 @@ const ViewProduct = () => {
           ) : (
             <>
               {/* View mode - existing fields */}
-              {renderField(
-                "Refund Eligible",
-                getOndcFieldValue("refund_eligible") ? "YES" : "NO"
-              )}
-              {renderField(
-                "Is Cancellable",
-                getOndcFieldValue("is_cancellable") ? "YES" : "NO"
-              )}
-              {renderField(
-                "Seller Return Pickup",
-                getOndcFieldValue("seller_pickup_return") ? "YES" : "NO"
-              )}
+              {renderField("Refund Eligible", getOndcFieldValue("refund_eligible"), true)}
+              {renderField("Is Cancellable", getOndcFieldValue("is_cancellable"), true)}
+              {renderField("Seller Return Pickup", getOndcFieldValue("seller_pickup_return"), true)}
               {renderField("Return Within", getOndcFieldValue("return_within"))}
               {renderField("Time To Ship", getOndcFieldValue("time_to_ship"))}
               {renderField(

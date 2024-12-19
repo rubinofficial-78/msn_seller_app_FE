@@ -90,20 +90,52 @@ const CreateVariant = () => {
 
   useEffect(() => {
     if (categoryAttributes?.length) {
-      // Initialize attributePairs with mandatory attributes
-      const mandatoryAttributes = categoryAttributes
-        .filter((attr) => attr.is_mandatory)
-        .map((attr) => ({
-          attribute: attr.name,
-          attributeValue: [],
-        }));
+      console.log('Setting up attribute pairs:', {
+        allAttributes: categoryAttributes.map(attr => ({
+          name: attr.name,
+          mandatory: attr.is_mandatory
+        })),
+        mandatoryOnly: categoryAttributes
+          .filter((attr) => attr.is_mandatory)
+          .map(attr => ({
+            name: attr.name,
+            mandatory: attr.is_mandatory
+          }))
+      });
+
+      // Initialize attributePairs with all attributes, not just mandatory ones
+      const allAttributes = categoryAttributes.map((attr) => ({
+        attribute: attr.name,
+        attributeValue: [],
+      }));
 
       setVariantFormData((prev) => ({
         ...prev,
-        attributePairs: mandatoryAttributes,
+        attributePairs: allAttributes,
       }));
     }
   }, [categoryAttributes]);
+
+  useEffect(() => {
+    const fetchCategoryAttributes = async () => {
+      try {
+        if (product?.level1_category?.name && product?.level2_category?.name) {
+          const response = await dispatch(
+            getProductCategoryAttributes(
+              product.level1_category.name,
+              product.level2_category.name
+            )
+          );
+          console.log('Category Attributes Response:', response);
+          console.log('All Attribute Names:', response.data.map((attr: any) => attr.name));
+        }
+      } catch (error) {
+        console.error("Error fetching category attributes:", error);
+      }
+    };
+
+    fetchCategoryAttributes();
+  }, [dispatch, product]);
 
   const variantColumns: Column[] = [
     {
@@ -227,13 +259,22 @@ const CreateVariant = () => {
     value: any,
     index?: number
   ) => {
-    console.log("handleVariantInputChange:", { key, value, index });
+    console.log("handleVariantInputChange:", { 
+      key, 
+      value, 
+      index,
+      currentFormData: variantFormData 
+    });
 
     if (key === "variantGroupName") {
-      setVariantFormData((prev) => ({
-        ...prev,
-        variantGroupName: value,
-      }));
+      setVariantFormData((prev) => {
+        const newState = {
+          ...prev,
+          variantGroupName: value,
+        };
+        console.log("Updated variantFormData:", newState);
+        return newState;
+      });
       return;
     }
 
@@ -284,32 +325,60 @@ const CreateVariant = () => {
   };
 
   const handleGenerateVariants = async () => {
+    // First check if variant group name is filled
+    if (!variantFormData.variantGroupName.trim()) {
+      toast.error("Variant Group Name is required");
+      return;
+    }
+
+    // Check for mandatory attributes
+    const missingMandatoryAttributes = categoryAttributes
+      ?.filter(attr => attr.is_mandatory)
+      .filter(attr => {
+        const attributePair = variantFormData.attributePairs.find(
+          pair => pair.attribute === attr.name
+        );
+        return !attributePair || attributePair.attributeValue.length === 0;
+      })
+      .map(attr => attr.name);
+
+    if (missingMandatoryAttributes && missingMandatoryAttributes.length > 0) {
+      if (missingMandatoryAttributes.length === 1) {
+        toast.error(`${missingMandatoryAttributes[0]} is required`);
+      } else {
+        toast.error(
+          <div>
+            <p>Following fields are required:</p>
+            <ul className="list-disc pl-4 mt-1">
+              {missingMandatoryAttributes.map((attr, index) => (
+                <li key={index}>{attr}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+      return;
+    }
+
     try {
-      if (!product?.sku_id) {
-        toast.error("Product SKU ID is required");
-        return;
-      }
-
-      if (!variantFormData.variantGroupName.trim()) {
-        toast.error("Variant Group Name is required");
-        return;
-      }
-
       // Transform the attribute pairs into the required format
       const attributes: Record<string, any> = {};
 
       variantFormData.attributePairs.forEach((pair) => {
         if (pair.attribute && pair.attributeValue.length > 0) {
-          const attribute = categoryAttributes.find(
+          const attribute = categoryAttributes?.find(
             (attr) => attr.name === pair.attribute
           );
-          if (
-            attribute?.input_type === "single_number" ||
-            attribute?.input_type === "single_text"
-          ) {
-            attributes[attribute.attribute_code] = pair.attributeValue[0];
-          } else {
-            attributes[attribute.attribute_code] = pair.attributeValue;
+          if (attribute?.attribute_code) {
+            if (
+              attribute.input_type === "single_number" ||
+              attribute.input_type === "single_text" ||
+              attribute.input_type === "single_image"
+            ) {
+              attributes[attribute.attribute_code] = pair.attributeValue[0];
+            } else {
+              attributes[attribute.attribute_code] = pair.attributeValue;
+            }
           }
         }
       });
@@ -320,7 +389,7 @@ const CreateVariant = () => {
       // Call the generate variants API
       const response = await dispatch(
         generateVariants(
-          product.sku_id,
+          product?.sku_id || "",
           attributes,
           variantFormData.variantGroupName
         )
@@ -440,10 +509,14 @@ const CreateVariant = () => {
     }
 
     return categoryAttributes
-      .slice(startIndex, endIndex)
-      .filter((attr) => (!showAdditionalPairs ? attr.is_mandatory : true))
+      .filter((attr) => {
+        if (!showAdditionalPairs) {
+          return startIndex <= categoryAttributes.indexOf(attr) && categoryAttributes.indexOf(attr) < endIndex;
+        }
+        return true;
+      })
       .map((attribute, index) => {
-        const currentIndex = startIndex + index;
+        const currentIndex = categoryAttributes.indexOf(attribute);
         const currentPair = variantFormData.attributePairs[currentIndex] || {
           attribute: "",
           attributeValue: [],
@@ -519,6 +592,14 @@ const CreateVariant = () => {
       });
   };
 
+  useEffect(() => {
+    console.log('Button Disable Debug:', {
+      variantGroupName: variantFormData.variantGroupName,
+      productSkuId: product?.sku_id,
+      isDisabled: !variantFormData.variantGroupName || !product?.sku_id
+    });
+  }, [variantFormData.variantGroupName, product?.sku_id]);
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       {/* Back Button */}
@@ -554,15 +635,11 @@ const CreateVariant = () => {
 
         {/* Initial Attributes and Values Grid */}
         <div className="grid grid-cols-2 gap-6">
-          {renderAttributePairs(0, 5)}
+          {!showAdditionalPairs ? 
+            renderAttributePairs(0, 5) : 
+            renderAttributePairs(0, categoryAttributes?.length || 0)
+          }
         </div>
-
-        {/* Additional Attributes and Values Grid */}
-        {showAdditionalPairs && (
-          <div className="grid grid-cols-2 gap-6 mt-6 border-t pt-6">
-            {renderAttributePairs(5, 10)}
-          </div>
-        )}
 
         {/* Add/Remove Attributes Button */}
         <div className="flex justify-between mt-6">
@@ -573,19 +650,20 @@ const CreateVariant = () => {
             {showAdditionalPairs ? (
               <>
                 <Minus className="w-4 h-4 mr-2" />
-                Remove Additional Attributes
+                Show Less Attributes
               </>
             ) : (
               <>
                 <Plus className="w-4 h-4 mr-2" />
-                Add More Attributes
+                Show All Attributes ({categoryAttributes?.length})
               </>
             )}
           </button>
           <button
             onClick={handleGenerateVariants}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!variantFormData.variantGroupName || !product?.sku_id}
+            title={`Group Name: ${variantFormData.variantGroupName}, SKU: ${product?.sku_id}`}
           >
             Generate Variants
           </button>

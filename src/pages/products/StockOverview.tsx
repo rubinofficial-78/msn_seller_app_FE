@@ -16,6 +16,7 @@ interface Stock {
     name: string;
     image_arr: string[];
     sku_id: string;
+    product_attributes_values: Array<Record<string, string>>;
   };
   product_sku_id: string;
   location: {
@@ -141,12 +142,12 @@ const StockOverview = () => {
       renderCell: (row: Stock) => (
         <div className="flex items-center gap-3">
           <img
-            src={row.product.image_arr[0] || "/placeholder-image.jpg"}
+            src={row.product.image_arr?.[0] || "/placeholder-image.jpg"}
             alt={row.product.name}
             className="w-12 h-12 rounded-lg object-cover"
           />
           <div>
-            <p className="font-medium">{row.product.name}</p>
+            <p className="font-medium">{row.product?.name}</p>
             <p className="text-sm text-gray-500">
               {new Date(row.createdAt).toLocaleString()}
             </p>

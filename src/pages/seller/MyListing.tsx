@@ -401,8 +401,41 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       id: "status",
       key: "status.display_name",
       label: "Status",
-      type: "status",
       minWidth: 120,
+      type: "custom",
+      renderCell: (row: any) => (
+        <div className="relative group">
+          <span 
+            className={`px-2 py-1 text-sm rounded-full ${
+              row.status?.lookup_code === "ACTIVE"
+                ? "bg-green-100 text-green-600"
+                : row.status?.lookup_code === "DRAFT"
+                ? "bg-yellow-100 text-yellow-600 cursor-help"
+                : "bg-red-100 text-red-600"
+            }`}
+          >
+            {row.status?.display_name}
+          </span>
+          {row.status?.lookup_code === "DRAFT" && (
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg z-50">
+              <p className="mb-2">This product is in draft mode.</p>
+              {row.draft_reason && row.draft_reason.length > 0 ? (
+                <div>
+                  <p className="font-medium mb-1">Draft Reasons:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {row.draft_reason.map((reason: string, index: number) => (
+                      <li key={index} className="text-gray-300">
+                        {reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       id: "actions",

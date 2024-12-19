@@ -43,6 +43,7 @@ interface Field {
   validation?: (value: any) => boolean;
   error?: string;
   preview?: string;
+  renderCell?: (value: any) => React.ReactNode;
 }
 
 interface AddFormProps {
@@ -317,15 +318,15 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
         />
       );
 
-    case "section":
-      return (
-        <div className="border-b border-gray-200 pb-4 mb-6">
-          <h3 className="text-lg font-medium text-gray-900">{field.label}</h3>
-          {field.description && (
-            <p className="mt-1 text-sm text-gray-500">{field.description}</p>
-          )}
-        </div>
-      );
+      case "section":
+        return (
+          <div className="border-b border-gray-200 pb-4 mb-6">
+            <h3 className="text-lg font-medium text-gray-900">{field.label}</h3>
+            {field.description && (
+              <p className="mt-1 text-sm text-gray-500">{field.description}</p>
+            )}
+          </div>
+        );
 
     case "switch":
       return (
@@ -355,50 +356,50 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
         />
       );
 
-    case "custom":
-      return field.component;
+      case "custom":
+        return field.component;
 
-    case "file":
-      return (
-        <div className="relative">
-          <input
-            type="file"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-            onChange={(e) => handleInputonChange?.(field.key, e.target.files)}
-            required={field.required}
-            disabled={field.disabled}
-            accept={field.accept}
-          />
-          {field.preview && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-              <img 
-                src={field.preview} 
-                alt="Preview" 
-                className="w-8 h-8 object-cover rounded"
-              />
-            </div>
-          )}
-        </div>
-      );
+      case "file":
+        return (
+          <div className="relative">
+            <input
+              type="file"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onChange={(e) => handleInputonChange?.(field.key, e.target.files)}
+              required={field.required}
+              disabled={field.disabled}
+              accept={field.accept}
+            />
+            {field.preview && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <img 
+                  src={field.preview} 
+                  alt="Preview" 
+                  className="w-8 h-8 object-cover rounded"
+                />
+              </div>
+            )}
+          </div>
+        );
 
-    case "radio":
-      return (
-        <div className="space-y-2">
-          {field.options.map((option: any, index: number) => (
-            <label key={index} className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name={field.key}
-                value={option.value}
-                checked={field.value === option.value}
-                onChange={() => field.onChange(option.value)}
-                className="form-radio h-4 w-4 text-blue-600"
-              />
-              <span className="text-gray-700">{option.label}</span>
-            </label>
-          ))}
-        </div>
-      );
+      case "radio":
+        return (
+          <div className="space-y-2">
+            {field.options.map((option: any, index: number) => (
+              <label key={index} className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name={field.key}
+                  value={option.value}
+                  checked={field.value === option.value}
+                  onChange={() => field.onChange(option.value)}
+                  className="form-radio h-4 w-4 text-blue-600"
+                />
+                <span className="text-gray-700">{option.label}</span>
+              </label>
+            ))}
+          </div>
+        );
 
     case "date":
       return edit ? (
@@ -421,10 +422,33 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
         field.value ?? "--"
       );
 
-    default:
-      return null;
-  }
-};
+      case "status":
+        return (
+          <div className="relative group">
+            <span 
+              className={`px-2 py-1 text-sm rounded-full ${
+                field.value?.lookup_code === "ACTIVE"
+                  ? "bg-green-100 text-green-600"
+                  : field.value?.lookup_code === "DRAFT"
+                  ? "bg-yellow-100 text-yellow-600 cursor-help"
+                  : "bg-red-100 text-red-600"
+              }`}
+            >
+              {field.value?.display_name}
+            </span>
+            {field.value?.lookup_code === "DRAFT" && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg">
+                This product is in draft mode. Complete all required fields to activate it.
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
 const FileUpload: React.FC<{ field: Field }> = ({ field }) => {
   return (

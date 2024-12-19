@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Ban, Edit } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Column {
   id: string;
@@ -55,6 +55,13 @@ interface AccordionTableProps {
   expandedViewButtonText?: string;
   onExpandedViewButtonClick?: (id: string) => void;
   onRowExpand?: (id: string) => void;
+  pagination?: {
+    total: number;
+    page: number;
+    perPage: number;
+    onPageChange: (page: number) => void;
+    onPerPageChange: (perPage: number) => void;
+  };
 }
 
 const AccordionTable: React.FC<AccordionTableProps> = ({
@@ -67,8 +74,11 @@ const AccordionTable: React.FC<AccordionTableProps> = ({
   expandedViewButtonText,
   onExpandedViewButtonClick,
   onRowExpand,
+  pagination,
 }) => {
   const [expandedRows, setExpandedRows] = useState<{ [key: string]: boolean }>({});
+
+  const perPageOptions = [5, 10, 25, 100];
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => {
@@ -83,6 +93,55 @@ const AccordionTable: React.FC<AccordionTableProps> = ({
       
       return newState;
     });
+  };
+
+  const renderPagination = () => {
+    if (!pagination) return null;
+
+    const totalPages = Math.ceil(pagination.total / pagination.perPage);
+    const currentPage = pagination.page;
+
+    return (
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-t">
+        <div className="flex items-center">
+          <span className="mr-2 text-sm text-gray-700">Rows Per Page:</span>
+          <select
+            value={pagination.perPage}
+            onChange={(e) => pagination.onPerPageChange(Number(e.target.value))}
+            className="border border-gray-300 rounded px-2 py-1 text-sm"
+          >
+            {perPageOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center">
+          <span className="text-sm text-gray-700 mr-4">
+            {`${(currentPage - 1) * pagination.perPage + 1}-${Math.min(
+              currentPage * pagination.perPage,
+              pagination.total
+            )} of ${pagination.total}`}
+          </span>
+          <button
+            onClick={() => pagination.onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            onClick={() => pagination.onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -190,6 +249,7 @@ const AccordionTable: React.FC<AccordionTableProps> = ({
           ))}
         </tbody>
       </table>
+      {renderPagination()}
     </div>
   );
 };

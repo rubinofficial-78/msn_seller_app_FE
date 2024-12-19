@@ -3241,7 +3241,7 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
           error: null,
           data: {
             ...state.categoryAttributes.data,
-            [action.payload.category]: action.payload.data
+            [`${action.payload.category}_${action.payload.subCategory}`]: action.payload.data
           },
           meta: action.payload.meta
         }

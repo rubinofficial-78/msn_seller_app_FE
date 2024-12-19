@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Ban } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import AccordionTable from "../../../components/AccordionTable";
 import AddForm from "../../../components/AddForm";
@@ -110,7 +110,7 @@ const ProductAttributes = () => {
   const [showAttributeValueForm, setShowAttributeValueForm] = useState(false);
   const [selectedAttribute, setSelectedAttribute] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage] = useState(10);
+  const [perPage, setPerPage] = useState(10);
 
   const {
     data: categories,
@@ -136,6 +136,35 @@ const ProductAttributes = () => {
     );
   };
 
+  const transformedData = categories?.map((category) => {
+    const categoryKey = category.parent_category ? 
+      `${category.parent_category.name}_${category.name}` : 
+      category.name;
+    
+    const categoryAttributes = attributesData[categoryKey] || [];
+    
+    return {
+      id: category.id.toString(),
+      categoryName: category.parent_category?.name || '-',
+      subCategoryName: category.parent_category ? category.name : '-',
+      shortDescription: category.short_description,
+      is_active: category.is_active,
+      createdAt: new Date(category.createdAt).toLocaleDateString(),
+      updatedAt: new Date(category.updatedAt).toLocaleDateString(),
+      child_categories: categoryAttributes.map((attr: any, index: number) => ({
+        id: attr.id,
+        no: index + 1,
+        name: attr.name,
+        attribute_code: attr.attribute_code,
+        is_mandatory: attr.is_mandatory ? "Yes" : "No",
+        is_input: attr.is_input ? "Yes" : "No",
+        input_type: attr.input_type,
+        is_active: attr.is_active,
+        status: attr.is_active ? "Active" : "Inactive"
+      }))
+    };
+  }) || [];
+
   const handleRowExpand = (categoryId: string) => {
     const category = categories?.find(cat => cat.id.toString() === categoryId);
     if (category) {
@@ -158,6 +187,11 @@ const ProductAttributes = () => {
     { id: "subCategoryName", label: "Sub Category Name", minWidth: 200 },
     { id: "shortDescription", label: "Short Description", minWidth: 300 },
   ];
+
+  const handleDisableAttribute = (attributeId: number) => {
+    // TODO: Implement disable logic
+    console.log('Disabling attribute:', attributeId);
+  };
 
   const subTableColumns = [
     { id: "no", label: "S.NO", minWidth: 70 },
@@ -182,26 +216,28 @@ const ProductAttributes = () => {
         </span>
       ),
     },
+    {
+      id: "actions",
+      label: "ACTIONS",
+      minWidth: 100,
+      renderCell: (row: any) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleDisableAttribute(row.id)}
+            className={`p-1.5 rounded ${
+              row.is_active 
+                ? "text-red-600 hover:bg-red-50" 
+                : "text-gray-400 cursor-not-allowed"
+            }`}
+            disabled={!row.is_active}
+            title={row.is_active ? "Disable Attribute" : "Attribute already disabled"}
+          >
+            <Ban size={18} />
+          </button>
+        </div>
+      ),
+    },
   ];
-
-  const transformedData = categories?.map((category) => {
-    const categoryAttributes = attributesData[category.name] || [];
-    
-    return {
-      id: category.id.toString(),
-      categoryName: category.parent_category?.name || '-',
-      subCategoryName: category.parent_category ? category.name : '-',
-      shortDescription: category.short_description,
-      is_active: category.is_active,
-      createdAt: new Date(category.createdAt).toLocaleDateString(),
-      updatedAt: new Date(category.updatedAt).toLocaleDateString(),
-      child_categories: categoryAttributes.map((attr: any, index: number) => ({
-        ...attr,
-        no: index + 1,
-        status: attr.is_active ? "Active" : "Inactive"
-      }))
-    };
-  }) || [];
 
   const handleAddAttribute = (categoryId: string) => {
     const category = categories?.find(
@@ -247,6 +283,16 @@ const ProductAttributes = () => {
         onRowExpand={handleRowExpand}
         expandedViewTitle="Attributes"
         expandedViewButtonText="ADD ATTRIBUTE"
+        pagination={{
+          total: meta?.total_rows || 0,
+          page: currentPage,
+          perPage: perPage,
+          onPageChange: (page) => setCurrentPage(page),
+          onPerPageChange: (newPerPage) => {
+            setPerPage(newPerPage);
+            setCurrentPage(1); // Reset to first page when changing per page
+          },
+        }}
       />
 
       <AttributeValueForm

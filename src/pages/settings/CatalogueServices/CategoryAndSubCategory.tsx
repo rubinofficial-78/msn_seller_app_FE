@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Ban } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import AccordionTable from '../../../components/AccordionTable';
 import AddForm from '../../../components/AddForm';
-import { getProductCategoriesWithSubCategories } from '../../../redux/Action/action';
+import { getProductCategoriesWithSubCategories, createCategory, updateCategory } from '../../../redux/Action/action';
 import { RootState } from '../../../redux/types';
 import { AppDispatch } from '../../../redux/store';
 
@@ -16,6 +16,12 @@ interface FormModalProps {
 }
 
 const CategoryForm: React.FC<FormModalProps> = ({ isOpen, onClose, title, onSubmit, parentCategory }) => {
+  const [formData, setFormData] = useState({
+    categoryName: '',
+    categoryCode: '',
+    shortDescription: ''
+  });
+
   const formFields = [
     {
       type: 'text',
@@ -23,6 +29,7 @@ const CategoryForm: React.FC<FormModalProps> = ({ isOpen, onClose, title, onSubm
       label: 'Category Name',
       required: true,
       placeholder: 'Enter category name',
+      value: formData.categoryName,
     },
     {
       type: 'text',
@@ -30,19 +37,35 @@ const CategoryForm: React.FC<FormModalProps> = ({ isOpen, onClose, title, onSubm
       label: 'Category Code',
       required: true,
       placeholder: 'Enter category code',
+      value: formData.categoryCode,
     },
     {
       type: 'textarea',
       key: 'shortDescription',
       label: 'Short Description',
       placeholder: 'Enter short description',
+      value: formData.shortDescription,
     },
   ];
 
+  const handleInputChange = (key: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
   const handleSave = () => {
-    // Implement save logic
-    onSubmit({});
+    if (!formData.categoryName || !formData.categoryCode) {
+      return;
+    }
+    onSubmit(formData);
     onClose();
+    setFormData({
+      categoryName: '',
+      categoryCode: '',
+      shortDescription: ''
+    });
   };
 
   if (!isOpen) return null;
@@ -66,9 +89,7 @@ const CategoryForm: React.FC<FormModalProps> = ({ isOpen, onClose, title, onSubm
 
         <AddForm
           data={formFields}
-          handleInputonChange={(key, value) => {
-            console.log(key, value);
-          }}
+          handleInputonChange={handleInputChange}
           handleSaveOnClick={handleSave}
         />
 
@@ -98,7 +119,7 @@ const CategoryAndSubCategory = () => {
   const [showSubCategoryForm, setShowSubCategoryForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage] = useState(10);
+  const [perPage, setPerPage] = useState(10);
 
   const { data: categories, loading, error, meta } = useSelector(
     (state: RootState) => state.data.productCategories
@@ -119,16 +140,97 @@ const CategoryAndSubCategory = () => {
     dispatch(getProductCategoriesWithSubCategories(params));
   };
 
-  const handleFormSubmit = (data: any) => {
-    console.log('Form submitted:', data);
-    // TODO: Implement category/subcategory creation logic
-    fetchCategories(); // Refresh the list after submission
+  const handleFormSubmit = async (data: any) => {
+    try {
+      let payload;
+      
+      if (showSubCategoryForm) {
+        // For subcategory, include parent_category_id
+        const parentCategory = categories?.find(cat => cat.name === selectedCategory);
+        payload = {
+          category_code: data.categoryCode,
+          name: data.categoryName,
+          short_description: data.shortDescription,
+          parent_category_id: parentCategory?.id
+        };
+      } else {
+        // For main category, only include basic fields
+        payload = {
+          category_code: data.categoryCode,
+          name: data.categoryName,
+          short_description: data.shortDescription
+        };
+      }
+
+      console.log('Creating category with payload:', payload); // For debugging
+
+      await dispatch(createCategory(payload));
+      
+      // Close the form
+      setShowCategoryForm(false);
+      setShowSubCategoryForm(false);
+      
+      // Refresh the categories list
+      fetchCategories();
+      
+    } catch (error) {
+      console.error('Failed to create category:', error);
+    }
+  };
+
+  const handleToggleCategory = async (categoryId: string, event: React.MouseEvent, isActive: boolean) => {
+    event.stopPropagation(); // Prevent row expansion when clicking the button
+    try {
+      await dispatch(updateCategory(Number(categoryId), {
+        is_active: !isActive // Toggle the active status
+      }));
+      
+      // Refresh the categories list after update
+      fetchCategories();
+    } catch (error) {
+      console.error('Failed to update category status:', error);
+    }
   };
 
   const mainColumns = [
     { id: 'categoryName', label: 'Category Name', minWidth: 200 },
     { id: 'categoryCode', label: 'Category Code', minWidth: 200 },
     { id: 'shortDescription', label: 'Short Description', minWidth: 300 },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 120,
+      renderCell: (row: any) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs ${
+            row.is_active
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+          }`}
+        >
+          {row.is_active ? 'Active' : 'Inactive'}
+        </span>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      minWidth: 100,
+      renderCell: (row: any) => (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={(e) => handleToggleCategory(row.id, e, row.is_active)}
+            className="p-1.5 rounded hover:bg-gray-100"
+            title={row.is_active ? 'Disable Category' : 'Enable Category'}
+          >
+            <Ban 
+              strokeWidth={2}
+              className={`h-5 w-5 ${row.is_active ? 'text-red-600' : 'text-green-600'}`}
+            />
+          </button>
+        </div>
+      )
+    }
   ];
 
   const subTableColumns = [
@@ -136,19 +238,41 @@ const CategoryAndSubCategory = () => {
     { id: 'categoryName', label: 'Sub Category Name', minWidth: 150 },
     { id: 'categoryCode', label: 'Category Code', minWidth: 120 },
     { id: 'shortDescription', label: 'Description', minWidth: 200 },
-    { id: 'status', label: 'Status', minWidth: 100, 
+    { 
+      id: 'status', 
+      label: 'Status', 
+      minWidth: 100, 
       renderCell: (row: any) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
-          row.status === 'Active' 
+          row.is_active 
             ? 'bg-green-100 text-green-800' 
             : 'bg-red-100 text-red-800'
         }`}>
-          {row.status}
+          {row.is_active ? 'Active' : 'Inactive'}
         </span>
       )
     },
     { id: 'createdAt', label: 'Created Date', minWidth: 120 },
-    { id: 'updatedAt', label: 'Updated Date', minWidth: 120 }
+    { id: 'updatedAt', label: 'Updated Date', minWidth: 120 },
+    {
+      id: 'actions',
+      label: 'Actions',
+      minWidth: 100,
+      renderCell: (row: any) => (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={(e) => handleToggleCategory(row.id, e, row.is_active)}
+            className="p-1.5 rounded hover:bg-gray-100"
+            title={row.is_active ? 'Disable Category' : 'Enable Category'}
+          >
+            <Ban 
+              strokeWidth={2}
+              className={`h-5 w-5 ${row.is_active ? 'text-red-600' : 'text-green-600'}`}
+            />
+          </button>
+        </div>
+      )
+    }
   ];
 
   const transformedData = categories?.map((category) => ({
@@ -159,12 +283,14 @@ const CategoryAndSubCategory = () => {
     is_active: category.is_active,
     createdAt: new Date(category.createdAt).toLocaleDateString(),
     updatedAt: new Date(category.updatedAt).toLocaleDateString(),
+    status: category.is_active ? 'Active' : 'Inactive',
     child_categories: category.child_categories?.map((subCategory, index) => ({
       id: subCategory.id,
       no: index + 1,
       categoryName: subCategory.name,
       categoryCode: subCategory.category_code,
       shortDescription: subCategory.short_description,
+      is_active: subCategory.is_active,
       status: subCategory.is_active ? 'Active' : 'Inactive',
       createdAt: new Date(subCategory.createdAt).toLocaleDateString(),
       updatedAt: new Date(subCategory.updatedAt).toLocaleDateString(),
@@ -208,6 +334,16 @@ const CategoryAndSubCategory = () => {
           subTableColumns={subTableColumns}
           data={transformedData}
           onAddSubCategory={handleAddSubCategory}
+          pagination={{
+            total: meta?.total_rows || 0,
+            page: currentPage,
+            perPage: perPage,
+            onPageChange: (page) => setCurrentPage(page),
+            onPerPageChange: (newPerPage) => {
+              setPerPage(newPerPage);
+              setCurrentPage(1);
+            },
+          }}
         />
       )}
 

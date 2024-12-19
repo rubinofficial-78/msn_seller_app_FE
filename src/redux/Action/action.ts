@@ -5917,13 +5917,69 @@ export const getProductAttributesByCategory = (
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch attributes');
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch attributes';
-      dispatch({
-        type: GET_PRODUCT_ATTRIBUTES_BY_CATEGORY_FAILURE,
-        payload: errorMessage
-      });
+      // ... error handling
+    }
+  };
+};
+
+export const createCategory = (data: {
+  parent_category_id?: number | null;
+  category_code: string;
+  name: string;
+  short_description: string;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/catalog/product_category/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create category');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const updateCategory = (
+  categoryId: number,
+  data: {
+    is_active: boolean;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/catalog/product_category/${categoryId}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update category');
+      }
+    } catch (error) {
       throw error;
     }
   };

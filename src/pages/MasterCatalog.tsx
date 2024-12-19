@@ -576,9 +576,9 @@ const MasterCatalog = () => {
   const getFilteredData = () => {
     return productsData.data || [];
   };
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+  // const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchQuery(e.target.value);
+  // };
 
   // Update the renderFiltersAndActions function
   const renderFiltersAndActions = () => {
@@ -597,7 +597,7 @@ const MasterCatalog = () => {
                 type="text"
                 placeholder="Search products"
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
-                onChange={handleSearch}
+                // onChange={handleSearch}
               />
             </div>
             

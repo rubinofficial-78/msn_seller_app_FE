@@ -386,28 +386,34 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
       type: "status",
       minWidth: 120,
     },
+    // {
+    //   id: "sellerName",
+    //   key: "created_by.name",
+    //   label: "Seller Name",
+    //   minWidth: 150,
+    // },
+    // {
+    //   id: "partnerName",
+    //   key: "created_by.parent.name", // Adjust based on actual API response
+    //   label: "Partner Name",
+    //   minWidth: 150,
+    // },
+    // {
+    //   id: "branchName",
+    //   key: "created_by.parent.parent.name", // Adjust based on actual API response
+    //   label: "Branch Name",
+    //   minWidth: 150,
+    // },
+    // {
+    //   id: "companyName",
+    //   key: "created_by.parent.parent.parent.name", // Adjust based on actual API response
+    //   label: "Company Name",
+    //   minWidth: 150,
+    // },
     {
-      id: "sellerName",
-      key: "created_by.name",
-      label: "Seller Name",
-      minWidth: 150,
-    },
-    {
-      id: "partnerName",
-      key: "created_by.parent.name", // Adjust based on actual API response
-      label: "Partner Name",
-      minWidth: 150,
-    },
-    {
-      id: "branchName",
-      key: "created_by.parent.parent.name", // Adjust based on actual API response
-      label: "Branch Name",
-      minWidth: 150,
-    },
-    {
-      id: "companyName",
-      key: "created_by.parent.parent.parent.name", // Adjust based on actual API response
-      label: "Company Name",
+      id: "CreateAt",
+      key: "createdAt", // Adjust based on actual API response
+      label: "Created At",
       minWidth: 150,
     },
     {

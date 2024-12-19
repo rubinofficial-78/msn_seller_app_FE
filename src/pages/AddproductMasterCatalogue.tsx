@@ -104,6 +104,9 @@ const AddproductMasterCatalogue = () => {
     }>
   >([]);
 
+  // Update the state to track if basic details are saved
+  const [isBasicDetailsSaved, setIsBasicDetailsSaved] = useState(false);
+
   // Add useEffect to fetch time options
   useEffect(() => {
     const fetchTimeOptions = async () => {
@@ -481,7 +484,49 @@ const AddproductMasterCatalogue = () => {
     }, {});
   };
 
-  // Update handleSave function to include ONDC Details case
+  // Update the validateOndcFields function to properly check required fields
+  const validateOndcFields = (ondcDetails: any[]) => {
+    const missingFields: string[] = [];
+
+    ondcDetails.forEach(field => {
+      // Check if the field is mandatory (is_mandatory from category_id)
+      if (field.category_id?.is_mandatory) {
+      const value = formData[field.field_key];
+        
+        // Enhanced validation for different field types
+        let isValueMissing = false;
+        
+        switch (field.type) {
+          case 'text':
+          case 'textarea':
+          case 'email':
+          case 'tel':
+            isValueMissing = !value || value.trim() === '';
+            break;
+          case 'number':
+          case 'decimal':
+            isValueMissing = value === null || value === undefined || value === '';
+            break;
+          case 'date':
+            isValueMissing = !value;
+            break;
+          case 'dropdown':
+            isValueMissing = !value || value === '';
+            break;
+          default:
+            isValueMissing = value === undefined || value === null || value === '';
+        }
+
+        if (isValueMissing) {
+        missingFields.push(field.field_name);
+        }
+      }
+    });
+
+    return missingFields;
+  };
+
+  // Update the handleSave function's ONDC Details case
   const handleSave = async (section: string) => {
     try {
       setSavingStates(prev => ({
@@ -528,12 +573,16 @@ const AddproductMasterCatalogue = () => {
             hsn_reference_number: formData.hsnReferenceNumber || "",
           };
 
-          await dispatch(saveBasicDetails(basicDetails));
-          toast.success("Basic details saved successfully!");
-
-          // Fetch ONDC details after saving basic details
-          await dispatch(getOndcDetails(formData.skuId));
+          const response = await dispatch(saveBasicDetails(basicDetails));
+          
+          if (response?.meta?.status) {
+            toast.success("Basic information saved successfully");
+            setIsBasicDetailsSaved(true); // Only set to true after successful save
           setShowOndcSection(true);
+            await dispatch(getOndcDetails(formData.skuId));
+          } else {
+            toast.error("Failed to save basic information");
+          }
           break;
 
         case "Product Images":
@@ -604,6 +653,14 @@ const AddproductMasterCatalogue = () => {
             throw new Error("ONDC details not loaded");
           }
 
+          // Validate required fields first
+          const missingFields = validateOndcFields(ondcDetails);
+          if (missingFields.length > 0) {
+            toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+            return;
+          }
+
+          try {
           // Prepare the bulk update payload
           const bulkUpdatePayload = ondcDetails.map((field) => {
             const value = formData[field.field_key];
@@ -632,6 +689,22 @@ const AddproductMasterCatalogue = () => {
                 processedValue = value ? Number(value) : null;
                 break;
 
+                case "email":
+                  // Basic email validation
+                  if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    throw new Error(`Invalid email format for ${field.field_name}`);
+                  }
+                  processedValue = value || null;
+                  break;
+
+                case "tel":
+                  // Basic phone number validation
+                  if (value && !/^\d{10}$/.test(value)) {
+                    throw new Error(`Invalid phone number format for ${field.field_name}`);
+                  }
+                  processedValue = value || null;
+                  break;
+
               default:
                 processedValue = value || null;
             }
@@ -643,17 +716,34 @@ const AddproductMasterCatalogue = () => {
           });
 
           // Call the bulk update API
-          await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
-          toast.success("ONDC details saved successfully!");
-          navigate("/dashboard/master-catalog");
+          const response = await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
+          
+            if (response?.meta?.status === false) {
+              // Handle API error response
+              toast.error(response.meta.message || "Failed to save ONDC details");
+              return;
+            }
+
+            // Success case
+            toast.success(response?.meta?.message || "ONDC details saved successfully!");
+            navigate("/dashboard/master-catalog");
+
+          } catch (error: any) {
+            console.error("Error saving ONDC details:", error);
+            const errorMessage = error?.response?.data?.meta?.message 
+              || error.message 
+              || "An error occurred while saving ONDC details";
+            toast.error(errorMessage);
+          }
           break;
 
         default:
           break;
       }
-    } catch (error) {
-      console.error("Failed to save:", error);
-      toast.error("Failed to save. Please try again.");
+    } catch (error: any) {
+      console.error("Error saving:", error);
+      // Show error message from API if available
+      toast.error(error?.response?.data?.meta?.message || "An error occurred while saving");
     } finally {
       setSavingStates(prev => ({
         ...prev,
@@ -742,6 +832,7 @@ const AddproductMasterCatalogue = () => {
       placeholder: "SKU ID",
       value: formData.skuId,
       id: "input-sku-id",
+      disabled: isBasicDetailsSaved, // Will only be disabled after successful save
     },
     {
       type: "select",
@@ -759,6 +850,7 @@ const AddproductMasterCatalogue = () => {
               value: cat.id,
             })) || [],
       id: "select-category-name",
+      disabled: isBasicDetailsSaved, // Will only be disabled after successful save
     },
     {
       type: "select",
@@ -776,6 +868,7 @@ const AddproductMasterCatalogue = () => {
               value: sub.id,
             })) || [],
       id: "select-sub-category-name",
+      disabled: !formData.categoryName || isBasicDetailsSaved, // Disabled if no category or after save
     },
     {
       type: "select",

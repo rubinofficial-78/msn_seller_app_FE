@@ -3,91 +3,97 @@ import { ArrowLeft, Download, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  getCategories,
-  getSubCategories,
+  getProductCategories,
   downloadTemplate,
   uploadTemplate
 } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
 import toast from "react-hot-toast";
+import AddForm from "../components/AddForm";
 
 const BulkUploadMasterCatalogue: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubCategory, setSelectedSubCategory] = useState("");
-
+  
   // Get categories and subcategories from Redux store
-  const {
-    data: categories,
-    loading: categoriesLoading,
-    subCategories,
-  } = useSelector((state: RootState) => state.data.productCategories);
-
-  const { loading: subCategoriesLoading } = useSelector(
+  const { data: categories, loading } = useSelector(
+    (state: RootState) => state.data.productCategories
+  );
+  const { data: subCategories, loading: subCategoriesLoading } = useSelector(
     (state: RootState) => state.data.productCategories
   );
 
-  const { loading: downloadLoading } = useSelector(
-    (state: RootState) => state.data.templateDownload
-  );
-
-  // Add console logs to debug the state
-  useEffect(() => {
-    console.log("Categories:", categories);
-    console.log("Selected Category:", selectedCategory);
-    console.log("SubCategories:", subCategories);
-    console.log("Selected SubCategory:", selectedSubCategory);
-  }, [categories, selectedCategory, subCategories, selectedSubCategory]);
+  // Form data state
+  const [formData, setFormData] = useState({
+    categoryName: null,
+    subCategoryName: null
+  });
 
   // Fetch categories when component mounts
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        await dispatch(getCategories());
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-        toast.error("Failed to fetch categories");
-      }
-    };
-
-    fetchCategories();
+    dispatch(getProductCategories(null));
   }, [dispatch]);
 
-  // Fetch subcategories when category changes
-  useEffect(() => {
-    const fetchSubCategories = async () => {
-      if (selectedCategory) {
-        try {
-          await dispatch(getSubCategories(Number(selectedCategory)));
-        } catch (error) {
-          console.error("Failed to fetch subcategories:", error);
-          toast.error("Failed to fetch subcategories");
-        }
-      }
-    };
+  // Define form fields for category and subcategory
+  const bulkUploadFields = [
+    {
+      type: "select",
+      key: "categoryName",
+      label: "Category Name",
+      required: true,
+      placeholder: "Select Category",
+      value: formData.categoryName || "",
+      options: loading
+        ? []
+        : categories
+            ?.filter((cat) => !cat.parent_category_id)
+            .map((cat) => ({
+              label: cat.name,
+              value: cat.id,
+            })) || [],
+      id: "select-category-name",
+    },
+    {
+      type: "select",
+      key: "subCategoryName",
+      label: "Sub Category Name",
+      required: true,
+      placeholder: "Select Sub Category",
+      value: formData.subCategoryName || "",
+      options: subCategoriesLoading
+        ? []
+        : subCategories
+            ?.filter((cat) => cat.parent_category_id === formData.categoryName)
+            .map((sub) => ({
+              label: sub.name,
+              value: sub.id,
+            })) || [],
+      id: "select-sub-category-name",
+      disabled: !formData.categoryName,
+    },
+  ];
 
-    fetchSubCategories();
-  }, [selectedCategory, dispatch]);
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedCategory(value);
-    setSelectedSubCategory(""); // Reset subcategory when category changes
+  // Handle form changes
+  const handleSelectChange = (key: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [key]: value,
+      // Reset subcategory when category changes
+      ...(key === 'categoryName' ? { subCategoryName: null } : {})
+    }));
   };
 
   const handleDownloadTemplate = async () => {
     try {
-      if (!selectedCategory || !selectedSubCategory) {
+      if (!formData.categoryName || !formData.subCategoryName) {
         toast.error("Please select both category and sub-category");
         return;
       }
 
       await dispatch(
-        downloadTemplate(Number(selectedCategory), Number(selectedSubCategory))
+        downloadTemplate(Number(formData.categoryName), Number(formData.subCategoryName))
       );
-
       toast.success("Template downloaded successfully");
     } catch (error) {
       console.error("Failed to download template:", error);
@@ -99,23 +105,19 @@ const BulkUploadMasterCatalogue: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       try {
-        // Create a temporary URL for the file
         const fileUrl = URL.createObjectURL(file);
         
-        // Prepare the data with the correct type
         const uploadData = {
-          level1_category_id: Number(selectedCategory),
-          level2_category_id: Number(selectedSubCategory),
+          level1_category_id: Number(formData.categoryName),
+          level2_category_id: Number(formData.subCategoryName),
           link: fileUrl
         };
 
         await dispatch(uploadTemplate(uploadData));
-        
-        // Clean up the temporary URL
         URL.revokeObjectURL(fileUrl);
         
         toast.success("Template uploaded successfully");
-        navigate("/dashboard/products");
+        navigate("/dashboard/master-catalog");
       } catch (error) {
         console.error("Failed to upload template:", error);
         toast.error("Failed to upload template");
@@ -164,64 +166,22 @@ const BulkUploadMasterCatalogue: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category Name <span className="text-red-500">*</span>
-            </label>
-            <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-              disabled={categoriesLoading}
-            >
-              <option value="">Select Category</option>
-              {categories?.map((category: any) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sub Category Name <span className="text-red-500">*</span>
-            </label>
-            <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              value={selectedSubCategory}
-              onChange={(e) => setSelectedSubCategory(e.target.value)}
-              disabled={!selectedCategory || subCategoriesLoading}
-            >
-              <option value="">Select Sub Category</option>
-              {subCategories?.map((subCategory: any) => (
-                <option key={subCategory.id} value={subCategory.id}>
-                  {subCategory.name}
-                </option>
-              ))}
-            </select>
-            {subCategoriesLoading && (
-              <p className="text-sm text-gray-500 mt-1">
-                Loading subcategories...
-              </p>
-            )}
-          </div>
-        </div>
+        <AddForm
+          data={bulkUploadFields}
+          handleSelectonChange={handleSelectChange}
+        />
 
         <button
           onClick={handleDownloadTemplate}
           className={`flex items-center gap-2 text-blue-600 hover:text-blue-700 ${
-            !selectedCategory || !selectedSubCategory || downloadLoading
-              ? "opacity-50 cursor-not-allowed"
-              : ""
+            (!formData.categoryName || !formData.subCategoryName) 
+              ? 'opacity-50 cursor-not-allowed' 
+              : ''
           }`}
-          disabled={
-            !selectedCategory || !selectedSubCategory || downloadLoading
-          }
+          disabled={!formData.categoryName || !formData.subCategoryName}
         >
-          <Download size={20} />
-          {downloadLoading ? "Downloading..." : "Download Template"}
+          <Download className="w-4 h-4 mr-2" />
+          Download Template
         </button>
       </div>
 

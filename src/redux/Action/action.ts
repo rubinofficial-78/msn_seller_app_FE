@@ -5984,3 +5984,68 @@ export const updateCategory = (
     }
   };
 };
+
+export const createAttribute = (data: {
+  attribute_code: string;
+  name: string;
+  category: string;
+  sub_category: string;
+  is_mandatory: boolean;
+  is_input: boolean;
+  input_type: string;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/catalog/product_attribute/create`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to create attribute');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};
+
+export const updateAttribute = (
+  attributeId: number,
+  data: {
+    is_active: boolean;
+  }
+): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+  return async (dispatch: Dispatch<AuthActionTypes>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/catalog/product_attribute/${attributeId}/update`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data?.meta?.status) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to update attribute');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+};

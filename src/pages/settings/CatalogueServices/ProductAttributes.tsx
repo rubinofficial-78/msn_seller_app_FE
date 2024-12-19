@@ -6,6 +6,8 @@ import AddForm from "../../../components/AddForm";
 import {
   getAllProductCategories,
   getProductAttributesByCategory,
+  createAttribute,
+  updateAttribute,
 } from "../../../redux/Action/action";
 import { RootState } from "../../../redux/types";
 import { AppDispatch } from "../../../redux/store";
@@ -23,37 +25,92 @@ const AttributeValueForm: React.FC<AttributeValueFormProps> = ({
   attributeName,
   onSubmit,
 }) => {
-  const formFields = [
-    {
-      type: "text",
-      key: "value",
-      label: "Value",
-      required: true,
-      placeholder: "Enter attribute value",
-    },
-    {
-      type: "switch",
-      key: "isMandatory",
-      label: "Is Mandatory",
-    },
-    {
-      type: "switch",
-      key: "isInput",
-      label: "Is Input",
-    },
-    {
-      type: "text",
-      key: "displayOrder",
-      label: "Display Order",
-      required: true,
-      placeholder: "Enter display order",
-    },
+  const [formData, setFormData] = useState({
+    name: '',
+    is_mandatory: false,
+    is_input: false,
+    input_type: ''
+  });
+
+  // Define the attribute value options
+  const attributeValueOptions = [
+    { value: 'multi_number', label: 'Multi Number' },
+    { value: 'multi_text', label: 'Multi Text' },
+    { value: 'multi_images', label: 'Multi Images' }
   ];
 
-  const handleSave = () => {
-    onSubmit({});
-    onClose();
+  const formFields = [
+    {
+      type: 'text',
+      key: 'name',
+      label: 'Attribute Name',
+      required: true,
+      placeholder: 'Enter attribute name',
+      value: formData.name
+    },
+    {
+      type: 'switch',
+      key: 'is_mandatory',
+      label: 'Is Mandatory',
+      value: formData.is_mandatory
+    },
+    {
+      type: 'switch',
+      key: 'is_input',
+      label: 'Is Input',
+      value: formData.is_input
+    },
+    {
+      type: 'select',
+      key: 'input_type',
+      label: 'Attribute Values',
+      required: true,
+      placeholder: 'Select attribute value type',
+      value: formData.input_type,
+      options: attributeValueOptions
+    }
+  ];
+
+  const handleInputChange = (key: string, value: any) => {
+    console.log('Input change:', key, value); // For debugging
+    setFormData(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
+
+  const handleSave = () => {
+    if (!formData.name || !formData.input_type) {
+      // Show error message or handle validation
+      return;
+    }
+    onSubmit(formData);
+    onClose();
+    // Reset form
+    setFormData({
+      name: '',
+      is_mandatory: false,
+      is_input: false,
+      input_type: ''
+    });
+  };
+
+  // Reset form when modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: '',
+        is_mandatory: false,
+        is_input: false,
+        input_type: ''
+      });
+    }
+  }, [isOpen]);
+
+  // Get the category name for display
+  const { data: categories } = useSelector((state: RootState) => state.data.allProductCategories);
+  const category = categories?.find(cat => cat.id.toString() === attributeName);
+  const displayName = category ? (category.parent_category ? category.name : category.name) : '';
 
   if (!isOpen) return null;
 
@@ -61,7 +118,7 @@ const AttributeValueForm: React.FC<AttributeValueFormProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Add Attribute Value</h2>
+          <h2 className="text-xl font-semibold">Add Attribute</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full"
@@ -72,16 +129,15 @@ const AttributeValueForm: React.FC<AttributeValueFormProps> = ({
 
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <span className="text-sm text-gray-600">
-            Adding value for attribute:
+            Adding attribute for category:
           </span>
-          <span className="ml-2 font-medium">{attributeName}</span>
+          <span className="ml-2 font-medium">{displayName}</span>
         </div>
 
         <AddForm
           data={formFields}
-          handleInputonChange={(key, value) => {
-            console.log(key, value);
-          }}
+          handleInputonChange={handleInputChange}
+          handleSelectonChange={handleInputChange}
           handleSaveOnClick={handleSave}
         />
 
@@ -188,9 +244,34 @@ const ProductAttributes = () => {
     { id: "shortDescription", label: "Short Description", minWidth: 300 },
   ];
 
-  const handleDisableAttribute = (attributeId: number) => {
-    // TODO: Implement disable logic
-    console.log('Disabling attribute:', attributeId);
+  const handleDisableAttribute = async (attributeId: number) => {
+    try {
+      await dispatch(updateAttribute(attributeId, {
+        is_active: false // Only allow disabling
+      }));
+
+      // Refresh the attributes list after update
+      const category = categories?.find(cat => {
+        const categoryAttributes = attributesData[cat.name] || [];
+        return categoryAttributes.some(attr => attr.id === attributeId);
+      });
+
+      if (category) {
+        if (category.parent_category) {
+          dispatch(getProductAttributesByCategory(
+            category.parent_category.name,
+            category.name
+          ));
+        } else {
+          dispatch(getProductAttributesByCategory(
+            category.name,
+            ''
+          ));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to disable attribute:', error);
+    }
   };
 
   const subTableColumns = [
@@ -229,7 +310,7 @@ const ProductAttributes = () => {
                 ? "text-red-600 hover:bg-red-50" 
                 : "text-gray-400 cursor-not-allowed"
             }`}
-            disabled={!row.is_active}
+            disabled={!row.is_active} // Disable button if already inactive
             title={row.is_active ? "Disable Attribute" : "Attribute already disabled"}
           >
             <Ban size={18} />
@@ -240,12 +321,60 @@ const ProductAttributes = () => {
   ];
 
   const handleAddAttribute = (categoryId: string) => {
+    console.log('Add attribute clicked for category:', categoryId);
     const category = categories?.find(
       (item) => item.id.toString() === categoryId
     );
     if (category) {
-      setSelectedAttribute(category.name);
+      setSelectedAttribute(categoryId);
       setShowAttributeValueForm(true);
+    } else {
+      console.log('Category not found:', categoryId);
+    }
+  };
+
+  const handleAttributeSubmit = async (data: any) => {
+    try {
+      const category = categories?.find(
+        (item) => item.id.toString() === selectedAttribute
+      );
+
+      if (!category) {
+        console.error('Category not found');
+        return;
+      }
+
+      const payload = {
+        attribute_code: data.name.toLowerCase().replace(/\s+/g, '_'),
+        name: data.name,
+        category: category.parent_category ? category.parent_category.name : category.name,
+        sub_category: category.parent_category ? category.name : '',
+        is_mandatory: data.is_mandatory,
+        is_input: data.is_input,
+        input_type: data.input_type
+      };
+
+      console.log('Creating attribute with payload:', payload); // For debugging
+
+      await dispatch(createAttribute(payload));
+      
+      // Close the form
+      setShowAttributeValueForm(false);
+      
+      // Refresh the attributes list
+      if (category.parent_category) {
+        dispatch(getProductAttributesByCategory(
+          category.parent_category.name,
+          category.name
+        ));
+      } else {
+        dispatch(getProductAttributesByCategory(
+          category.name,
+          ''
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to create attribute:', error);
     }
   };
 
@@ -290,20 +419,19 @@ const ProductAttributes = () => {
           onPageChange: (page) => setCurrentPage(page),
           onPerPageChange: (newPerPage) => {
             setPerPage(newPerPage);
-            setCurrentPage(1); // Reset to first page when changing per page
+            setCurrentPage(1);
           },
         }}
       />
 
-      <AttributeValueForm
-        isOpen={showAttributeValueForm}
-        onClose={() => setShowAttributeValueForm(false)}
-        attributeName={selectedAttribute}
-        onSubmit={(data) => {
-          console.log("Attribute value submitted:", data);
-          // Implement submission logic
-        }}
-      />
+      {showAttributeValueForm && (
+        <AttributeValueForm
+          isOpen={showAttributeValueForm}
+          onClose={() => setShowAttributeValueForm(false)}
+          attributeName={selectedAttribute}
+          onSubmit={handleAttributeSubmit}
+        />
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import {
   Edit,
   ToggleRight,
   ToggleLeft,
+  Filter,
 } from "lucide-react";
 import Groups from "./products/Groups";
 import AddOns from "./products/AddOns";
@@ -21,7 +22,7 @@ import ScrollableTabs from "../components/ScrollableTabs";
 import CustomTable, { Column } from "../components/CustomTable";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getProducts, getProductCounts, getProductById,saveBasicDetails } from "../redux/Action/action";
+import { getProducts, getProductCounts, getProductById,saveBasicDetails, getCompanyDropdown, getBranchDropdown, getPartnerDropdown, getSellerDropdown } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from '../redux/store';
 import { toast } from 'react-hot-toast';
@@ -79,7 +80,7 @@ const tabs = [
   },
   {
     label: "Inactive",
-    status: "INACTIVE",
+    status: "IN_ACTIVE",
     count: 0,
     color: "text-red-600",
     bgColor: "bg-red-50",
@@ -197,7 +198,7 @@ const ProductGrid: React.FC<{ data: Product[] }> = ({ data }) => {
                   ${
                     product.status?.lookup_code === "ACTIVE"
                       ? "bg-green-50 text-green-700"
-                      : product.status?.lookup_code === "INACTIVE"
+                      : product.status?.lookup_code === "IN_ACTIVE"
                       ? "bg-red-50 text-red-700"
                       : "bg-gray-50 text-gray-700"
                   }`}
@@ -467,25 +468,135 @@ const Products = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const productsData = useSelector((state: RootState) => state.data.products);
   const productCounts = useSelector((state: RootState) => state.data.productCounts?.data);
+  const companyDropdown = useSelector((state: RootState) => state.data.companyDropdown);
+  const branchDropdown = useSelector((state: RootState) => state.data.branchDropdown);
+  const partnerDropdown = useSelector((state: RootState) => state.data.partnerDropdown);
+  const sellerDropdown = useSelector((state: RootState) => state.data.sellerDropdown);
+  const [filters, setFilters] = useState({
+    parent_company_id: '',
+    company_branch_id: '',
+    partner_id: '',
+    seller_id: '',
+    search: ''
+  });
 
   // Fetch products and counts when component mounts
   useEffect(() => {
-    dispatch(getProducts({ page_no: 1, per_page: 10 }));
-    dispatch(getProductCounts());
+    const fetchProducts = async () => {
+      try {
+        let params: any = {
+          page_no: 1,
+          per_page: 10,
+          ...filters // Include any existing filters
+        };
+
+        // Add status parameter based on active tab
+        switch (activeTab) {
+          case "Active":
+            params.status = "ACTIVE";
+            break;
+          case "Inactive":
+            params.status = "IN_ACTIVE";
+            break;
+          case "Draft":
+            params.status = "DRAFT";
+            break;
+          // "All Products" tab doesn't need a status parameter
+          default:
+            break;
+        }
+
+        await dispatch(getProducts(params));
+        await dispatch(getProductCounts());
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+
+    if (["All Products", "Active", "Inactive", "Draft"].includes(activeTab)) {
+      fetchProducts();
+    }
+  }, [dispatch, activeTab, filters]);
+
+  // Load dropdowns on component mount
+  useEffect(() => {
+    dispatch(getCompanyDropdown());
   }, [dispatch]);
+
+  // Load branch dropdown when company changes
+  useEffect(() => {
+    if (filters.parent_company_id) {
+      dispatch(getBranchDropdown(Number(filters.parent_company_id)));
+    }
+  }, [dispatch, filters.parent_company_id]);
+
+  // Load partner dropdown when branch changes
+  useEffect(() => {
+    if (filters.company_branch_id) {
+      dispatch(getPartnerDropdown(Number(filters.company_branch_id)));
+    }
+  }, [dispatch, filters.company_branch_id]);
+
+  // Load seller dropdown
+  useEffect(() => {
+    dispatch(getSellerDropdown());
+  }, [dispatch]);
+
+  // Handle filter changes
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters(prev => {
+      const newFilters = {
+        ...prev,
+        [field]: value
+      };
+
+      // Clear dependent fields
+      if (field === 'parent_company_id') {
+        newFilters.company_branch_id = '';
+        newFilters.partner_id = '';
+      } else if (field === 'company_branch_id') {
+        newFilters.partner_id = '';
+      }
+
+      // Fetch products with new filters
+      dispatch(getProducts({ 
+        page_no: 1,
+        per_page: 10,
+        ...newFilters
+      }));
+
+      return newFilters;
+    });
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setFilters({
+      parent_company_id: '',
+      company_branch_id: '',
+      partner_id: '',
+      seller_id: '',
+      search: ''
+    });
+    
+    dispatch(getProducts({ 
+      page_no: 1,
+      per_page: 10
+    }));
+  };
 
   // Update the tabs with counts from API
   const updatedTabs = tabs.map((tab) => {
-    if (tab.status === "ACTIVE" && productCounts) {
-      return { ...tab, count: productCounts.active };
+    switch (tab.status) {
+      case "ACTIVE":
+        return { ...tab, count: productCounts?.active || 0 };
+      case "IN_ACTIVE":
+        return { ...tab, count: productCounts?.inactive || 0 };
+      case "DRAFT":
+        return { ...tab, count: productCounts?.draft || 0 };
+      default:
+        return tab;
     }
-    if (tab.status === "INACTIVE" && productCounts) {
-      return { ...tab, count: productCounts.inactive };
-    }
-    if (tab.status === "DRAFT" && productCounts) {
-      return { ...tab, count: productCounts.draft };
-    }
-    return tab;
   });
 
   // Get filtered data from Redux store
@@ -495,78 +606,164 @@ const Products = () => {
 
   // Update the renderFiltersAndActions function
   const renderFiltersAndActions = () => {
-    
-    // Only show filters for product-related tabs
     if (["All Products", "Active", "Inactive", "Draft"].includes(activeTab)) {
       return (
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
+        <>
+          {/* Header Section */}
+          <div className="flex justify-between items-center p-4">
+            <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
           <div className="flex gap-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search
-                id="search-products"
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-                size={16}
-              />
+              <button
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center gap-2"
+              >
+                <Filter size={18} />
+                Filters
+              </button>
+              <button
+                id="add-product-button-products"
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+              >
+                <Plus size={18} />
+                Add Product
+              </button>
+            </div>
+          </div>
+
+          {/* Search and Filters Section */}
+          <div className="bg-white p-4 border-t border-gray-200 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Search Input */}
+              <div>
               <input
-                id="search-input-products"
                 type="text"
-                placeholder="Search products"
-                className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
+                  placeholder="Search by Product Name/SKU"
+                  className="w-full border rounded-md px-3 py-2"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
               />
             </div>
+
+            {/* Company Dropdown */}
+              <div>
             <select
-              id="company-select-products"
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+                  className="w-full border rounded-md px-3 py-2 bg-white text-gray-700"
+              value={filters.parent_company_id}
+              onChange={(e) => handleFilterChange('parent_company_id', e.target.value)}
             >
-              <option value="">Select Company</option>
+                  <option value="" className="text-gray-500">Select Company</option>
+                  {companyDropdown.data.map((company: any) => (
+                    <option 
+                      key={company.id} 
+                      value={company.id}
+                      className="text-gray-700"
+                    >
+                  {company.name}
+                </option>
+              ))}
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
-              <option value="">Select Branch</option>
+              </div>
+
+            {/* Branch Dropdown */}
+              <div>
+            <select
+                  className="w-full border rounded-md px-3 py-2 bg-white text-gray-700"
+              value={filters.company_branch_id}
+              onChange={(e) => handleFilterChange('company_branch_id', e.target.value)}
+              disabled={!filters.parent_company_id}
+            >
+                  <option value="" className="text-gray-500">Select Branch</option>
+                  {branchDropdown.data.map((branch: any) => (
+                    <option 
+                      key={branch.id} 
+                      value={branch.id}
+                      className="text-gray-700"
+                    >
+                  {branch.name}
+                </option>
+              ))}
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
-              <option value="">Select Partner</option>
+              </div>
+
+            {/* Partner Dropdown */}
+              <div>
+            <select
+                  className="w-full border rounded-md px-3 py-2 bg-white text-gray-700"
+              value={filters.partner_id}
+              onChange={(e) => handleFilterChange('partner_id', e.target.value)}
+              disabled={!filters.company_branch_id}
+            >
+                  <option value="" className="text-gray-500">Select Partner</option>
+                  {partnerDropdown.data?.map((partner: any) => (
+                    <option 
+                      key={partner.id} 
+                      value={partner.id}
+                      className="text-gray-700"
+                    >
+                  {partner.name}
+                </option>
+              ))}
             </select>
-            <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
-              <option value="">Select Seller</option>
+              </div>
+
+            {/* Seller Dropdown */}
+              <div>
+            <select
+                  className="w-full border rounded-md px-3 py-2 bg-white text-gray-700"
+              value={filters.seller_id}
+              onChange={(e) => handleFilterChange('seller_id', e.target.value)}
+            >
+                  <option value="" className="text-gray-500">Select Seller</option>
+                  {sellerDropdown.data.map((seller: any) => (
+                    <option 
+                      key={seller.id} 
+                      value={seller.id}
+                      className="text-gray-700"
+                    >
+                  {seller.name}
+                </option>
+              ))}
             </select>
-          </div>
-          <div className="flex items-center gap-2">
+              </div>
+
+            {/* Clear Filters Button */}
+              <div>
             <button
-              id="view-mode-products"
+              onClick={handleClearFilters}
+                  className="w-full px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md border border-gray-300"
+            >
+              Clear Filters
+            </button>
+              </div>
+          </div>
+
+            {/* View Mode Toggles */}
+            <div className="flex justify-end gap-2">
+            <button
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded ${
+                className={`p-2 rounded ${
                 viewMode === "grid"
                   ? "bg-primary-100 text-primary-600"
-                  : "text-gray-600"
+                    : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <LayoutGrid id="view-mode-grid-products" size={18} />
+                <LayoutGrid size={20} />
             </button>
             <button
-              id="view-mode-table-products"
               onClick={() => setViewMode("table")}
-              className={`p-1.5 rounded ${
+                className={`p-2 rounded ${
                 viewMode === "table"
                   ? "bg-primary-100 text-primary-600"
-                  : "text-gray-600"
-              }`}
-            >
-              <Table id="view-mode-table-products" size={18} />
-            </button>
-            <button
-              id="add-product-button-products"
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg"
-            >
-              <Plus size={16} />
-              <span>ADD PRODUCT</span>
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <Table size={20} />
             </button>
           </div>
         </div>
+        </>
       );
     }
-
-    // Return null for other tabs as they handle their own filters
     return null;
   };
 

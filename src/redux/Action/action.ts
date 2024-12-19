@@ -2045,23 +2045,34 @@ export const activateSeller = (
   };
 };
 
-export const getProducts = (
-  params: { 
-    status?: string;
-    page_no: number;
-    per_page: number;
-    master_catalog: boolean;
-  }
-): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
+export const getProducts = (params: {
+  page_no: number;
+  per_page: number;
+  status?: string;
+  search?: string;
+  parent_company_id?: string;
+  company_branch_id?: string;
+  partner_id?: string;
+  seller_id?: string;
+}): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_PRODUCTS_REQUEST });
 
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_BASE_URL}/backend_master/catalog/products`,
+        `${API_BASE_URL}/catalog/products`,
         {
-          params: { ...params, master_catalog: false },
+          params: {
+            page_no: params.page_no,
+            per_page: params.per_page,
+            status: params.status,
+            search: params.search,
+            parent_company_id: params.parent_company_id,
+            company_branch_id: params.company_branch_id,
+            partner_id: params.partner_id,
+            seller_id: params.seller_id
+          },
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -2074,19 +2085,17 @@ export const getProducts = (
           type: GET_PRODUCTS_SUCCESS,
           payload: {
             data: response.data.data,
-            meta: response.data.meta
+            meta: response.data.meta.pagination
           }
         });
         return response.data;
       } else {
         throw new Error(response.data?.meta?.message || 'Failed to fetch products');
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch products';
       dispatch({
         type: GET_PRODUCTS_FAILURE,
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to fetch products'
       });
       throw error;
     }
@@ -2097,6 +2106,7 @@ export const getmylisting = (params: {
   page_no: number;
   per_page: number;
   search?: string;
+  status?: string;
 }): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
     dispatch({ type: GET_MY_LISTING_REQUEST });
@@ -2107,7 +2117,8 @@ export const getmylisting = (params: {
         params: {
           page_no: params.page_no,
           per_page: params.per_page,
-          search: params.search // Add search parameter
+          search: params.search, // Add search parameter
+          status: params.status
         },
         headers: {
           Authorization: `Bearer ${token}`,

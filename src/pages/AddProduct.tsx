@@ -114,6 +114,9 @@ const AddProduct = () => {
     }>
   >([]);
 
+  // Update the state to track if basic details are saved
+  const [isBasicDetailsSaved, setIsBasicDetailsSaved] = useState(false);
+
   // Add useEffect to fetch time options
   useEffect(() => {
     const fetchTimeOptions = async () => {
@@ -449,14 +452,25 @@ const AddProduct = () => {
             hsn_reference_number: formData.hsnReferenceNumber || "",
           };
 
-          await dispatch(saveBasicDetails(basicDetails));
-          toast.success("Basic details saved successfully!");
+          const response = await dispatch(saveBasicDetails(basicDetails));
+          // toast.success("Basic details saved successfully!");
 
           // Fetch ONDC details after saving basic details
-          await dispatch(getOndcDetails(formData.skuId));
+          // await dispatch(getOndcDetails(formData.skuId));
+          // setShowOndcSection(true);
+          // break;
+
+          if (response?.meta?.status) {
+            toast.success("Basic information saved successfully");
+            setIsBasicDetailsSaved(true); // Only set to true after successful save
           setShowOndcSection(true);
+            await dispatch(getOndcDetails(formData.skuId));
+          } else {
+            toast.error("Failed to save basic information");
+          }
           break;
 
+          
         case "Product Images":
           const imageDetails = {
             section_key: "PRODUCT_IMAGE",
@@ -525,6 +539,13 @@ const AddProduct = () => {
             throw new Error("ONDC details not loaded");
           }
 
+          const missingFields = validateOndcFields(ondcDetails);
+          if (missingFields.length > 0) {
+            toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+            return;
+          }
+
+          try {
           // Prepare the bulk update payload
           const bulkUpdatePayload = ondcDetails.map((field) => {
             const value = formData[field.field_key];
@@ -555,6 +576,22 @@ const AddProduct = () => {
                 processedValue = value ? Number(value) : null;
                 break;
 
+                case "email":
+                  // Basic email validation
+                  if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    throw new Error(`Invalid email format for ${field.field_name}`);
+                  }
+                  processedValue = value || null;
+                  break;
+
+                case "tel":
+                  // Basic phone number validation
+                  if (value && !/^\d{10}$/.test(value)) {
+                    throw new Error(`Invalid phone number format for ${field.field_name}`);
+                  }
+                  processedValue = value || null;
+                  break;
+
               default:
                 processedValue = value || null;
             }
@@ -566,9 +603,23 @@ const AddProduct = () => {
           });
 
           // Call the bulk update API
-          await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
-          toast.success("ONDC details saved successfully!");
-          navigate("/dashboard/products");
+          const response = await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
+          if (response?.meta?.status === false) {
+            // Handle API error response
+            toast.error(response.meta.message || "Failed to save ONDC details");
+            return;
+          }
+          // Success case
+          toast.success(response?.meta?.message || "ONDC details saved successfully!");
+          
+           navigate("/dashboard/products");
+        } catch (error: any) {
+          console.error("Error saving ONDC details:", error);
+          const errorMessage = error?.response?.data?.meta?.message 
+            || error.message 
+            || "An error occurred while saving ONDC details";
+          toast.error(errorMessage);
+        }
           break;
 
         default:
@@ -749,6 +800,47 @@ const AddProduct = () => {
     }, {});
   };
 
+  const validateOndcFields = (ondcDetails: any[]) => {
+    const missingFields: string[] = [];
+
+    ondcDetails.forEach(field => {
+      // Check if the field is mandatory (is_mandatory from category_id)
+      if (field.category_id?.is_mandatory) {
+      const value = formData[field.field_key];
+        
+        // Enhanced validation for different field types
+        let isValueMissing = false;
+        
+        switch (field.type) {
+          case 'text':
+          case 'textarea':
+          case 'email':
+          case 'tel':
+            isValueMissing = !value || value.trim() === '';
+            break;
+          case 'number':
+          case 'decimal':
+            isValueMissing = value === null || value === undefined || value === '';
+            break;
+          case 'date':
+            isValueMissing = !value;
+            break;
+          case 'dropdown':
+            isValueMissing = !value || value === '';
+            break;
+          default:
+            isValueMissing = value === undefined || value === null || value === '';
+        }
+
+        if (isValueMissing) {
+        missingFields.push(field.field_name);
+        }
+      }
+    });
+
+    return missingFields;
+  };
+
   // Then define the fields
   const basicInfoFields = [
     {
@@ -777,6 +869,7 @@ const AddProduct = () => {
       placeholder: "SKU ID",
       value: formData.skuId,
       id: "input-sku-id",
+      disabled: isBasicDetailsSaved, // Will only be disabled after successful save
     },
     {
       type: "select",
@@ -794,6 +887,8 @@ const AddProduct = () => {
               value: cat.id,
             })) || [],
       id: "select-category-name",
+      disabled: isBasicDetailsSaved, // Will only be disabled after successful save
+      
     },
     {
       type: "select",
@@ -812,6 +907,8 @@ const AddProduct = () => {
               value: sub.id,
             })) || [],
       id: "select-sub-category-name",
+      disabled: !formData.categoryName || isBasicDetailsSaved, // Disabled if no category or after save
+
     },
     {
       type: "select",

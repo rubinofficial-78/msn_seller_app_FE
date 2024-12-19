@@ -800,6 +800,7 @@ const AddProduct = () => {
       key: "subCategoryName",
       label: "Sub Category Name",
       required: true,
+      searchable: true,
       placeholder: "Sub Category name",
       value: formData.subCategoryName || "",
       options: subCategoriesLoading

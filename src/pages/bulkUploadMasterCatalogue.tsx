@@ -59,6 +59,7 @@ const BulkUploadMasterCatalogue: React.FC = () => {
       key: "subCategoryName",
       label: "Sub Category Name",
       required: true,
+      searchable: true,
       placeholder: "Select Sub Category",
       value: formData.subCategoryName || "",
       options: subCategoriesLoading

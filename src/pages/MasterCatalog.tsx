@@ -411,10 +411,14 @@ const ProductTable: React.FC<{ data: Product[] }> = ({ data }) => {
     //   minWidth: 150,
     // },
     {
-      id: "CreateAt",
-      key: "createdAt", // Adjust based on actual API response
-      label: "Created At",
-      minWidth: 150,
+      id: "createdAt",
+      key: "createdAt",
+      label: "Created Date",
+      minWidth: 140,
+      type: "custom",
+      renderCell: (row: any) => (
+        <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+      ),
     },
     {
       id: "actions",
@@ -498,6 +502,9 @@ const MasterCatalog = () => {
     status: "",
   });
 
+  // Add search state to your component
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Update useEffect to use queryParams
   useEffect(() => {
     // Map tab status to API status
@@ -522,18 +529,19 @@ const MasterCatalog = () => {
       status,
     }));
 
-    // Fetch products with status filter
+    // Fetch products with status filter and search
     dispatch(
       getMasterCatalogProducts({
         page_no: queryParams.page_no,
         per_page: queryParams.per_page,
-        status: status, // Only include status if it's not empty
+        status: status,
+        search: searchQuery, // Include search query in API call
       })
     );
 
     // Fetch counts
     dispatch(getMasterCatalogueProductCounts());
-  }, [dispatch, activeTab]);
+  }, [dispatch, activeTab, searchQuery]); // Add searchQuery to dependencies
 
   // Update the table pagination handler
   const handlePaginationChange = (params: {
@@ -568,6 +576,9 @@ const MasterCatalog = () => {
   const getFilteredData = () => {
     return productsData.data || [];
   };
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   // Update the renderFiltersAndActions function
   const renderFiltersAndActions = () => {
@@ -586,32 +597,10 @@ const MasterCatalog = () => {
                 type="text"
                 placeholder="Search products"
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
+                onChange={handleSearch}
               />
             </div>
-            <select
-              id="select-company"
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-            >
-              <option value="">Select Company</option>
-            </select>
-            <select
-              id="select-branch"
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-            >
-              <option value="">Select Branch</option>
-            </select>
-            <select
-              id="select-partner"
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-            >
-              <option value="">Select Partner</option>
-            </select>
-            <select
-              id="select-seller"
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-            >
-              <option value="">Select Seller</option>
-            </select>
+            
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -714,7 +703,11 @@ const MasterCatalog = () => {
               className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
             >
               <div className="p-2 bg-gray-100 rounded">
-                <Plus id="add-icon-manual-upload" size={24} className="text-gray-600" />
+                <Plus
+                  id="add-icon-manual-upload"
+                  size={24}
+                  className="text-gray-600"
+                />
               </div>
               <div>
                 <h3 className="font-medium">Manual upload</h3>
@@ -731,7 +724,11 @@ const MasterCatalog = () => {
               className="w-full p-4 border rounded-lg hover:bg-gray-50 text-left flex items-start gap-4"
             >
               <div className="p-2 bg-gray-100 rounded">
-                <Upload id="add-icon-bulk-upload" size={24} className="text-gray-600" />
+                <Upload
+                  id="add-icon-bulk-upload"
+                  size={24}
+                  className="text-gray-600"
+                />
               </div>
               <div>
                 <h3 className="font-medium">Bulk upload</h3>

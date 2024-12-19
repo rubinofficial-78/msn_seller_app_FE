@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 
 interface TailSelectProps {
@@ -11,6 +11,7 @@ interface TailSelectProps {
   required?: boolean;
   disabled?: boolean;
   multiple?: boolean;
+  searchable?: boolean;
 }
 
 const TailSelect: React.FC<TailSelectProps> = ({
@@ -22,9 +23,11 @@ const TailSelect: React.FC<TailSelectProps> = ({
   index,
   required,
   disabled,
-  multiple
+  multiple,
+  searchable
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,6 +73,13 @@ const TailSelect: React.FC<TailSelectProps> = ({
     handleSelectonChange(fieldKey, newValues, index);
   };
 
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery) return Data;
+    return Data.filter(item => 
+      item.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [Data, searchQuery]);
+
   return (
     <div className="relative" ref={dropdownRef}>
       <div className="relative">
@@ -114,38 +124,59 @@ const TailSelect: React.FC<TailSelectProps> = ({
       </div>
 
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-          {Data.map((item, i) => (
-            <div
-              key={i}
-              className={`
-                px-4 py-2 cursor-pointer hover:bg-gray-50 flex items-center gap-2
-                ${selectedValues.includes(item.value) ? 'bg-gray-50' : ''}
-              `}
-              onClick={() => handleSelect(item.value)}
-            >
-              {multiple && (
-                <div className={`
-                  w-4 h-4 border rounded 
-                  ${selectedValues.includes(item.value) 
-                    ? 'bg-primary-600 border-primary-600' 
-                    : 'border-gray-300'
-                  }
-                  flex items-center justify-center
-                `}>
-                  {selectedValues.includes(item.value) && (
-                    <svg className="w-3 h-3 text-white" viewBox="0 0 12 12">
-                      <path
-                        fill="currentColor"
-                        d="M3.795 6.795L2.295 5.295a1 1 0 0 0-1.41 1.41l2.5 2.5a1 1 0 0 0 1.41 0l6-6a1 1 0 0 0-1.41-1.41L3.795 6.795z"
-                      />
-                    </svg>
-                  )}
-                </div>
-              )}
-              <span className="text-sm text-gray-700">{item.label}</span>
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+          {searchable && (
+            <div className="p-2 border-b border-gray-200">
+              <input
+                type="text"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
             </div>
-          ))}
+          )}
+
+          <div className="max-h-60 overflow-auto">
+            {filteredOptions.map((item, i) => (
+              <div
+                key={i}
+                className={`
+                  px-4 py-2 cursor-pointer hover:bg-gray-50 flex items-center gap-2
+                  ${selectedValues.includes(item.value) ? 'bg-gray-50' : ''}
+                `}
+                onClick={() => handleSelect(item.value)}
+              >
+                {multiple && (
+                  <div className={`
+                    w-4 h-4 border rounded 
+                    ${selectedValues.includes(item.value) 
+                      ? 'bg-primary-600 border-primary-600' 
+                      : 'border-gray-300'
+                    }
+                    flex items-center justify-center
+                  `}>
+                    {selectedValues.includes(item.value) && (
+                      <svg className="w-3 h-3 text-white" viewBox="0 0 12 12">
+                        <path
+                          fill="currentColor"
+                          d="M3.795 6.795L2.295 5.295a1 1 0 0 0-1.41 1.41l2.5 2.5a1 1 0 0 0 1.41 0l6-6a1 1 0 0 0-1.41-1.41L3.795 6.795z"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                )}
+                <span className="text-sm text-gray-700">{item.label}</span>
+              </div>
+            ))}
+            
+            {filteredOptions.length === 0 && (
+              <div className="px-4 py-2 text-sm text-gray-500">
+                No results found
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

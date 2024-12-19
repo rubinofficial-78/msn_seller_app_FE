@@ -44,6 +44,7 @@ interface Field {
   error?: string;
   preview?: string;
   renderCell?: (value: any) => React.ReactNode;
+  searchable?: boolean;
 }
 
 interface AddFormProps {
@@ -296,6 +297,7 @@ const renderField = (field: Field, edit: boolean, handlers: any) => {
           required={field.required}
           disabled={field.disabled}
           multiple={field.multiple}
+          searchable={field.searchable}
         />
       ) : (
         field.value ?? "--"

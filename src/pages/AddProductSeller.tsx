@@ -433,15 +433,15 @@ const AddProductSeller = () => {
     inventory: false,
     measurement: false,
     pricing: false,
-    ondc: false
+    ondc: false,
   });
 
   // Update handleSave function to use specific saving state
   const handleSave = async (section: string) => {
     try {
-      setSavingStates(prev => ({
+      setSavingStates((prev) => ({
         ...prev,
-        [getSavingStateKey(section)]: true
+        [getSavingStateKey(section)]: true,
       }));
 
       switch (section) {
@@ -501,7 +501,7 @@ const AddProductSeller = () => {
           if (response?.meta?.status) {
             toast.success("Basic information saved successfully");
             setIsBasicDetailsSaved(true); // Only set to true after successful save
-          setShowOndcSection(true);
+            setShowOndcSection(true);
             await dispatch(getOndcDetails(formData.skuId));
           } else {
             toast.error("Failed to save basic information");
@@ -613,38 +613,41 @@ const AddProductSeller = () => {
           // Validate required fields first
           const missingFields = validateOndcFields(ondcDetails);
           if (missingFields.length > 0) {
-            toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+            toast.error(
+              `Please fill in required fields: ${missingFields.join(", ")}`
+            );
             return;
           }
 
           try {
+            // Prepare the bulk update payload
+            const bulkUpdatePayload = ondcDetails.map((field) => {
+              const value = formData[field.field_key];
+              let processedValue = value;
 
-          // Prepare the bulk update payload
-          const bulkUpdatePayload = ondcDetails.map((field) => {
-            const value = formData[field.field_key];
-            let processedValue = value;
+              // Process value based on field type
+              switch (field.type) {
+                case "checkbox":
+                  processedValue = Boolean(value);
+                  break;
 
-            // Process value based on field type
-            switch (field.type) {
-              case "checkbox":
-                processedValue = Boolean(value);
-                break;
+                case "dropdown":
+                  if (isTimeRelatedField(field.field_name)) {
+                    // Just send the value directly for time-related fields
+                    processedValue = value;
+                  }
+                  break;
 
-              case "dropdown":
-                if (isTimeRelatedField(field.field_name)) {
-                  // Just send the value directly for time-related fields
-                  processedValue = value;
-                }
-                break;
-
-              case "decimal":
-                processedValue = value ? Number(value) : null;
-                break;
+                case "decimal":
+                  processedValue = value ? Number(value) : null;
+                  break;
 
                 case "email":
                   // Basic email validation
                   if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                    throw new Error(`Invalid email format for ${field.field_name}`);
+                    throw new Error(
+                      `Invalid email format for ${field.field_name}`
+                    );
                   }
                   processedValue = value || null;
                   break;
@@ -652,39 +655,48 @@ const AddProductSeller = () => {
                 case "tel":
                   // Basic phone number validation
                   if (value && !/^\d{10}$/.test(value)) {
-                    throw new Error(`Invalid phone number format for ${field.field_name}`);
+                    throw new Error(
+                      `Invalid phone number format for ${field.field_name}`
+                    );
                   }
                   processedValue = value || null;
                   break;
-              default:
-                processedValue = value || null;
+                default:
+                  processedValue = value || null;
+              }
+
+              return {
+                id: field.id,
+                value: processedValue,
+              };
+            });
+
+            // Call the bulk update API
+            const response = await dispatch(
+              bulkUpdateOndcDetails(bulkUpdatePayload)
+            );
+            if (response?.meta?.status === false) {
+              // Handle API error response
+              toast.error(
+                response.meta.message || "Failed to save ONDC details"
+              );
+              return;
             }
 
-            return {
-              id: field.id,
-              value: processedValue,
-            };
-          });
-
-          // Call the bulk update API
-          const response = await dispatch(bulkUpdateOndcDetails(bulkUpdatePayload));
-          if (response?.meta?.status === false) {
-            // Handle API error response
-            toast.error(response.meta.message || "Failed to save ONDC details");
-            return;
+            // Success case
+            toast.success(
+              response?.meta?.message || "ONDC details saved successfully!"
+            );
+            navigate("/dashboard/my-listings");
+          } catch (error: any) {
+            console.error("Error saving ONDC details:", error);
+            const errorMessage =
+              error?.response?.data?.meta?.message ||
+              error.message ||
+              "An error occurred while saving ONDC details";
+            toast.error(errorMessage);
           }
-
-          // Success case
-          toast.success(response?.meta?.message || "ONDC details saved successfully!");
-          navigate("/dashboard/my-listings");
-        } catch (error: any) {
-          console.error("Error saving ONDC details:", error);
-          const errorMessage = error?.response?.data?.meta?.message 
-            || error.message 
-            || "An error occurred while saving ONDC details";
-          toast.error(errorMessage);
-        }
-        break;
+          break;
 
         default:
           break;
@@ -693,9 +705,9 @@ const AddProductSeller = () => {
       console.error("Failed to save:", error);
       toast.error("Failed to save. Please try again.");
     } finally {
-      setSavingStates(prev => ({
+      setSavingStates((prev) => ({
         ...prev,
-        [getSavingStateKey(section)]: false
+        [getSavingStateKey(section)]: false,
       }));
     }
   };
@@ -780,7 +792,7 @@ const AddProductSeller = () => {
       "Return Within",
       "Time To Ship",
       "Time to Ship",
-      "Expected Delivery_time"
+      "Expected Delivery_time",
     ];
     return timeFields.includes(fieldName);
   };
@@ -825,7 +837,6 @@ const AddProductSeller = () => {
 
       // Handle specific field types
       switch (field.type) {
-        case "text":
         case "number":
         case "decimal":
           fieldObject.type = "text";
@@ -836,7 +847,7 @@ const AddProductSeller = () => {
             ...fieldObject,
             type: "select",
             options: isTimeRelatedField(field.field_name)
-              ? timeOptions.map(option => ({
+              ? timeOptions.map((option) => ({
                   label: option.label,
                   value: option.value,
                 }))
@@ -898,37 +909,39 @@ const AddProductSeller = () => {
   const validateOndcFields = (ondcDetails: any[]) => {
     const missingFields: string[] = [];
 
-    ondcDetails.forEach(field => {
+    ondcDetails.forEach((field) => {
       // Check if the field is mandatory (is_mandatory from category_id)
       if (field.category_id?.is_mandatory) {
-      const value = formData[field.field_key];
-        
+        const value = formData[field.field_key];
+
         // Enhanced validation for different field types
         let isValueMissing = false;
-        
+
         switch (field.type) {
-          case 'text':
-          case 'textarea':
-          case 'email':
-          case 'tel':
-            isValueMissing = !value || value.trim() === '';
+          case "text":
+          case "textarea":
+          case "email":
+          case "tel":
+            isValueMissing = !value || value.trim() === "";
             break;
-          case 'number':
-          case 'decimal':
-            isValueMissing = value === null || value === undefined || value === '';
+          case "number":
+          case "decimal":
+            isValueMissing =
+              value === null || value === undefined || value === "";
             break;
-          case 'date':
+          case "date":
             isValueMissing = !value;
             break;
-          case 'dropdown':
-            isValueMissing = !value || value === '';
+          case "dropdown":
+            isValueMissing = !value || value === "";
             break;
           default:
-            isValueMissing = value === undefined || value === null || value === '';
+            isValueMissing =
+              value === undefined || value === null || value === "";
         }
 
         if (isValueMissing) {
-        missingFields.push(field.field_name);
+          missingFields.push(field.field_name);
         }
       }
     });

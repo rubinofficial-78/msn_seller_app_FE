@@ -17,7 +17,7 @@ import { toast } from "react-hot-toast";
 const Partners: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("All Partners");
 
   const [params, setParams] = useState({
     page_no: 1,
@@ -67,10 +67,10 @@ const Partners: React.FC = () => {
 
   // Add search handler
   const handleSearch = debounce((value: string) => {
-    setParams(prev => ({
+    setParams((prev) => ({
       ...prev,
       page_no: 1,
-      search: value ? value : undefined
+      search: value ? value : undefined,
     }));
   }, 500);
 
@@ -82,10 +82,54 @@ const Partners: React.FC = () => {
 
   // Fetch data on mount
   useEffect(() => {
-    dispatch(getCompanyDropdown());
-    dispatch(getPartnerStatusLookup());
-    dispatch(getPartnerCounts());
-  }, [dispatch]);
+    const fetchInitialData = async () => {
+      try {
+        // Fetch status lookup first
+        const statusResponse = await dispatch(getPartnerStatusLookup());
+        if (statusResponse?.data) {
+          // Handle URL parameters after status lookup is loaded
+          const searchParams = new URLSearchParams(location.search);
+          const statusParam = searchParams.get("status");
+
+          if (statusParam) {
+            // Map URL status to tab label
+            let tabLabel = "All Partners";
+            switch (statusParam) {
+              case "APPROVED":
+                tabLabel = "Active Partners";
+                break;
+              case "PENDING":
+                tabLabel = "Inactive Partners";
+                break;
+            }
+
+            // Set active tab
+            setActiveTab(tabLabel);
+
+            // Find the corresponding status ID from the loaded lookup
+            const status = statusResponse.data.find(
+              (s: any) => s.lookup_code === statusParam
+            );
+            if (status) {
+              setParams((prev) => ({
+                ...prev,
+                status_id: status.id,
+                page_no: 1,
+              }));
+            }
+          }
+        }
+
+        // Fetch other data
+        dispatch(getCompanyDropdown());
+        dispatch(getPartnerCounts());
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      }
+    };
+
+    fetchInitialData();
+  }, [dispatch, location.search]);
 
   // Add useEffect for branch dropdown
   useEffect(() => {
@@ -94,42 +138,53 @@ const Partners: React.FC = () => {
     }
   }, [dispatch, params.company_id]);
 
-  // Handle tab change with debug logging
-  const handleTabChange = (tab: string) => {
-    let statusId: number | undefined;
+  // Handle tab change
+  const handleTabChange = (tabLabel: string) => {
+    setActiveTab(tabLabel);
+    let statusId = undefined;
+    let statusCode = undefined;
 
-    console.log("Tab clicked:", tab);
-    console.log("Status lookup data:", statusLookup);
-
-    if (tab === "active partners") {
-      const approvedStatus = statusLookup.find(
-        (s) => s.lookup_code === "APPROVED"
-      );
-      statusId = approvedStatus?.id;
-      console.log("Found APPROVED status:", approvedStatus);
-    } else if (tab === "inactive partners") {
-      const pendingStatus = statusLookup.find(
-        (s) => s.lookup_code === "PENDING"
-      );
-      statusId = pendingStatus?.id;
-      console.log("Found PENDING status:", pendingStatus);
-    } else {
-      statusId = undefined;
+    switch (tabLabel) {
+      case "Active Partners":
+        const approvedStatus = statusLookup.find(
+          (s) => s.lookup_code === "APPROVED"
+        );
+        statusId = approvedStatus?.id || undefined;
+        statusCode = "APPROVED";
+        break;
+      case "Inactive Partners":
+        const pendingStatus = statusLookup.find(
+          (s) => s.lookup_code === "PENDING"
+        );
+        statusId = pendingStatus?.id || undefined;
+        statusCode = "PENDING";
+        break;
+      default:
+        statusId = undefined;
+        statusCode = undefined;
     }
 
-    console.log("Setting status_id to:", statusId);
+    // Update URL with status parameter
+    const searchParams = new URLSearchParams(location.search);
+    if (statusCode) {
+      searchParams.set("status", statusCode);
+    } else {
+      searchParams.delete("status");
+    }
+    navigate(
+      {
+        pathname: location.pathname,
+        search: searchParams.toString(),
+      },
+      { replace: true }
+    );
 
-    setParams((prev) => {
-      const newParams = {
-        ...prev,
-        page_no: 1,
-        status_id: statusId,
-      };
-      console.log("New params:", newParams);
-      return newParams;
-    });
-
-    setActiveTab(tab);
+    // Update params which will trigger the useEffect to fetch partners
+    setParams((prev) => ({
+      ...prev,
+      status_id: statusId,
+      page_no: 1,
+    }));
   };
 
   // Add effect to log params changes
@@ -210,7 +265,7 @@ const Partners: React.FC = () => {
       key: "parent.name",
       label: "Branch Name",
       minWidth: 150,
-    },   
+    },
     {
       id: "createdAt",
       key: "createdAt",
@@ -294,11 +349,25 @@ const Partners: React.FC = () => {
       company_id: undefined,
       branch_id: undefined,
       status_id: undefined,
-      search: undefined
+      search: undefined,
     });
-    setSearchTerm(''); // Clear search input
-    setActiveTab('all'); // Reset active tab
+    setSearchTerm(""); // Clear search input
+    setActiveTab("All Partners"); // Reset active tab
   };
+
+  // Set initial active tab based on URL parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const status = searchParams.get("status");
+
+    if (status === "APPROVED") {
+      setActiveTab("Active Partners");
+    } else if (status === "PENDING") {
+      setActiveTab("Inactive Partners");
+    } else {
+      setActiveTab("All Partners");
+    }
+  }, [location.search]);
 
   return (
     <div className="p-6">
@@ -399,10 +468,10 @@ const Partners: React.FC = () => {
             (tab) => (
               <button
                 key={tab}
-                id={`tab-button-${tab.toLowerCase()}`}
-                onClick={() => handleTabChange(tab.toLowerCase())}
+                id={`tab-button-${tab}`}
+                onClick={() => handleTabChange(tab)}
                 className={`border-b-2 py-4 px-1 text-sm font-medium ${
-                  activeTab === tab.toLowerCase()
+                  activeTab === tab
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
@@ -459,7 +528,10 @@ const Partners: React.FC = () => {
               </option>
             ))}
           </select>
-          {(searchTerm || params.company_id || params.branch_id || params.status_id) && (
+          {(searchTerm ||
+            params.company_id ||
+            params.branch_id ||
+            params.status_id) && (
             <button
               onClick={handleClearFilters}
               className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2"

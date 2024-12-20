@@ -79,7 +79,11 @@ const Orders = () => {
       key: "sales_order_fulfillments[0].ready_to_ship",
       type: "custom",
       renderCell: (row: any) => (
-        <span>{new Date(row.sales_order_fulfillments[0].ready_to_ship).toLocaleString()}</span>
+        <span>
+          {new Date(
+            row.sales_order_fulfillments[0].ready_to_ship
+          ).toLocaleString()}
+        </span>
       ),
     },
     {
@@ -88,7 +92,11 @@ const Orders = () => {
       key: "sales_order_fulfillments[0].pickedup_time",
       type: "custom",
       renderCell: (row: any) => (
-        <span>{new Date(row.sales_order_fulfillments[0].pickedup_time).toLocaleString()}</span>
+        <span>
+          {new Date(
+            row.sales_order_fulfillments[0].pickedup_time
+          ).toLocaleString()}
+        </span>
       ),
     },
     {
@@ -97,7 +105,11 @@ const Orders = () => {
       key: "sales_order_fulfillments[0].delivered_time",
       type: "custom",
       renderCell: (row: any) => (
-        <span>{new Date(row.sales_order_fulfillments[0].delivered_time).toLocaleString()}</span>
+        <span>
+          {new Date(
+            row.sales_order_fulfillments[0].delivered_time
+          ).toLocaleString()}
+        </span>
       ),
     },
     {
@@ -136,7 +148,11 @@ const Orders = () => {
       key: "sales_order_fulfillments[0].cancelled_date",
       type: "custom",
       renderCell: (row: any) => (
-        <span>{new Date(row.sales_order_fulfillments[0].cancelled_date).toLocaleString()}</span>
+        <span>
+          {new Date(
+            row.sales_order_fulfillments[0].cancelled_date
+          ).toLocaleString()}
+        </span>
       ),
     },
     {
@@ -269,16 +285,63 @@ const Orders = () => {
     dispatch(getCancellationReasons());
   }, [dispatch]);
 
-  // Handle tab change
-  const handleTabChange = (tabLabel: string) => {
-    setActiveTab(tabLabel);
-    if (tabLabel === "All Orders") {
+  // Set initial active tab based on URL parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const status = searchParams.get("status");
+
+    if (status) {
+      // Find the matching status from the lookup
+      const matchingStatus = statusLookup?.find(
+        (s) => s.lookup_code === status
+      );
+      if (matchingStatus) {
+        setActiveTab(matchingStatus.display_name);
+        setParams((prev) => ({
+          ...prev,
+          status: status,
+          page_no: 1,
+        }));
+      }
+    } else {
+      setActiveTab("All Orders");
       setParams((prev) => ({
         ...prev,
         status: "",
         page_no: 1,
       }));
-    } else if (tabLabel === "Returns") {
+    }
+  }, [location.search, statusLookup]);
+
+  // Update handleTabChange to maintain URL state
+  const handleTabChange = (tabLabel: string) => {
+    setActiveTab(tabLabel);
+    let statusCode = "";
+
+    if (tabLabel !== "All Orders" && tabLabel !== "Returns") {
+      const selectedStatus = statusLookup?.find(
+        (s) => s.display_name === tabLabel
+      );
+      statusCode = selectedStatus?.lookup_code || "";
+    }
+
+    // Update URL with status parameter
+    const searchParams = new URLSearchParams(location.search);
+    if (statusCode) {
+      searchParams.set("status", statusCode);
+    } else {
+      searchParams.delete("status");
+    }
+    navigate(
+      {
+        pathname: location.pathname,
+        search: searchParams.toString(),
+      },
+      { replace: true }
+    );
+
+    // Update params which will trigger the useEffect to fetch orders
+    if (tabLabel === "Returns") {
       setReturnsParams((prev) => ({
         ...prev,
         page_no: 1,

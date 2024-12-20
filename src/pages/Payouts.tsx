@@ -97,7 +97,7 @@ const Payouts = () => {
     },
     {
       id: "buyer_finder_fee",
-      key: "payment.@ondc/org/buyer_app_finder_fee_amount",
+      key: "buyer_finder_fee",
       label: "Buyer Finder Fee (Amount)",
       type: "amount",
       minWidth: 160,
@@ -151,7 +151,7 @@ const Payouts = () => {
     },
     {
       id: "settlement_ref",
-      key: "payment.@ondc/org/settlement_details[0].settlement_reference",
+      key: "settlement_reference_number",
       label: "Settlement Reference Number",
       minWidth: 200,
     },
@@ -170,7 +170,7 @@ const Payouts = () => {
     },
     {
       id: "updatedAt",
-      key: "updatedAt",
+      key: "createdAt",
       label: "Created Date & Time",
       minWidth: 180,
     },

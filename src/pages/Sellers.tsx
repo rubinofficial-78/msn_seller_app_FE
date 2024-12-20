@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search, Eye, Edit, Plus, LayoutGrid, Table, X } from "lucide-react";
 import CustomTable from "../components/CustomTable";
 import {
@@ -73,7 +73,7 @@ const columns = [
     id: "createdAt",
     key: "createdAt",
     label: "Seller Onboarding Date",
-    minWidth: 150,  
+    minWidth: 150,
     type: "custom",
     renderCell: (row: any) => (
       <span>{new Date(row.createdAt).toLocaleDateString()}</span>
@@ -100,7 +100,7 @@ const columns = [
     key: "store_details.0.is_active",
     label: "Catalog Status",
     minWidth: 150,
-    format: (isActive: boolean) => isActive ? "Active" : "Inactive",
+    format: (isActive: boolean) => (isActive ? "Active" : "Inactive"),
   },
   {
     id: "company_status",
@@ -164,6 +164,7 @@ const tabs: { label: string }[] = [
 const Sellers = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     data: sellers,
@@ -173,9 +174,15 @@ const Sellers = () => {
   const { data: sellerCounts } = useSelector(
     (state: RootState) => state.data.sellerCounts
   );
-  const { data: companyDropdownData } = useSelector((state: RootState) => state.data.companyDropdown);
-  const { data: branchDropdownData } = useSelector((state: RootState) => state.data.branchDropdown);
-  const { data: partnerDropdownData } = useSelector((state: RootState) => state.data.partnerDropdown);
+  const { data: companyDropdownData } = useSelector(
+    (state: RootState) => state.data.companyDropdown
+  );
+  const { data: branchDropdownData } = useSelector(
+    (state: RootState) => state.data.branchDropdown
+  );
+  const { data: partnerDropdownData } = useSelector(
+    (state: RootState) => state.data.partnerDropdown
+  );
 
   const [activeTab, setActiveTab] = useState("All Sellers");
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
@@ -205,10 +212,10 @@ const Sellers = () => {
   };
 
   const handleSearch = debounce((value: string) => {
-    setParams(prev => ({
+    setParams((prev) => ({
       ...prev,
       page_no: 1,
-      search: value ? value : undefined
+      search: value ? value : undefined,
     }));
   }, 500);
 
@@ -286,6 +293,41 @@ const Sellers = () => {
         const response = await dispatch(getSellerStatusLookup());
         if (response?.data) {
           setStatusLookup(response.data);
+
+          // Handle URL parameters after status lookup is loaded
+          const searchParams = new URLSearchParams(location.search);
+          const statusParam = searchParams.get("status");
+
+          if (statusParam) {
+            // Map URL status to tab label
+            let tabLabel = "All Sellers";
+            switch (statusParam) {
+              case "APPROVED":
+                tabLabel = "Approved";
+                break;
+              case "PENDING":
+                tabLabel = "Pending";
+                break;
+              case "REJECTED":
+                tabLabel = "Rejected";
+                break;
+            }
+
+            // Set active tab and status
+            setActiveTab(tabLabel);
+
+            // Find the corresponding status ID from the loaded lookup
+            const status = response.data.find(
+              (s: any) => s.lookup_code === statusParam
+            );
+            if (status) {
+              setParams((prev) => ({
+                ...prev,
+                status_id: status.id,
+                page_no: 1,
+              }));
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to fetch seller status lookup:", error);
@@ -294,7 +336,7 @@ const Sellers = () => {
 
     fetchStatusLookup();
     dispatch(getSellerCounts());
-  }, [dispatch]); // Only run once on mount
+  }, [dispatch, location.search]); // Added location.search as dependency
 
   const handleParamsChange = (newParams: {
     page?: number;
@@ -401,10 +443,10 @@ const Sellers = () => {
       company_branch_id: null,
       partner_id: null,
       status_id: null,
-      search: ""
+      search: "",
     });
-    setSearchTerm(''); // Clear search input
-    setActiveTab('All Sellers'); // Reset active tab
+    setSearchTerm(""); // Clear search input
+    setActiveTab("All Sellers"); // Reset active tab
   };
 
   const renderContent = () => {
@@ -626,7 +668,11 @@ const Sellers = () => {
               ))}
             </select>
 
-            {(searchTerm || params.parent_company_id || params.company_branch_id || params.partner_id || params.status_id) && (
+            {(searchTerm ||
+              params.parent_company_id ||
+              params.company_branch_id ||
+              params.partner_id ||
+              params.status_id) && (
               <button
                 onClick={handleClearFilters}
                 className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2"

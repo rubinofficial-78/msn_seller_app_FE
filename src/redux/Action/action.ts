@@ -2850,35 +2850,20 @@ export const downloadTemplate = (
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          },
-          responseType: 'arraybuffer'
+          }
         }
       );
 
-      // Create blob from arraybuffer
-      const blob = new Blob([response.data], { 
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      });
-      
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'product_template.xlsx');
-      
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Cleanup
-      window.URL.revokeObjectURL(url);
+      if (response.data?.meta?.status) {
+        dispatch({
+          type: DOWNLOAD_TEMPLATE_SUCCESS,
+          payload: response.data
+        });
+        return response.data;
+      } else {
+        throw new Error(response.data?.meta?.message || 'Failed to download template');
+      }
 
-      dispatch({
-        type: DOWNLOAD_TEMPLATE_SUCCESS
-      });
-
-      return response.data;
     } catch (error) {
       console.error('Error downloading template:', error);
       dispatch({

@@ -109,12 +109,35 @@ const BulkUpload: React.FC = () => {
         return;
       }
 
-      await dispatch(
+      const response = await dispatch(
         downloadTemplate(
           Number(formData.categoryName),
           Number(formData.subCategoryName)
         )
       );
+
+      // Get the URL from the response
+      const fileUrl = response.data.url;
+      const filename = fileUrl.split("/").pop() || "template.xlsx";
+
+      // Fetch the actual file content
+      const fileResponse = await fetch(fileUrl);
+      const blob = await fileResponse.blob();
+
+      // Create download link with original filename
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", filename);
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Cleanup
+      window.URL.revokeObjectURL(downloadUrl);
+
       toast.success("Template downloaded successfully");
     } catch (error) {
       console.error("Failed to download template:", error);

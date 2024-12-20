@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getProductCategories,
   downloadTemplate,
-  uploadTemplate
+  uploadTemplate,
 } from "../redux/Action/action";
 import { RootState } from "../redux/types";
 import { AppDispatch } from "../redux/store";
@@ -15,7 +15,7 @@ import AddForm from "../components/AddForm";
 const BulkUploadMasterCatalogue: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Get categories and subcategories from Redux store
   const { data: categories, loading } = useSelector(
     (state: RootState) => state.data.productCategories
@@ -27,7 +27,7 @@ const BulkUploadMasterCatalogue: React.FC = () => {
   // Form data state
   const [formData, setFormData] = useState({
     categoryName: null,
-    subCategoryName: null
+    subCategoryName: null,
   });
 
   // Fetch categories when component mounts
@@ -77,11 +77,11 @@ const BulkUploadMasterCatalogue: React.FC = () => {
 
   // Handle form changes
   const handleSelectChange = (key: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [key]: value,
       // Reset subcategory when category changes
-      ...(key === 'categoryName' ? { subCategoryName: null } : {})
+      ...(key === "categoryName" ? { subCategoryName: null } : {}),
     }));
   };
 
@@ -92,9 +92,35 @@ const BulkUploadMasterCatalogue: React.FC = () => {
         return;
       }
 
-      await dispatch(
-        downloadTemplate(Number(formData.categoryName), Number(formData.subCategoryName))
+      const response = await dispatch(
+        downloadTemplate(
+          Number(formData.categoryName),
+          Number(formData.subCategoryName)
+        )
       );
+
+      // Get the URL from the response
+      const fileUrl = response.data.url;
+      const filename = fileUrl.split("/").pop() || "template.xlsx";
+
+      // Fetch the actual file content
+      const fileResponse = await fetch(fileUrl);
+      const blob = await fileResponse.blob();
+
+      // Create download link with original filename
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", filename);
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Cleanup
+      window.URL.revokeObjectURL(downloadUrl);
+
       toast.success("Template downloaded successfully");
     } catch (error) {
       console.error("Failed to download template:", error);
@@ -102,21 +128,23 @@ const BulkUploadMasterCatalogue: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       try {
         const fileUrl = URL.createObjectURL(file);
-        
+
         const uploadData = {
           level1_category_id: Number(formData.categoryName),
           level2_category_id: Number(formData.subCategoryName),
-          link: fileUrl
+          link: fileUrl,
         };
 
         await dispatch(uploadTemplate(uploadData));
         URL.revokeObjectURL(fileUrl);
-        
+
         toast.success("Template uploaded successfully");
         navigate("/dashboard/master-catalog");
       } catch (error) {
@@ -149,9 +177,8 @@ const BulkUploadMasterCatalogue: React.FC = () => {
       <div>
         <h1 className="text-2xl font-semibold">Bulk Upload via .csv</h1>
         <p className="text-gray-600 mt-2">Personal details and application.</p>
-        
+
         {/* Add the note about master catalogue */}
-       
       </div>
 
       {/* Category Selection Section */}
@@ -175,9 +202,9 @@ const BulkUploadMasterCatalogue: React.FC = () => {
         <button
           onClick={handleDownloadTemplate}
           className={`flex items-center gap-2 text-blue-600 hover:text-blue-700 ${
-            (!formData.categoryName || !formData.subCategoryName) 
-              ? 'opacity-50 cursor-not-allowed' 
-              : ''
+            !formData.categoryName || !formData.subCategoryName
+              ? "opacity-50 cursor-not-allowed"
+              : ""
           }`}
           disabled={!formData.categoryName || !formData.subCategoryName}
         >

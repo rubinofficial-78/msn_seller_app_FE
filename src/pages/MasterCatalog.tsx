@@ -535,13 +535,14 @@ const MasterCatalog = () => {
         page_no: queryParams.page_no,
         per_page: queryParams.per_page,
         status: status,
-        search: searchQuery, // Include search query in API call
+        search: searchQuery,
+        master_catalog: true
       })
     );
 
     // Fetch counts
     dispatch(getMasterCatalogueProductCounts());
-  }, [dispatch, activeTab, searchQuery]); // Add searchQuery to dependencies
+  }, [dispatch, activeTab, queryParams.page_no, queryParams.per_page, searchQuery]);
 
   // Update the table pagination handler
   const handlePaginationChange = (params: {
@@ -576,13 +577,30 @@ const MasterCatalog = () => {
   const getFilteredData = () => {
     return productsData.data || [];
   };
-  // const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setSearchQuery(e.target.value);
-  // };
+
+  // Update the handleSearch function
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
+    setSearchQuery(searchValue);
+    
+    // Update query params
+    setQueryParams(prev => ({
+      ...prev,
+      page_no: 1, // Reset to first page on new search
+    }));
+
+    // Fetch products with updated search query
+    dispatch(getMasterCatalogProducts({
+      page_no: 1,
+      per_page: queryParams.per_page,
+      status: queryParams.status,
+      search: searchValue,
+      master_catalog: true
+    }));
+  };
 
   // Update the renderFiltersAndActions function
   const renderFiltersAndActions = () => {
-    // Only show filters for product-related tabs
     if (["All Products", "Active", "Inactive", "Draft"].includes(activeTab)) {
       return (
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
@@ -597,10 +615,10 @@ const MasterCatalog = () => {
                 type="text"
                 placeholder="Search products"
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg w-full"
-                // onChange={handleSearch}
+                value={searchQuery}
+                onChange={handleSearch}
               />
             </div>
-            
           </div>
           <div className="flex items-center gap-2">
             <button

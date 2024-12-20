@@ -3115,6 +3115,7 @@ export const getMasterCatalogProducts = (params: {
   page_no: number; 
   per_page: number;
   status?: string;
+  search?: string;
   master_catalog?: boolean;
 }): ThunkAction<Promise<any>, RootState, unknown, AuthActionTypes> => {
   return async (dispatch: Dispatch<AuthActionTypes>) => {
@@ -3129,7 +3130,8 @@ export const getMasterCatalogProducts = (params: {
             page_no: params.page_no,
             per_page: params.per_page,
             status: params.status,
-            master_catalog: params.master_catalog ?? true // Default to true if not provided
+            search: params.search,
+            master_catalog: params.master_catalog ?? true
           },
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -3137,8 +3139,6 @@ export const getMasterCatalogProducts = (params: {
           }
         }
       );
-
-      console.log('Master catalog products API Response:', response.data);
 
       if (response.data?.meta?.status) {
         dispatch({
@@ -3153,7 +3153,6 @@ export const getMasterCatalogProducts = (params: {
         throw new Error(response.data?.meta?.message || 'Failed to fetch products');
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch products';
       dispatch({
         type: GET_PRODUCTS_FAILURE,

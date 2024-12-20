@@ -496,7 +496,7 @@ const Products = () => {
             params.status = "ACTIVE";
             break;
           case "Inactive":
-            params.status = "IN_ACTIVE";
+            params.status = "INACTIVE";
             break;
           case "Draft":
             params.status = "DRAFT";
